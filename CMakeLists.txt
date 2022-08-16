@@ -12,6 +12,9 @@ add_subdirectory(src)
 # compile the tests
 add_subdirectory(tests)
 
+# compile the benchmarks
+add_subdirectory(bench)
+
 # compile the demonstration
 add_subdirectory(app)
 

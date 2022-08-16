@@ -1,3 +1,3 @@
-add_library(common rnspolynomial.cpp bigint.cpp bigintpoly.cpp)
+add_library(common rnspolynomial.cpp bigint.cpp bigintpoly.cpp mod_arith.cpp)
 # require at least c++17
-target_compile_features(adder PUBLIC cxx_std_17)
+target_compile_features(common PUBLIC cxx_std_17)
