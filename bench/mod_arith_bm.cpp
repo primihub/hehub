@@ -16,6 +16,14 @@ TEST_CASE("BM vector mul mod") {
         g[i] = seed % modulus;
     }
 
+    BENCHMARK("vector_mul_mod_hybrid_lazy 8192") {
+        return vector_mul_mod_hybrid_lazy(modulus, vec_len, f, g, h);
+    };
+
+    BENCHMARK("vector_mul_mod_barrett_lazy 8192") {
+        return vector_mul_mod_barrett_lazy(modulus, vec_len, f, g, h);
+    };
+
     BENCHMARK("vector_mul_mod_hybrid 8192") {
         return vector_mul_mod_hybrid(modulus, vec_len, f, g, h);
     };
