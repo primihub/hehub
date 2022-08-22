@@ -1,0 +1,38 @@
+#include "catch2/catch.hpp"
+#include "common/ntt.h"
+#include "common/rnspolynomial.h"
+#include <random>
+
+using namespace hehub;
+
+TEST_CASE("benchmark ntt and intt") {
+    u64 Q = 576460752272228353ULL;
+
+    std::random_device rd;
+    std::default_random_engine generator(rd());
+    std::uniform_int_distribution<u64> distribution(0, Q - 1);
+
+    for (auto LOGN: {10, 11, 12, 13, 14, 15}) {
+        u64 N = 1 << LOGN;
+        u64 poly[N];
+        for (int i = 0; i < N; i++) {
+            poly[i] = distribution(generator);
+        }
+        
+        BENCHMARK(std::string("NTT / len=") + std::to_string(N)) {
+            return ntt_negacyclic_inplace_lazy(Q, LOGN, poly);
+        };
+    }
+
+    for (auto LOGN: {10, 11, 12, 13, 14, 15}) {
+        u64 N = 1 << LOGN;
+        u64 poly[N];
+        for (int i = 0; i < N; i++) {
+            poly[i] = distribution(generator);
+        }
+        
+        BENCHMARK(std::string("INTT / len=") + std::to_string(N)) {
+            return intt_negacyclic_inplace_lazy(Q, LOGN, poly);
+        };
+    }
+}

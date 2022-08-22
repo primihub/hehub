@@ -3,7 +3,7 @@
 
 namespace hehub {
 
-RnsPolynomial::ComponentData::ComponentData(const u64 poly_len)
+RnsPolynomial::ComponentData::ComponentData(const size_t poly_len)
     : poly_len_(poly_len), data_(new u64[poly_len]) {}
 
 RnsPolynomial::ComponentData::ComponentData(const ComponentData &other)

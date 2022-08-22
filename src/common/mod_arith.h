@@ -118,9 +118,9 @@ inline void vector_mul_mod_hybrid(const u64 modulus, const size_t vec_len,
  * produced, barrett reduction works as follows: A barrett constant c is
  * pre-computed as floor(2**128 / modulus). Let the product of in_vec1[i] and
  * in_vec2[i] is a, then floor(a / modulus) ≈ floor(a * c / 2**128), from which
- * we can obtain a % modulus with possibly one additional multiple of modulus,
- * cf. https://en.wikipedia.org/wiki/Barrett_reduction. The resulting
+ * we can obtain a % modulus with possibly one additional multiple of modulus. The resulting
  * out_vec[i]'s are left in [0, 2*modulus).
+ * @see https://en.wikipedia.org/wiki/Barrett_reduction
  *
  * @param[in] modulus The modulus.
  * @param[in] vec_len The length of input vectors.

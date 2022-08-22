@@ -35,7 +35,7 @@ public:
          * @brief Construct a new ComponentData object.
          * @param poly_len The length of the polynomial.
          */
-        ComponentData(const u64 poly_len);
+        ComponentData(const size_t poly_len);
 
         /**
          * @brief Create a ComponentData object by copying from another one.
@@ -127,7 +127,7 @@ public:
         u64 *data_ = nullptr;
 
         /// The length of the polynomial (= degree + 1).
-        u64 poly_len_ = 0;
+        size_t poly_len_ = 0;
     };
 
     /**
