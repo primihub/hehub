@@ -1,5 +1,5 @@
 add_executable(benchmarks benchmarks.cpp mod_arith_bm.cpp ntt_bm.cpp)
 add_definitions(-DCATCH_CONFIG_ENABLE_BENCHMARKING)
-target_link_libraries(benchmarks PUBLIC common)
+target_link_libraries(benchmarks PUBLIC hehub)
 target_include_directories(benchmarks PUBLIC ${PROJECT_SOURCE_DIR}/src)
 target_include_directories(benchmarks PUBLIC ${PROJECT_SOURCE_DIR}/third-party)

@@ -94,7 +94,6 @@ struct NTTFactors {
                 }
             }
             const u64 poly_len_inv = modulus - ((modulus - 1) >> log_poly_len);
-            // std::cout << "n inv = " << poly_len_inv << std::endl;
             const u64 poly_len_inv_harvey =
                 ((u128)poly_len_inv << 64) / modulus;
             for (size_t i = 0; i < poly_len; i++) {
