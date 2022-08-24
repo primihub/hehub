@@ -3,10 +3,12 @@
 
 using namespace hehub;
 
-TEST_CASE("RNS poly") {
-    RnsPolynomial r1(3, 12, std::vector<u64>{3, 5, 7});
-    RnsPolynomial r2(3, 12, std::vector<u64>{3, 5, 7});
-    RnsPolynomial r3(3, 12, std::vector<u64>{3, 5, 7});
+TEST_CASE("RNS polynomial") {
+    RnsPolynomial r1(4096, 3, std::vector<u64>{3, 5, 7});
+
+    PolyDimensions poly_dim{4096, 3, std::vector<u64>{3, 5, 7}};
+    RnsPolynomial r2(poly_dim);
+    RnsPolynomial r3(poly_dim);
 
     RnsPolynomial r4(r2);
     RnsPolynomial r5(std::move(r1));
@@ -19,4 +21,8 @@ TEST_CASE("RNS poly") {
     REQUIRE(r3.component_count() == 4);
     REQUIRE(r4.component_count() == 2);
     REQUIRE(r5.component_count() == 3);
+
+    REQUIRE_THROWS(RnsPolynomial(PolyDimensions{4096, 4, std::vector<u64>(3)}));
+    REQUIRE_THROWS(RnsPolynomial(PolyDimensions{4095, 3, std::vector<u64>(3)}));
+    REQUIRE_THROWS(RnsPolynomial(PolyDimensions{4097, 3, std::vector<u64>(3)}));
 }

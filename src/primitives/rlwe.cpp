@@ -3,8 +3,7 @@
 
 namespace hehub {
 
-RlweSk::RlweSk(const size_t components, const size_t log_poly_len,
-               const std::vector<u64> &moduli)
-    : RnsPolynomial(get_rand_ternary_poly(components, log_poly_len, moduli)) {}
+RlweSk::RlweSk(const PolyDimensions &poly_dim)
+    : RnsPolynomial(get_rand_ternary_poly(poly_dim)) {}
 
 } // namespace hehub

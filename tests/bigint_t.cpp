@@ -77,7 +77,7 @@ TEST_CASE("big int poly") {
     // Generate a pseudo-random RNS polynomial.
     auto moduli_vec =
         std::vector<u64>{0x3ffffffffffe5, 0x3ffffffffffdd, 0x3ffffffffffcd};
-    RnsPolynomial rns_poly(3, 3, moduli_vec);
+    RnsPolynomial rns_poly(PolyDimensions{16, 3, moduli_vec});
     auto seed = 42;
     auto poly_len = rns_poly.poly_len();
     auto components = rns_poly.component_count();

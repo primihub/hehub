@@ -9,11 +9,10 @@ std::random_device rand_dvc;
 std::default_random_engine rand_engine;
 std::uniform_int_distribution rand_ternary((i8)-1, (i8)1);
 
-RnsPolynomial get_rand_ternary_poly(const size_t component_count,
-                                    const size_t log_poly_len,
-                                    const std::vector<u64> &moduli) {
-    RnsPolynomial poly(component_count, log_poly_len, moduli);
-    size_t poly_len = 1 << log_poly_len;
+RnsPolynomial get_rand_ternary_poly(const PolyDimensions &poly_dim) {
+    RnsPolynomial poly(poly_dim);
+    auto poly_len = poly_dim.poly_len;
+    auto component_count = poly_dim.component_count;
 
     // Sampling.
     i8 temp[poly_len];

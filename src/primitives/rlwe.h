@@ -22,8 +22,7 @@ public:
     RlweSk();
 
     /// Initialize the polynomial parameters and sample ternary coefficients.
-    RlweSk(const size_t components, const size_t log_poly_len,
-           const std::vector<u64> &moduli);
+    RlweSk(const PolyDimensions &poly_dim);
 };
 
 } // namespace hehub

@@ -13,16 +13,36 @@ namespace hehub {
 
 /**
  * @class RnsPolynomial
- * @brief A RnsPolynomial mainly contains a group of polynomials whose
- * coefficients of terms of same degree constitute an residue number system
- * (RNS). The degree of polynomials equals certain 2-power minus 1.
+ * @brief A RnsPolynomial represents an element of Z_q[X]/(X^n + 1), where q is
+ * a big composite integer, and n is a certain power of 2. The object contains a
+ * group of polynomials whose coefficients of terms of same degree constitute an
+ * residue number system (RNS) whose basis is the co-prime factors of q. The
+ * group of polynomials are each represented by n coefficients (or n values from
+ * the transformation of NTT). The X^n + 1 is sometimes called the
+ * polynomial modulus of this object.
  */
 class RnsPolynomial {
 public:
     /**
+     * @brief Specifying the dimensions of an RnsPolynomial, i.e. the length of
+     * polynomial, the number of RNS components and the set of moduli. Used for
+     * initializing an RnsPolynomial object.
+     */
+    struct RnsPolyDim {
+        /// The length of polynomial.
+        size_t poly_len;
+
+        /// The number of RNS components.
+        size_t component_count;
+
+        /// The set of RNS moduli.
+        std::vector<u64> moduli;
+    };
+
+    /**
      * @class ComponentData
      * @brief A dynamic array for storing all coefficients of a component
-     * polynomial of a RnsPolynomial object.
+     * polynomial of an RnsPolynomial object.
      */
     class ComponentData {
     public:
@@ -137,13 +157,21 @@ public:
 
     /**
      * @brief Construct a new RnsPolynomial object.
+     * @param poly_len The length of each component polynomial, i.e. the number
+     * of coefficients (or NTT values). This should be a power of 2.
      * @param components The number of components, i.e. polynomials each
      * modulo different integer.
-     * @param log_poly_len log2 value of each component polynomial's length
-     * (= degree + 1).
+     * @param moduli The modulus set of the RNS of coefficients.
      */
-    RnsPolynomial(const size_t components, const size_t log_poly_len,
+    RnsPolynomial(const size_t poly_len, const size_t components,
                   const std::vector<u64> &moduli);
+
+    /**
+     * @brief Construct a new RnsPolynomial object.
+     * @param poly_dim A parameter set specifying the length of polynomial, the
+     * number of RNS components and the modulus set.
+     */
+    RnsPolynomial(const RnsPolyDim &poly_dim);
 
     /**
      * @brief Creates an RnsPolynomial object by copying from another one.
@@ -191,15 +219,13 @@ public:
     inline const size_t component_count() const { return components_.size(); }
 
     /**
-     * @brief Returns log2 value of component polynomials' length (which is
-     * their degree + 1).
+     * @brief Returns log2 value of component polynomials' length.
      * @return const size_t
      */
     inline const size_t log_poly_len() const { return log_poly_len_; }
 
     /**
-     * @brief Returns component polynomials' length (= their
-     * degree + 1).
+     * @brief Returns component polynomials' length.
      * @return const size_t
      */
     inline const size_t poly_len() const { return poly_len_; }
@@ -267,10 +293,10 @@ public:
     // void load(std::stringstream &stream, u64 log_poly_len);
 
 private:
-    /// log2 value of component polynomials' length (which is their degree + 1).
+    /// log2 value of component polynomials' length.
     size_t log_poly_len_ = 0;
 
-    /// Component polynomials' length (= their degree + 1).
+    /// Component polynomials' length.
     size_t poly_len_ = 0;
 
     /// A vector storing all polynomial coefficients.
@@ -279,5 +305,7 @@ private:
     /// A vector of RNS basis, i.e. all the moduli of coefficients.
     std::vector<u64> moduli_;
 };
+
+using PolyDimensions = RnsPolynomial::RnsPolyDim;
 
 } // namespace hehub

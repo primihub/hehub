@@ -7,8 +7,6 @@
 
 namespace hehub {
 
-RnsPolynomial get_rand_ternary_poly(const size_t component_count,
-                                    const size_t log_poly_len,
-                                    const std::vector<u64> &moduli);
+RnsPolynomial get_rand_ternary_poly(const PolyDimensions &poly_dim);
 
 } // namespace hehub

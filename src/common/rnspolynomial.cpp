@@ -1,4 +1,5 @@
 #include "rnspolynomial.h"
+#include <cmath>
 #include <iostream>
 
 namespace hehub {
@@ -45,20 +46,28 @@ RnsPolynomial::ComponentData::operator=(ComponentData &&moving) noexcept {
     return *this;
 }
 
-RnsPolynomial::RnsPolynomial(const size_t components, const size_t log_poly_len,
+RnsPolynomial::RnsPolynomial(const size_t poly_len, const size_t components,
                              const std::vector<u64> &moduli)
-    : components_(components), log_poly_len_(log_poly_len),
-      poly_len_(1 << log_poly_len) {
+    : poly_len_(poly_len), components_(components),
+      log_poly_len_(std::log2(poly_len) + 0.5) {
+
+    if (poly_len_ != 1 << log_poly_len_) {
+        throw std::invalid_argument("poly_len should be a 2-power.");
+    }
 
     if (moduli.size() < component_count()) {
         throw std::invalid_argument(
             "No matching number of moduli provided to create RnsPolynomial.");
     }
     moduli_.assign(moduli.begin(), moduli.begin() + component_count());
-    for (auto &component: components_) {
+    for (auto &component : components_) {
         component = ComponentData(poly_len_);
     }
 }
+
+RnsPolynomial::RnsPolynomial(const PolyDimensions &poly_dim)
+    : RnsPolynomial(poly_dim.poly_len, poly_dim.component_count,
+                    poly_dim.moduli) {}
 
 void RnsPolynomial::add_components(const std::vector<u64> &new_moduli,
                                    size_t adding) {
