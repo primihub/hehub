@@ -28,7 +28,7 @@ public:
      * polynomial, the number of RNS components and the set of moduli. Used for
      * initializing an RnsPolynomial object.
      */
-    struct RnsPolyDim {
+    struct Dimensions {
         /// The length of polynomial.
         size_t poly_len;
 
@@ -151,6 +151,11 @@ public:
     };
 
     /**
+     * @brief Representation form of the polynomial.
+     */
+    enum class RepForm { coeff, value };
+
+    /**
      * @brief Construct an empty RnsPolynomial object.
      */
     RnsPolynomial() {}
@@ -171,7 +176,7 @@ public:
      * @param poly_dim A parameter set specifying the length of polynomial, the
      * number of RNS components and the modulus set.
      */
-    RnsPolynomial(const RnsPolyDim &poly_dim);
+    RnsPolynomial(const Dimensions &poly_dim);
 
     /**
      * @brief Creates an RnsPolynomial object by copying from another one.
@@ -288,6 +293,10 @@ public:
      */
     void remove_components(size_t removing = 1);
 
+    friend void ntt_negacyclic_inplace_lazy(RnsPolynomial &);
+
+    friend void intt_negacyclic_inplace_lazy(RnsPolynomial &);
+
     // void save(std::stringstream &stream);
 
     // void load(std::stringstream &stream, u64 log_poly_len);
@@ -304,8 +313,13 @@ private:
 
     /// A vector of RNS basis, i.e. all the moduli of coefficients.
     std::vector<u64> moduli_;
+
+    /// Representation form of the polynomial, default being coefficients.
+    RepForm rep_form = RepForm::coeff;
 };
 
-using PolyDimensions = RnsPolynomial::RnsPolyDim;
+using PolyDimensions = RnsPolynomial::Dimensions;
+
+using PolyRepForm = RnsPolynomial::RepForm;
 
 } // namespace hehub

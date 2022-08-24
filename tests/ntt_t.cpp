@@ -61,7 +61,7 @@ TEST_CASE("ntt", "[.]") {
         }
         poly[0] = 1;
 
-        ntt_negacyclic_inplace_lazy(Q, LOGN, poly.data());
+        ntt_negacyclic_inplace_lazy(LOGN, Q, poly.data());
 
         for (size_t i = 0; i < N; i++) {
             REQUIRE(poly[i] < 2 * Q);
@@ -74,7 +74,7 @@ TEST_CASE("ntt", "[.]") {
         }
         poly[1] = 1;
 
-        ntt_negacyclic_inplace_lazy(Q, LOGN, poly.data());        
+        ntt_negacyclic_inplace_lazy(LOGN, Q, poly.data());        
         
         for (size_t i = 0; i < N; i++) {
             REQUIRE(poly[i] < 2 * Q);
@@ -93,7 +93,7 @@ TEST_CASE("ntt", "[.]") {
         }
         auto poly_copy(poly);
 
-        ntt_negacyclic_inplace_lazy(Q, LOGN, poly.data());
+        ntt_negacyclic_inplace_lazy(LOGN, Q, poly.data());
 
         for (size_t i = 0; i < N; i++) {
             REQUIRE(poly[i] < 2 * Q);
@@ -117,12 +117,10 @@ TEST_CASE("ntt", "[.]") {
 }
 
 TEST_CASE("ntt and intt") {
-    auto LOGN = GENERATE(1, 2, 3, 4, 6, 7, 10, 13, 14, 15);
-    // auto LOGN = GENERATE(1, 2, 3, 4, 6);
+    auto LOGN = GENERATE(4, 7, 13, 14, 15);
     u64 N = 1 << LOGN;
     u64 Q = GENERATE(260898817ULL, 35184358850561ULL, 36028796997599233ULL,
                      576460752272228353ULL);
-    // u64 Q = 260898817ULL;
 
     std::random_device rd;
     std::default_random_engine generator(rd());
@@ -138,8 +136,8 @@ TEST_CASE("ntt and intt") {
 
         SimplePoly poly_copy = poly;
 
-        ntt_negacyclic_inplace_lazy(Q, LOGN, poly.data());
-        intt_negacyclic_inplace_lazy(Q, LOGN, poly.data());
+        ntt_negacyclic_inplace_lazy(LOGN, Q, poly.data());
+        intt_negacyclic_inplace_lazy(LOGN, Q, poly.data());
 
         for (int i = 0; i < N; i++) {
             REQUIRE(poly[i] < 2 * Q);
@@ -158,8 +156,8 @@ TEST_CASE("ntt and intt") {
 
         SimplePoly poly_copy = poly;
 
-        ntt_negacyclic_inplace_lazy(Q, LOGN, poly.data());
-        intt_negacyclic_inplace_lazy(Q, LOGN, poly.data());
+        ntt_negacyclic_inplace_lazy(LOGN, Q, poly.data());
+        intt_negacyclic_inplace_lazy(LOGN, Q, poly.data());
 
         for (int i = 0; i < N; i++) {
             REQUIRE(poly[i] < 2 * Q);
@@ -177,8 +175,8 @@ TEST_CASE("ntt and intt") {
 
         SimplePoly poly_copy = poly;
 
-        ntt_negacyclic_inplace_lazy(Q, LOGN, poly.data());
-        intt_negacyclic_inplace_lazy(Q, LOGN, poly.data());
+        ntt_negacyclic_inplace_lazy(LOGN, Q, poly.data());
+        intt_negacyclic_inplace_lazy(LOGN, Q, poly.data());
 
         for (int i = 0; i < N; i++) {
             REQUIRE(poly[i] < 2 * Q);

@@ -163,7 +163,7 @@ __find_or_create_ntt_factors(const u64 modulus, const size_t log_poly_len,
     }
 }
 
-void ntt_negacyclic_inplace_lazy(const u64 modulus, const size_t log_poly_len,
+void ntt_negacyclic_inplace_lazy(const size_t log_poly_len, const u64 modulus,
                                  u64 coeffs[]) {
     const size_t poly_len = 1ULL << log_poly_len;
     // generate or read from cache
@@ -195,7 +195,7 @@ void ntt_negacyclic_inplace_lazy(const u64 modulus, const size_t log_poly_len,
     }
 }
 
-void intt_negacyclic_inplace_lazy(const u64 modulus, const size_t log_poly_len,
+void intt_negacyclic_inplace_lazy(const size_t log_poly_len, const u64 modulus,
                                   u64 values[]) {
     const size_t poly_len = 1ULL << log_poly_len;
     // generate or read from cache
@@ -241,8 +241,34 @@ void intt_negacyclic_inplace_lazy(const u64 modulus, const size_t log_poly_len,
     }
 }
 
-void cache_ntt_factors_strict(const std::vector<u64> &moduli,
-                              const u64 log_poly_len) {
+void ntt_negacyclic_inplace_lazy(RnsPolynomial &rns_poly) {
+    const auto component_count = rns_poly.components_.size();
+    const auto &moduli = rns_poly.moduli_;
+    const auto log_poly_len = rns_poly.log_poly_len_;
+
+    for (size_t k = 0; k < component_count; k++) {
+        ntt_negacyclic_inplace_lazy(log_poly_len, moduli[k],
+                                    rns_poly.components_[k].data());
+    }
+
+    rns_poly.rep_form = PolyRepForm::value;
+}
+
+void intt_negacyclic_inplace_lazy(RnsPolynomial &rns_poly) {
+    const auto component_count = rns_poly.components_.size();
+    const auto &moduli = rns_poly.moduli_;
+    const auto log_poly_len = rns_poly.log_poly_len_;
+
+    for (size_t k = 0; k < component_count; k++) {
+        intt_negacyclic_inplace_lazy(log_poly_len, moduli[k],
+                                    rns_poly.components_[k].data());
+    }
+
+    rns_poly.rep_form = PolyRepForm::coeff;
+}
+
+void cache_ntt_factors_strict(const u64 log_poly_len,
+                              const std::vector<u64> &moduli) {
     for (auto modulus : moduli) {
         __find_or_create_ntt_factors(modulus, log_poly_len);
         __find_or_create_ntt_factors(modulus, log_poly_len, true);
