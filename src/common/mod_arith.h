@@ -210,4 +210,11 @@ inline void vector_mul_mod_barrett(const u64 modulus, const size_t vec_len,
                            out.data());
 }
 
+/**
+ * @brief TODO
+ * 
+ * @param rns_poly 
+ */
+void strict_reduce(RnsPolynomial &rns_poly);
+
 } // namespace hehub

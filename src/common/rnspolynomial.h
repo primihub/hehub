@@ -142,11 +142,36 @@ public:
          */
         inline const u64 *data() const { return data_; }
 
+        /**
+         * @brief Returns the begin of data as a non-const pointer.
+         * @return u64 *
+         */
+        inline u64 *begin() { return data_; }
+
+        /**
+         * @brief Returns the begin of data as a const pointer.
+         * @return const u64 *
+         */
+        inline const u64 *begin() const { return data_; }
+
+        /**
+         * @brief Returns the end of data as a non-const pointer.
+         * @return u64 *
+         */
+        inline u64 *end() { return data_ + poly_len_; }
+
+        /**
+         * @brief Returns the end of data as a const pointer.
+         * @return const u64 *
+         */
+        inline const u64 *end() const { return data_ + poly_len_; }
+
     private:
         /// Pointer as a dynamic array for storing the coefficients.
         u64 *data_ = nullptr;
 
-        /// The length of the polynomial (= degree + 1).
+        /// The length of the polynomial, i.e. the number of coefficients or NTT
+        /// values.
         size_t poly_len_ = 0;
     };
 
@@ -250,6 +275,30 @@ public:
     }
 
     /**
+     * @brief Returns the begin of components_ vector as non-const reference.
+     * @return std::vector<ComponentData>::iterator
+     */
+    inline auto begin() { return components_.begin(); }
+
+    /**
+     * @brief Returns the begin of components_ vector as const reference.
+     * @return const std::vector<ComponentData>::const_iterator
+     */
+    inline const auto begin() const { return components_.cbegin(); }
+
+    /**
+     * @brief Returns the end of components_ vector as non-const reference.
+     * @return std::vector<ComponentData>::iterator
+     */
+    inline auto end() { return components_.end(); }
+
+    /**
+     * @brief Returns the end of components_ vector as const reference.
+     * @return const std::vector<ComponentData>::const_iterator
+     */
+    inline const auto end() const { return components_.cend(); }
+
+    /**
      * @brief Get the i-th modulus in moduli_.
      * @param i The index of the accessing modulus.
      * @return const u64
@@ -297,9 +346,31 @@ public:
 
     friend void intt_negacyclic_inplace_lazy(RnsPolynomial &);
 
+    friend const RnsPolynomial &operator+=(RnsPolynomial &self,
+                                           const RnsPolynomial &b);
+
+    friend RnsPolynomial operator+(const RnsPolynomial &a,
+                                   const RnsPolynomial &b);
+
+    friend const RnsPolynomial &operator-=(RnsPolynomial &self,
+                                           const RnsPolynomial &b);
+
+    friend RnsPolynomial operator-(const RnsPolynomial &a,
+                                   const RnsPolynomial &b);
+
+    friend const RnsPolynomial &operator*=(RnsPolynomial &self,
+                                           const RnsPolynomial &b);
+
+    friend RnsPolynomial operator*(const RnsPolynomial &a,
+                                   const RnsPolynomial &b);
+
     // void save(std::stringstream &stream);
 
     // void load(std::stringstream &stream, u64 log_poly_len);
+
+    /// Representation form of the polynomial, default being coefficients.
+    /// This is set to be publicly visible in order to enable some tweaks.
+    RepForm rep_form = RepForm::coeff;
 
 private:
     /// log2 value of component polynomials' length.
@@ -313,13 +384,87 @@ private:
 
     /// A vector of RNS basis, i.e. all the moduli of coefficients.
     std::vector<u64> moduli_;
-
-    /// Representation form of the polynomial, default being coefficients.
-    RepForm rep_form = RepForm::coeff;
 };
 
 using PolyDimensions = RnsPolynomial::Dimensions;
 
 using PolyRepForm = RnsPolynomial::RepForm;
+
+/**
+ * @brief TODO
+ *
+ * @param self
+ * @param b
+ * @return RnsPolynomial
+ */
+const RnsPolynomial &operator+=(RnsPolynomial &self, const RnsPolynomial &b);
+
+/**
+ * @brief TODO
+ *
+ * @param a
+ * @param b
+ * @return RnsPolynomial
+ */
+inline RnsPolynomial operator+(const RnsPolynomial &a, const RnsPolynomial &b) {
+    auto result(a);
+    result += b;
+    return result;
+}
+
+/**
+ * @brief TODO
+ *
+ * @param self
+ * @param b
+ * @return RnsPolynomial
+ */
+const RnsPolynomial &operator-=(RnsPolynomial &self, const RnsPolynomial &b);
+
+/**
+ * @brief TODO
+ *
+ * @param a
+ * @param b
+ * @return RnsPolynomial
+ */
+inline RnsPolynomial operator-(const RnsPolynomial &a, const RnsPolynomial &b) {
+    auto result(a);
+    result -= b;
+    return result;
+}
+
+/**
+ * @brief TODO
+ *
+ * @param a
+ * @param b
+ * @return RnsPolynomial
+ */
+RnsPolynomial operator*(const RnsPolynomial &a, const RnsPolynomial &b);
+
+/**
+ * @brief TODO
+ *
+ * @param self
+ * @param b
+ * @return RnsPolynomial
+ */
+inline const RnsPolynomial &operator*=(RnsPolynomial &self,
+                                       const RnsPolynomial &b) {
+    auto temp(self);
+    return self = temp * b;
+}
+
+#ifdef FHE_DEBUG
+/**
+ * @brief TODO
+ *
+ * @param out
+ * @param rns_poly
+ * @return std::ostream&
+ */
+std::ostream &operator<<(std::ostream &out, const RnsPolynomial &rns_poly);
+#endif
 
 } // namespace hehub

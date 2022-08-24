@@ -243,12 +243,12 @@ void intt_negacyclic_inplace_lazy(const size_t log_poly_len, const u64 modulus,
 
 void ntt_negacyclic_inplace_lazy(RnsPolynomial &rns_poly) {
     const auto component_count = rns_poly.components_.size();
-    const auto &moduli = rns_poly.moduli_;
+    auto mod_ptr = rns_poly.moduli_.begin();
     const auto log_poly_len = rns_poly.log_poly_len_;
 
-    for (size_t k = 0; k < component_count; k++) {
-        ntt_negacyclic_inplace_lazy(log_poly_len, moduli[k],
-                                    rns_poly.components_[k].data());
+    for (auto &component_poly : rns_poly) {
+        ntt_negacyclic_inplace_lazy(log_poly_len, *(mod_ptr++),
+                                    component_poly.data());
     }
 
     rns_poly.rep_form = PolyRepForm::value;
@@ -256,12 +256,12 @@ void ntt_negacyclic_inplace_lazy(RnsPolynomial &rns_poly) {
 
 void intt_negacyclic_inplace_lazy(RnsPolynomial &rns_poly) {
     const auto component_count = rns_poly.components_.size();
-    const auto &moduli = rns_poly.moduli_;
+    auto mod_ptr = rns_poly.moduli_.begin();
     const auto log_poly_len = rns_poly.log_poly_len_;
 
-    for (size_t k = 0; k < component_count; k++) {
-        intt_negacyclic_inplace_lazy(log_poly_len, moduli[k],
-                                    rns_poly.components_[k].data());
+    for (auto &component_poly : rns_poly) {
+        intt_negacyclic_inplace_lazy(log_poly_len, *(mod_ptr++),
+                                     component_poly.data());
     }
 
     rns_poly.rep_form = PolyRepForm::coeff;

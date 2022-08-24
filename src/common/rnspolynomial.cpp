@@ -1,4 +1,5 @@
 #include "rnspolynomial.h"
+#include "mod_arith.h"
 #include <cmath>
 #include <iostream>
 
@@ -89,5 +90,122 @@ void RnsPolynomial::remove_components(size_t removing) {
     moduli_.erase(moduli_.end() - removing, moduli_.end());
     components_.erase(components_.end() - removing, components_.end());
 }
+
+const RnsPolynomial &operator+=(RnsPolynomial &self, const RnsPolynomial &b) {
+    if (self.rep_form != b.rep_form) {
+        throw std::invalid_argument(
+            "Operands are in different representation form.");
+    }
+    if (self.poly_len() != b.poly_len()) {
+        throw std::invalid_argument("Operands' poly len mismatch.");
+    }
+    auto poly_len = self.poly_len();
+    if (b.component_count() < self.component_count()) {
+        throw std::invalid_argument(
+            "Operand b contains less components than self.");
+    }
+    auto components = self.component_count();
+    auto moduli(self.moduli_vec()), b_moduli(b.moduli_vec());
+    b_moduli.resize(components);
+    if (moduli != b_moduli) {
+        throw std::invalid_argument("Operands' moduli mismatch.");
+    }
+
+    auto moduli_doubled(std::move(moduli));
+    for (auto &m : moduli_doubled) {
+        m *= 2;
+    }
+    for (size_t k = 0; k < components; k++) {
+        for (size_t i = 0; i < poly_len; i++) {
+            self[k][i] += b[k][i];
+            self[k][i] -=
+                (self[k][i] >= moduli_doubled[k]) ? moduli_doubled[k] : 0;
+        }
+    }
+
+    return self;
+}
+
+const RnsPolynomial &operator-=(RnsPolynomial &self, const RnsPolynomial &b) {
+    if (self.rep_form != b.rep_form) {
+        throw std::invalid_argument(
+            "Operands are in different representation form.");
+    }
+    if (self.poly_len() != b.poly_len()) {
+        throw std::invalid_argument("Operands' poly len mismatch.");
+    }
+    auto poly_len = self.poly_len();
+    if (b.component_count() < self.component_count()) {
+        throw std::invalid_argument(
+            "Operand b contains less components than self.");
+    }
+    auto components = self.component_count();
+    auto moduli(self.moduli_vec()), b_moduli(b.moduli_vec());
+    b_moduli.resize(components);
+    if (moduli != b_moduli) {
+        throw std::invalid_argument("Operands' moduli mismatch.");
+    }
+
+    auto moduli_doubled(std::move(moduli));
+    for (auto &m : moduli_doubled) {
+        m *= 2;
+    }
+    for (size_t k = 0; k < components; k++) {
+        for (size_t i = 0; i < poly_len; i++) {
+            self[k][i] += moduli_doubled[k] - b[k][i];
+            self[k][i] -=
+                (self[k][i] >= moduli_doubled[k]) ? moduli_doubled[k] : 0;
+        }
+    }
+
+    return self;
+}
+
+RnsPolynomial operator*(const RnsPolynomial &a, const RnsPolynomial &b) {
+    if (a.rep_form == PolyRepForm::coeff) {
+        throw std::invalid_argument("Operand a is in coefficient form.");
+    }
+    if (b.rep_form == PolyRepForm::coeff) {
+        throw std::invalid_argument("Operand b is in coefficient form.");
+    }
+    if (a.poly_len() != b.poly_len()) {
+        throw std::invalid_argument("Operands' poly len mismatch.");
+    }
+    auto poly_len = a.poly_len();
+    auto components = std::min(a.component_count(), b.component_count());
+    auto moduli(a.moduli_vec()), b_moduli(b.moduli_vec());
+    moduli.resize(components);
+    b_moduli.resize(components);
+    if (moduli != b_moduli) {
+        throw std::invalid_argument("Operands' moduli mismatch.");
+    }
+
+    RnsPolynomial result(PolyDimensions{poly_len, components, moduli});
+    result.rep_form = PolyRepForm::value;
+    for (size_t k = 0; k < components; k++) {
+        vector_mul_mod_hybrid_lazy(moduli[k], poly_len, a[k], b[k], result[k]);
+    }
+
+    return result;
+}
+
+#ifdef FHE_DEBUG
+std::ostream &operator<<(std::ostream &out, const RnsPolynomial &rns_poly) {
+    auto component_count = rns_poly.component_count();
+    auto poly_len = rns_poly.poly_len();
+    auto mod_ptr = rns_poly.moduli_vec().begin();
+
+    for (const auto &component_poly : rns_poly) {
+        out << "mod " << *(mod_ptr++) << ":\t[ ";
+        for (const auto &coeff : component_poly) {
+            // here "coeff" can also be NTT value
+            out << coeff << ", ";
+        }
+        out << "]" << std::endl;
+    }
+
+    return out;
+}
+#endif
 
 } // namespace hehub

@@ -98,4 +98,16 @@ void vector_mul_mod_barrett_lazy(const u64 modulus, const size_t vec_len,
     }
 }
 
+void strict_reduce(RnsPolynomial &rns_poly) {
+    auto mod_ptr = rns_poly.moduli_vec().begin();
+
+    for (auto &component_poly : rns_poly) {
+        auto curr_mod = *(mod_ptr++);
+        for (auto &coeff : component_poly) {
+            // here "coeff" can also be NTT value
+            coeff -= (coeff >= curr_mod) ? curr_mod : 0;
+        }
+    }
+}
+
 } // namespace hehub

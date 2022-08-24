@@ -1,6 +1,8 @@
 #include "catch2/catch.hpp"
+#include "common/mod_arith.h"
 #include "common/ntt.h"
 #include "common/rnspolynomial.h"
+#include <numeric>
 #include <random>
 
 using namespace hehub;
@@ -43,9 +45,9 @@ u64 bit_rev(u64 x, const size_t bit_len) {
 TEST_CASE("ntt", "[.]") {
     const size_t LOGN = GENERATE(11, 13, 15);
     const size_t N = 1 << LOGN;
-    const auto [Q, R] = 
+    const auto [Q, R] =
         GENERATE(std::make_pair<u64, u64>(260898817ULL, 5),
-                 std::make_pair<u64, u64>(35184358850561ULL, 3), 
+                 std::make_pair<u64, u64>(35184358850561ULL, 3),
                  std::make_pair<u64, u64>(36028796997599233ULL, 5),
                  std::make_pair<u64, u64>(576460752272228353ULL, 5));
 
@@ -63,21 +65,21 @@ TEST_CASE("ntt", "[.]") {
 
         ntt_negacyclic_inplace_lazy(LOGN, Q, poly.data());
 
-        for (size_t i = 0; i < N; i++) {
-            REQUIRE(poly[i] < 2 * Q);
-            REQUIRE(poly[i] % Q == 1);
+        for (const auto &value : poly) {
+            REQUIRE(value < 2 * Q);
+            REQUIRE(value % Q == 1);
         }
     }
     SECTION("just x") {
-        for (int i = 0; i < N; i++) {
-            poly[i] = 0;
+        for (auto &coeff : poly) {
+            coeff = 0;
         }
         poly[1] = 1;
 
-        ntt_negacyclic_inplace_lazy(LOGN, Q, poly.data());        
-        
-        for (size_t i = 0; i < N; i++) {
-            REQUIRE(poly[i] < 2 * Q);
+        ntt_negacyclic_inplace_lazy(LOGN, Q, poly.data());
+
+        for (const auto &value : poly) {
+            REQUIRE(value < 2 * Q);
         }
 
         auto root = powmod(Q, R, (Q - 1) / N / 2);
@@ -88,15 +90,15 @@ TEST_CASE("ntt", "[.]") {
         }
     }
     SECTION("random") {
-        for (int i = 0; i < N; i++) {
-            poly[i] = distribution(generator);
+        for (auto &coeff : poly) {
+            coeff = distribution(generator);
         }
         auto poly_copy(poly);
 
         ntt_negacyclic_inplace_lazy(LOGN, Q, poly.data());
 
-        for (size_t i = 0; i < N; i++) {
-            REQUIRE(poly[i] < 2 * Q);
+        for (const auto &value : poly) {
+            REQUIRE(value < 2 * Q);
         }
 
         // naive NTT on selected points
@@ -139,11 +141,13 @@ TEST_CASE("ntt and intt") {
         ntt_negacyclic_inplace_lazy(LOGN, Q, poly.data());
         intt_negacyclic_inplace_lazy(LOGN, Q, poly.data());
 
+        auto check_range = [=](bool status, u64 coeff) {
+            return status && (coeff < 2 * Q);
+        };
+        REQUIRE(
+            std::accumulate(poly.data(), poly.data() + N, true, check_range));
         for (int i = 0; i < N; i++) {
-            REQUIRE(poly[i] < 2 * Q);
-            if (poly[i] >= Q) {
-                poly[i] -= Q;
-            }
+            poly[i] -= (poly[i] >= Q) ? Q : 0;
         }
 
         REQUIRE(poly == poly_copy);
@@ -159,11 +163,13 @@ TEST_CASE("ntt and intt") {
         ntt_negacyclic_inplace_lazy(LOGN, Q, poly.data());
         intt_negacyclic_inplace_lazy(LOGN, Q, poly.data());
 
+        auto check_range = [=](bool status, u64 coeff) {
+            return status && (coeff < 2 * Q);
+        };
+        REQUIRE(
+            std::accumulate(poly.data(), poly.data() + N, true, check_range));
         for (int i = 0; i < N; i++) {
-            REQUIRE(poly[i] < 2 * Q);
-            if (poly[i] >= Q) {
-                poly[i] -= Q;
-            }
+            poly[i] -= (poly[i] >= Q) ? Q : 0;
         }
 
         REQUIRE(poly == poly_copy);
@@ -178,13 +184,28 @@ TEST_CASE("ntt and intt") {
         ntt_negacyclic_inplace_lazy(LOGN, Q, poly.data());
         intt_negacyclic_inplace_lazy(LOGN, Q, poly.data());
 
+        auto check_range = [=](bool status, u64 coeff) {
+            return status && (coeff < 2 * Q);
+        };
+        REQUIRE(
+            std::accumulate(poly.data(), poly.data() + N, true, check_range));
         for (int i = 0; i < N; i++) {
-            REQUIRE(poly[i] < 2 * Q);
-            if (poly[i] >= Q) {
-                poly[i] -= Q;
-            }
+            poly[i] -= (poly[i] >= Q) ? Q : 0;
         }
 
         REQUIRE(poly == poly_copy);
+    }
+    SECTION("on rns poly") {
+        RnsPolynomial rns_poly(N, 1, std::vector{Q});
+        for (int i = 0; i < N; i++) {
+            rns_poly[0][i] = distribution(generator);
+        }
+        auto rns_poly_copy(rns_poly);
+
+        ntt_negacyclic_inplace_lazy(rns_poly);
+        intt_negacyclic_inplace_lazy(rns_poly);
+        strict_reduce(rns_poly);
+
+        REQUIRE(rns_poly == rns_poly_copy);
     }
 }
