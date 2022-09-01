@@ -1,0 +1,11 @@
+build-job:
+  stage: build
+  script:
+    - cmake -S . -B build -DCMAKE_BUILD_TYPE=Debug
+    - cmake --build build
+
+test-job:
+  stage: test
+  script:
+    - cd build
+    - ctest -C Debug -T test --output-on-failure
