@@ -19,7 +19,7 @@ RlweCt get_rlwe_sample(const RlweSk &sk, const PolyDimensions &poly_dim) {
     return RlweCt{std::move(ax), std::move(bx)};
 }
 
-RlweCt encrypt(const RlweSk &sk, const RlwePt &pt) {
+RlweCt encrypt(const RlwePt &pt, const RlweSk &sk) {
     const auto poly_len = pt.poly_len();
     const auto &moduli = pt.moduli_vec();
     const auto components = moduli.size();
@@ -37,9 +37,11 @@ RlweCt encrypt(const RlweSk &sk, const RlwePt &pt) {
     return RlweCt{std::move(ax), std::move(bx)};
 }
 
-RlwePt decrypt(const RlweSk &sk, const RlweCt &ct) {
+RlwePt decrypt(const RlweCt &ct, const RlweSk &sk) {
     auto &[ax, bx] = ct;
     auto pt = bx + ax * sk;
+
+    // the obtained plaintext is now in NTT value representation
     intt_negacyclic_inplace_lazy(pt);
     strict_reduce(pt);
     return pt;

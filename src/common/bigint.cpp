@@ -1,5 +1,5 @@
 #include "bigint.h"
-#include <iostream>
+#include <sstream>
 
 namespace hehub {
 
@@ -267,6 +267,15 @@ std::ostream &operator<<(std::ostream &out, const UBInt &a) {
     for (int i = a.digits_.size() - 1; i >= 0; i--)
         out << (short)a.digits_[i];
     return out;
+}
+
+u64 to_u64(const UBInt &a) {
+    std::stringstream ss;
+    ss.str("");
+    ss << a;
+    u64 result;
+    ss >> result;
+    return result;
 }
 
 void divide_by_2(UBInt &a) {

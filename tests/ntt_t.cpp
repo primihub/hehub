@@ -121,8 +121,8 @@ TEST_CASE("ntt", "[.]") {
 TEST_CASE("ntt and intt") {
     auto LOGN = GENERATE(4, 7, 13, 14, 15);
     u64 N = 1 << LOGN;
-    u64 Q = GENERATE(260898817ULL, 35184358850561ULL, 36028796997599233ULL,
-                     576460752272228353ULL);
+    u64 Q = GENERATE(65537ULL, 260898817ULL, 35184358850561ULL,
+                     36028796997599233ULL, 576460752272228353ULL);
 
     std::random_device rd;
     std::default_random_engine generator(rd());

@@ -2,7 +2,6 @@
 #include "ntt.h"
 #include "rnspolynomial.h"
 #include "type_defs.h"
-#include <iostream>
 #include <random>
 
 namespace hehub {

@@ -1,7 +1,6 @@
 #include "rnspolynomial.h"
 #include "mod_arith.h"
 #include <cmath>
-#include <iostream>
 
 namespace hehub {
 
@@ -183,7 +182,7 @@ RnsPolynomial operator*(const RnsPolynomial &a, const RnsPolynomial &b) {
     RnsPolynomial result(PolyDimensions{poly_len, components, moduli});
     result.rep_form = PolyRepForm::value;
     for (size_t k = 0; k < components; k++) {
-        vector_mul_mod_hybrid_lazy(moduli[k], poly_len, a[k], b[k], result[k]);
+        batched_mul_mod_hybrid_lazy(moduli[k], poly_len, a[k], b[k], result[k]);
     }
 
     return result;

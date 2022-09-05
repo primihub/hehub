@@ -37,20 +37,20 @@ RlweCt get_rlwe_sample(const RlweSk &sk, const PolyDimensions &poly_dim);
 
 /**
  * @brief TODO
- *
- * @param sk
- * @param pt
- * @return RlweCt
+ * 
+ * @param pt 
+ * @param sk 
+ * @return RlweCt 
  */
-RlweCt encrypt(const RlweSk &sk, const RlwePt &pt);
+RlweCt encrypt(const RlwePt &pt, const RlweSk &sk);
 
 /**
  * @brief TODO
- *
- * @param sk
- * @param ct
- * @return RlwePt
+ * 
+ * @param ct 
+ * @param sk 
+ * @return RlwePt 
  */
-RlwePt decrypt(const RlweSk &sk, const RlweCt &ct);
+RlwePt decrypt(const RlweCt &ct, const RlweSk &sk);
 
 } // namespace hehub

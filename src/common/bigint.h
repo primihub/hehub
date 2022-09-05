@@ -94,149 +94,156 @@ public:
 
     /**
      * @brief Add b to a, and return the result.
-     * @param a 
-     * @param b 
-     * @return UBInt & 
+     * @param a
+     * @param b
+     * @return UBInt &
      */
     friend UBInt &operator+=(UBInt &a, const UBInt &b);
 
     /**
      * @brief Return the sum of a and b.
-     * @param a 
-     * @param b 
-     * @return UBInt 
+     * @param a
+     * @param b
+     * @return UBInt
      */
     friend UBInt operator+(const UBInt &a, const UBInt &b);
 
     /**
      * @brief Subtract a by b, and return the result.
-     * @param a 
-     * @param b 
-     * @return UBInt & 
+     * @param a
+     * @param b
+     * @return UBInt &
      */
     friend UBInt &operator-=(UBInt &a, const UBInt &b);
 
     /**
      * @brief Return the difference between a and b.
-     * @param a 
-     * @param b 
-     * @return UBInt 
+     * @param a
+     * @param b
+     * @return UBInt
      */
     friend UBInt operator-(const UBInt &a, const UBInt &b);
 
     /**
      * @brief Multiply a by b, and return the result.
-     * @param a 
-     * @param b 
-     * @return UBInt& 
+     * @param a
+     * @param b
+     * @return UBInt&
      */
     friend UBInt &operator*=(UBInt &a, const UBInt &b);
 
     /**
      * @brief Return the product of a and b.
-     * @param a 
-     * @param b 
-     * @return UBInt 
+     * @param a
+     * @param b
+     * @return UBInt
      */
     friend UBInt operator*(const UBInt &a, const UBInt &b);
 
     /**
      * @brief Divide a by b, and return the result.
-     * @param a 
-     * @param b 
-     * @return UBInt & 
+     * @param a
+     * @param b
+     * @return UBInt &
      */
     friend UBInt &operator/=(UBInt &a, const UBInt &b);
 
     /**
      * @brief Return the result of a divided by b.
-     * @param a 
-     * @param b 
-     * @return UBInt 
+     * @param a
+     * @param b
+     * @return UBInt
      */
     friend UBInt operator/(const UBInt &a, const UBInt &b);
 
     /**
      * @brief Reduce a modulo b, and return the result.
-     * @param a 
+     * @param a
      * @param b
-     * @return UBInt & 
+     * @return UBInt &
      */
     friend UBInt &operator%=(UBInt &a, const UBInt &b);
 
     /**
      * @brief Return the result of a reduced modulo b.
      * @param a
-     * @param b 
-     * @return UBInt 
+     * @param b
+     * @return UBInt
      */
     friend UBInt operator%(const UBInt &a, const UBInt &b);
 
     /**
      * @brief Square root function.
-     * @return UBInt 
+     * @return UBInt
      */
     friend UBInt sqrt(const UBInt &);
 
     /**
      * @brief Tell if a is equivalent to b.
-     * @param a 
-     * @param b 
+     * @param a
+     * @param b
      * @return bool
      */
     friend bool operator==(const UBInt &a, const UBInt &b);
 
     /**
      * @brief Tell if a is non-equivalent to b.
-     * @param a 
-     * @param b 
+     * @param a
+     * @param b
      * @return bool
      */
     friend bool operator!=(const UBInt &a, const UBInt &b);
 
     /**
      * @brief Tell if a is greater than b.
-     * @param a 
-     * @param b 
+     * @param a
+     * @param b
      * @return bool
      */
     friend bool operator>(const UBInt &a, const UBInt &b);
 
     /**
      * @brief Tell if a is greater than or equal to b.
-     * @param a 
-     * @param b 
+     * @param a
+     * @param b
      * @return bool
      */
     friend bool operator>=(const UBInt &a, const UBInt &b);
 
     /**
      * @brief Tell if a is less than b.
-     * @param a 
-     * @param b 
+     * @param a
+     * @param b
      * @return bool
      */
     friend bool operator<(const UBInt &a, const UBInt &b);
 
     /**
      * @brief Tell if a is less than or equal to b.
-     * @param a 
-     * @param b 
+     * @param a
+     * @param b
      * @return bool
      */
     friend bool operator<=(const UBInt &a, const UBInt &b);
 
     /**
      * @brief Read a UBInt object via a std istream.
-     * @return std::istream & 
+     * @return std::istream &
      */
     friend std::istream &operator>>(std::istream &, UBInt &);
 
     /**
      * @brief Print via a std ostream.
-     * @return std::ostream & 
+     * @return std::ostream &
      */
     friend std::ostream &operator<<(std::ostream &, const UBInt &);
+
+    /**
+     * @brief Transform to type u64. The result is not guarenteed if the input
+     * is not a valid 64-bit integer.
+     * @return u64
+     */
+    friend u64 to_u64(const UBInt &);
 
     /**
      * @brief Helper function: divide the input by 2.
@@ -251,14 +258,14 @@ public:
 
     /**
      * @brief Return the decimal length of this big integer.
-     * @return int 
+     * @return int
      */
     friend int length(const UBInt &);
 
     /**
      * @brief Get the specified digit by index.
      * @param i Index of the needed digit.
-     * @return int 
+     * @return int
      */
     int operator[](const int i) const;
 

@@ -3,7 +3,37 @@
 
 using namespace hehub;
 
-TEST_CASE("vector mul mod") {
+TEST_CASE("batched barrett") {
+    const u64 modulus =
+        GENERATE(65537, 33333333, 777777777777777, 1234567890111111111);
+    const size_t vec_len = 1000;
+
+    u64 seed = 42;
+    u64 vec[vec_len], vec_copy[vec_len];
+    for (size_t i = 0; i < vec_len; i++) {
+        seed = (seed ^ 893758435427369) * 65536 + 945738773644543;
+        vec[i] = seed;
+        vec_copy[i] = seed % modulus;
+    }
+
+    batched_barrett_lazy(modulus, vec_len, vec);
+    auto check_range = [=](bool status, u64 item) {
+        return status && (item < 2 * modulus);
+    };
+    REQUIRE(
+        std::accumulate(vec, vec + vec_len, true, check_range));
+    u64 diff[vec_len];
+    for (size_t i = 0; i < vec_len; i++) {
+        diff[i] = vec[i] - vec_copy[i];
+    }
+    auto check_equal = [=](bool status, u64 item) {
+        return status && (item == 0 || item == modulus);
+    };
+    REQUIRE(
+        std::accumulate(diff, diff + vec_len, true, check_equal));
+}
+
+TEST_CASE("batched mul mod") {
     const u64 modulus = 1234567890111111111;
     const size_t vec_len = 1000;
 
@@ -16,14 +46,14 @@ TEST_CASE("vector mul mod") {
         g[i] = seed % modulus;
     }
 
-    SECTION("vector_mul_mod_hybrid") {
-        vector_mul_mod_hybrid(modulus, vec_len, f, g, h);
+    SECTION("batched_mul_mod_hybrid") {
+        batched_mul_mod_hybrid(modulus, vec_len, f, g, h);
         for (size_t i = 1; i < vec_len; i *= 3) {
             REQUIRE(h[i] == (u128)f[i] * g[i] % modulus);
         }
     }
-    SECTION("vector_mul_mod_barrett") {
-        vector_mul_mod_barrett(modulus, vec_len, f, g, h);
+    SECTION("batched_mul_mod_barrett") {
+        batched_mul_mod_barrett(modulus, vec_len, f, g, h);
         for (size_t i = 1; i < vec_len; i *= 3) {
             REQUIRE(h[i] == (u128)f[i] * g[i] % modulus);
         }

@@ -27,6 +27,13 @@ public:
     /**
      * @brief Get the i-th coefficient of this polynomial.
      * @param i The specified coefficient index.
+     * @return UBInt & 
+     */
+    inline UBInt &operator[](int i) { return coeffs_[i]; }
+
+    /**
+     * @brief Get the i-th coefficient of this polynomial as read-only.
+     * @param i The specified coefficient index.
      * @return const UBInt & 
      */
     inline const UBInt &operator[](int i) const { return coeffs_[i]; }

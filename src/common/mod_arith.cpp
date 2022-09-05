@@ -1,7 +1,18 @@
 #include "mod_arith.h"
+#include <cmath>
 #include <map>
 
 namespace hehub {
+
+void batched_barrett_lazy(const u64 modulus, const size_t vec_len, u64 vec[]) {
+    u64 c = (u64)(-1) / modulus;
+    for (size_t i = 0; i < vec_len; i++) {
+        u128 a = (u128)vec[i] * c;
+        u64 approx_quotient = a >> 64;
+        u128 approx_mod_multiple = modulus * approx_quotient;
+        vec[i] -= approx_mod_multiple;
+    }
+}
 
 std::tuple<i128, i128, i128> xgcd128(i128 a, i128 b) {
     int sign_a = (a < 0) ? (-1) : 1;
@@ -48,9 +59,9 @@ inline u64 get_mont_harvay(const u64 modulus) {
     return (((u128)(mont_but_one + 1)) << 64) / modulus;
 }
 
-void vector_mul_mod_hybrid_lazy(const u64 modulus, const size_t vec_len,
-                                const u64 in_vec1[], const u64 in_vec2[],
-                                u64 out_vec[]) {
+void batched_mul_mod_hybrid_lazy(const u64 modulus, const size_t vec_len,
+                                 const u64 in_vec1[], const u64 in_vec2[],
+                                 u64 out_vec[]) {
     static std::map<u64, MulModLUT> lut_cache;
 
     auto it = lut_cache.find(modulus);
@@ -79,9 +90,9 @@ void vector_mul_mod_hybrid_lazy(const u64 modulus, const size_t vec_len,
     }
 }
 
-void vector_mul_mod_barrett_lazy(const u64 modulus, const size_t vec_len,
-                                 const u64 in_vec1[], const u64 in_vec2[],
-                                 u64 out_vec[]) {
+void batched_mul_mod_barrett_lazy(const u64 modulus, const size_t vec_len,
+                                  const u64 in_vec1[], const u64 in_vec2[],
+                                  u64 out_vec[]) {
     u128 c = (u128)(-1) / modulus;
     u64 ch = c >> 64;
     u64 cl = c;

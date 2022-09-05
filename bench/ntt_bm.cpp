@@ -14,25 +14,28 @@ TEST_CASE("benchmark ntt and intt") {
 
     for (auto LOGN: {10, 11, 12, 13, 14, 15}) {
         u64 N = 1 << LOGN;
+        cache_ntt_factors_strict(LOGN, std::vector{Q});
+
         u64 poly[N];
         for (int i = 0; i < N; i++) {
             poly[i] = distribution(generator);
         }
         
         BENCHMARK(std::string("NTT / len=") + std::to_string(N)) {
-            return ntt_negacyclic_inplace_lazy(Q, LOGN, poly);
+            return ntt_negacyclic_inplace_lazy(LOGN, Q, poly);
         };
     }
 
     for (auto LOGN: {10, 11, 12, 13, 14, 15}) {
         u64 N = 1 << LOGN;
+
         u64 poly[N];
         for (int i = 0; i < N; i++) {
             poly[i] = distribution(generator);
         }
         
         BENCHMARK(std::string("INTT / len=") + std::to_string(N)) {
-            return intt_negacyclic_inplace_lazy(Q, LOGN, poly);
+            return intt_negacyclic_inplace_lazy(LOGN, Q, poly);
         };
     }
 }

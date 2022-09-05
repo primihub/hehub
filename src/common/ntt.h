@@ -61,8 +61,8 @@ void intt_negacyclic_inplace_lazy(RnsPolynomial &rns_poly);
 /**
  * @brief Create the NTT factors for all the input moduli immediately, which
  * will be used in the process of NTT and INTT. N.B., this functionality is
- * _optional_ since we use a lazy strategy in creating these NTT factors, i.e.
- * create and store them when being used the first time.
+ * _optional_ in use since we use a lazy strategy in creating these NTT factors,
+ * i.e. create and store them when needed the first time.
  * @param[in] log_poly_len The log value of the length of the polynomial.
  * @param[in] moduli The moduli modulo which the NTT factors are produced.
  */

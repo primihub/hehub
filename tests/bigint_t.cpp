@@ -1,7 +1,6 @@
 #include "catch2/catch.hpp"
 #include "common/bigint.h"
 #include "common/bigintpoly.h"
-#include <iostream>
 #include <sstream>
 
 using namespace hehub;

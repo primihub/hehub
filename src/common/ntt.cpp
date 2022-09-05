@@ -1,4 +1,5 @@
 #include "ntt.h"
+#include "mod_arith.h"
 #include <cmath>
 #include <map>
 
@@ -53,12 +54,6 @@ u64 __reverse_bits(u64 x, const size_t bit_len) {
     return x;
 }
 
-inline u64 __harvey_mul_mod(const u64 modulus, const u64 a, const u64 b,
-                            const u64 b_harvey) {
-    u64 u = (u128)a * b_harvey >> 64;
-    return (u128)a * b - (u128)u * modulus;
-}
-
 struct NTTFactors {
     NTTFactors(u64 modulus, size_t log_poly_len, bool for_inverse = false) {
         const size_t log_modulus = (u64)(log2(modulus) + 0.5);
@@ -99,8 +94,8 @@ struct NTTFactors {
             for (size_t i = 0; i < poly_len; i++) {
                 auto temp = __pow_mod(modulus, root_of_2nth_inv, i);
                 auto idx = i + poly_len;
-                seq[idx] = __harvey_mul_mod(modulus, temp, poly_len_inv,
-                                            poly_len_inv_harvey);
+                seq[idx] = mul_mod_harvey_lazy(modulus, temp, poly_len_inv,
+                                               poly_len_inv_harvey);
                 seq[idx] -= (seq[idx] >= modulus) ? modulus : 0;
                 seq_harvey[idx] = ((u128)seq[idx] << 64) / modulus;
             }
@@ -181,7 +176,8 @@ void ntt_negacyclic_inplace_lazy(const size_t log_poly_len, const u64 modulus,
             zeta_harvey = ntt_factors.seq_harvey[idx];
             for (l = start; l < start + gap; l++) {
                 h = l + gap;
-                temp = __harvey_mul_mod(modulus, coeffs[h], zeta, zeta_harvey);
+                temp =
+                    mul_mod_harvey_lazy(modulus, coeffs[h], zeta, zeta_harvey);
                 coeffs[h] = coeffs[l] + 2 * modulus - temp;
                 coeffs[l] = coeffs[l] + temp;
             }
@@ -219,8 +215,8 @@ void intt_negacyclic_inplace_lazy(const size_t log_poly_len, const u64 modulus,
             zeta_harvey = intt_factors.seq_harvey[idx];
             for (l = start; l < start + gap; l++) {
                 h = l + gap;
-                temp = __harvey_mul_mod(modulus, values_shuffled[h], zeta,
-                                        zeta_harvey);
+                temp = mul_mod_harvey_lazy(modulus, values_shuffled[h], zeta,
+                                           zeta_harvey);
                 values_shuffled[h] = values_shuffled[l] + 2 * modulus - temp;
                 values_shuffled[l] = values_shuffled[l] + temp;
             }
@@ -236,8 +232,9 @@ void intt_negacyclic_inplace_lazy(const size_t log_poly_len, const u64 modulus,
     idx++;
     for (size_t i = 0; i < poly_len; i++, idx++) {
         values[i] -= ((values[i] >> log_modulus) - div_fix) * modulus;
-        values[i] = __harvey_mul_mod(modulus, values[i], intt_factors.seq[idx],
-                                     intt_factors.seq_harvey[idx]);
+        values[i] =
+            mul_mod_harvey_lazy(modulus, values[i], intt_factors.seq[idx],
+                                intt_factors.seq_harvey[idx]);
     }
 }
 
