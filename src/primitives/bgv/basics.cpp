@@ -29,7 +29,7 @@ RlwePt bgv::simd_encode(const std::vector<u64> &data, const u64 modulus,
     // Pack the data into plaintext slots.
     RlwePt pt(PolyDimensions{slot_count, 1, std::vector<u64>{modulus}});
     pt.rep_form = PolyRepForm::value;
-    auto mod_ptr = pt.moduli_vec().begin();
+    auto mod_ptr = pt.modulus_vec().begin();
     auto &pt_poly = pt[0];
     std::copy(data.begin(), data.end(), pt_poly.data());
     std::fill(pt_poly.begin() + data_size, pt_poly.end(), 0);
@@ -63,10 +63,11 @@ RlweCt bgv::get_rlwe_sample_lift_noise(const RlweSk &sk,
                                        const u64 lifting_factor) {
     auto rlwe_sample = get_rlwe_sample(sk, poly_dim);
     for (auto &rns_poly : rlwe_sample) {
-        auto mod_ptr = rns_poly.moduli_vec().begin();
+        auto mod_ptr = rns_poly.modulus_vec().begin();
         for (auto &component : rns_poly) {
             auto component_mod = *(mod_ptr++);
-            u64 lifting_factor_reduced = lifting_factor % component_mod;
+            u64 lifting_factor_reduced =
+                lifting_factor % component_mod; // can be optimized?
             u64 lifting_factor_harvey =
                 ((u128)lifting_factor_reduced << 64) / component_mod;
             for (auto &value : component) {
@@ -89,7 +90,9 @@ RlweCt bgv::encrypt(const RlwePt &pt, const RlweSk &rlwe_sk,
     }
     auto pt_modulus = pt.modulus_at(0);
 
-    if (ct_moduli.empty()) { ct_moduli = rlwe_sk.moduli_vec(); }
+    if (ct_moduli.empty()) {
+        ct_moduli = rlwe_sk.modulus_vec();
+    }
     if (std::find(ct_moduli.begin(), ct_moduli.end(), pt_modulus) !=
         ct_moduli.end()) {
         throw std::logic_error(

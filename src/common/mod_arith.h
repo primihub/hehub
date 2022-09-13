@@ -8,6 +8,7 @@
 #include "rnspolynomial.h"
 #include "type_defs.h"
 #include <tuple>
+#include <map>
 
 namespace hehub {
 
@@ -35,8 +36,6 @@ inline void batched_barrett(const u64 modulus, const size_t vec_len,
         vec[i] -= (vec[i] >= modulus) ? modulus : 0;
     }
 }
-
-using MulModLUT = std::tuple<u64, u64, u64>;
 
 /**
  * @brief An optimized method for calculating modular multiplication (between
@@ -68,32 +67,6 @@ void batched_mul_mod_hybrid_lazy(const u64 modulus, const size_t vec_len,
  * * in_vec2[i] * C) % modulus where C is a montgomery constant related to the
  * modulus, and then does a harvey reduction to remove C. (cf.
  * https://en.wikipedia.org/wiki/Montgomery_modular_multiplication and
- * https://doi.org/10.1016/j.jsc.2013.09.002) The resulting out_vec[i]'s are
- * left in [0, 2*modulus).
- *
- * @param[in] modulus The modulus.
- * @param[in] vec_len The length of input vectors.
- * @param[in] in1 Input vector of length vec_len
- * @param[in] in2 Input vector of length vec_len
- * @param[out] out Output vector s.t. out[i] == in1[i] * in2[i] %
- * modulus.
- */
-inline void batched_mul_mod_hybrid_lazy(const u64 modulus, const size_t vec_len,
-                                        const RnsPolynomial::ComponentData &in1,
-                                        const RnsPolynomial::ComponentData &in2,
-                                        RnsPolynomial::ComponentData &out) {
-    batched_mul_mod_hybrid_lazy(modulus, vec_len, in1.data(), in2.data(),
-                                out.data());
-}
-
-/**
- * @brief An optimized method for calculating modular multiplication (between
- * vectors for efficiency) for a modulus of less than 64-bit, and input vectors
- * arbituary (non-fixed). Here we apply a hybrid method, which does a montgomery
- * reduction on in_vec1[i] * in_vec2[i] producing a result equal to (in_vec1[i]
- * * in_vec2[i] * C) % modulus where C is a montgomery constant related to the
- * modulus, and then does a harvey reduction to remove C. (cf.
- * https://en.wikipedia.org/wiki/Montgomery_modular_multiplication and
  * https://doi.org/10.1016/j.jsc.2013.09.002)
  *
  * @param[in] modulus The modulus.
@@ -111,31 +84,6 @@ inline void batched_mul_mod_hybrid(const u64 modulus, const size_t vec_len,
     for (size_t i = 0; i < vec_len; i++) {
         out_vec[i] -= (out_vec[i] >= modulus) ? modulus : 0;
     }
-}
-
-/**
- * @brief An optimized method for calculating modular multiplication (between
- * vectors for efficiency) for a modulus of less than 64-bit, and input vectors
- * arbituary (non-fixed). Here we apply a hybrid method, which does a montgomery
- * reduction on in_vec1[i] * in_vec2[i] producing a result equal to (in_vec1[i]
- * * in_vec2[i] * C) % modulus where C is a montgomery constant related to the
- * modulus, and then does a harvey reduction to remove C. (cf.
- * https://en.wikipedia.org/wiki/Montgomery_modular_multiplication and
- * https://doi.org/10.1016/j.jsc.2013.09.002)
- *
- * @param[in] modulus The modulus.
- * @param[in] vec_len The length of input vectors.
- * @param[in] in1 Input vector of length vec_len
- * @param[in] in2 Input vector of length vec_len
- * @param[out] out Output vector s.t. out[i] == in1[i] * in2[i] %
- * modulus.
- */
-inline void batched_mul_mod_hybrid(const u64 modulus, const size_t vec_len,
-                                   const RnsPolynomial::ComponentData &in1,
-                                   const RnsPolynomial::ComponentData &in2,
-                                   RnsPolynomial::ComponentData &out) {
-    batched_mul_mod_hybrid(modulus, vec_len, in1.data(), in2.data(),
-                           out.data());
 }
 
 /**
@@ -168,33 +116,6 @@ void batched_mul_mod_barrett_lazy(const u64 modulus, const size_t vec_len,
  * pre-computed as floor(2**128 / modulus). Let the product of in_vec1[i] and
  * in_vec2[i] is a, then floor(a / modulus) ≈ floor(a * c / 2**128), from which
  * we can obtain a % modulus with possibly one additional multiple of modulus,
- * cf. https://en.wikipedia.org/wiki/Barrett_reduction. The resulting
- * out_vec[i]'s are left in [0, 2*modulus).
- *
- * @param[in] modulus The modulus.
- * @param[in] vec_len The length of input vectors.
- * @param[in] in1 Input vector of length vec_len
- * @param[in] in2 Input vector of length vec_len
- * @param[out] out Output vector s.t. out[i] == in1[i] * in2[i] %
- * modulus.
- */
-inline void
-batched_mul_mod_barrett_lazy(const u64 modulus, const size_t vec_len,
-                             const RnsPolynomial::ComponentData &in1,
-                             const RnsPolynomial::ComponentData &in2,
-                             RnsPolynomial::ComponentData &out) {
-    batched_mul_mod_barrett_lazy(modulus, vec_len, in1.data(), in2.data(),
-                                 out.data());
-}
-
-/**
- * @brief Use barrett reduction for calculating modular multiplication (between
- * vectors for efficiency) for a modulus of less than 64-bit, and input vectors
- * arbituary (non-fixed). After the product of in_vec1[i] and in_vec2[i] is
- * produced, barrett reduction works as follows: A barrett constant c is
- * pre-computed as floor(2**128 / modulus). Let the product of in_vec1[i] and
- * in_vec2[i] is a, then floor(a / modulus) ≈ floor(a * c / 2**128), from which
- * we can obtain a % modulus with possibly one additional multiple of modulus,
  * cf. https://en.wikipedia.org/wiki/Barrett_reduction.
  *
  * @param[in] modulus The modulus.
@@ -215,28 +136,17 @@ inline void batched_mul_mod_barrett(const u64 modulus, const size_t vec_len,
 }
 
 /**
- * @brief Use barrett reduction for calculating modular multiplication (between
- * vectors for efficiency) for a modulus of less than 64-bit, and input vectors
- * arbituary (non-fixed). After the product of in_vec1[i] and in_vec2[i] is
- * produced, barrett reduction works as follows: A barrett constant c is
- * pre-computed as floor(2**128 / modulus). Let the product of in_vec1[i] and
- * in_vec2[i] is a, then floor(a / modulus) ≈ floor(a * c / 2**128), from which
- * we can obtain a % modulus with possibly one additional multiple of modulus,
- * cf. https://en.wikipedia.org/wiki/Barrett_reduction.
+ * @brief TODO
  *
- * @param[in] modulus The modulus.
- * @param[in] vec_len The length of input vectors.
- * @param[in] in1 Input vector of length vec_len
- * @param[in] in2 Input vector of length vec_len
- * @param[out] out Output vector s.t. out[i] == in1[i] * in2[i] %
- * modulus.
+ * @param modulus
+ * @param vec_len
+ * @param vec
  */
-inline void batched_mul_mod_barrett(const u64 modulus, const size_t vec_len,
-                                    const RnsPolynomial::ComponentData &in1,
-                                    const RnsPolynomial::ComponentData &in2,
-                                    RnsPolynomial::ComponentData &out) {
-    batched_mul_mod_barrett(modulus, vec_len, in1.data(), in2.data(),
-                            out.data());
+inline void batched_strict_reduce(const u64 modulus, const size_t vec_len,
+                                  u64 vec[]) {
+    for (size_t i = 0; i < vec_len; i++) {
+        vec[i] -= (vec[i] >= modulus) ? modulus : 0;
+    }
 }
 
 /**
@@ -244,7 +154,15 @@ inline void batched_mul_mod_barrett(const u64 modulus, const size_t vec_len,
  *
  * @param rns_poly
  */
-void strict_reduce(RnsPolynomial &rns_poly);
+inline void strict_reduce(RnsPolynomial &rns_poly) {
+    auto mod_ptr = rns_poly.modulus_vec().begin();
+    auto poly_len = rns_poly.poly_len();
+
+    for (auto &component_poly : rns_poly) {
+        auto curr_mod = *(mod_ptr++);
+        batched_strict_reduce(curr_mod, poly_len, component_poly.data());
+    }
+}
 
 /**
  * @brief TODO
@@ -260,5 +178,20 @@ inline u64 mul_mod_harvey_lazy(const u64 modulus, const u64 in1, const u64 in2,
     u64 approx_quotient = (u128)in1 * in2_harvey >> 64;
     return (u128)in1 * in2 - (u128)approx_quotient * modulus;
 }
+
+/**
+ * @brief TODO
+ * 
+ */
+extern std::map<std::pair<u64, u64>, u64> modular_inverse_table;
+
+/**
+ * @brief 
+ * 
+ * @param elem 
+ * @param prime 
+ * @return u64 
+ */
+u64 inverse_mod_prime(const u64 elem, const u64 prime);
 
 } // namespace hehub

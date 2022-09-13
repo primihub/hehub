@@ -7,8 +7,6 @@ namespace hehub {
 
 RlweSk::RlweSk(const PolyDimensions &poly_dim)
     : RnsPolynomial(get_rand_ternary_poly(poly_dim)) {
-    // For efficiency the secret key is stored in NTT form.
-    ntt_negacyclic_inplace_lazy(*this);
 }
 
 RlweCt get_rlwe_sample(const RlweSk &sk, const PolyDimensions &poly_dim) {
@@ -21,7 +19,7 @@ RlweCt get_rlwe_sample(const RlweSk &sk, const PolyDimensions &poly_dim) {
 
 RlweCt encrypt(const RlwePt &pt, const RlweSk &sk) {
     const auto poly_len = pt.poly_len();
-    const auto &moduli = pt.moduli_vec();
+    const auto &moduli = pt.modulus_vec();
     const auto components = moduli.size();
     PolyDimensions poly_dim{poly_len, components, moduli};
 

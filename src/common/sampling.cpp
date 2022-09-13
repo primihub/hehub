@@ -21,7 +21,7 @@ RnsPolynomial get_rand_ternary_poly(const PolyDimensions &poly_dim) {
     }
 
     // Transform to RNS representation.
-    auto mod_ptr = tern_poly.moduli_vec().begin();
+    auto mod_ptr = tern_poly.modulus_vec().begin();
     for (auto &component_poly : tern_poly) {
         auto curr_mod = *(mod_ptr++);
         auto temp_item_ptr = temp;
@@ -47,7 +47,7 @@ RnsPolynomial get_rand_uniform_poly(const PolyDimensions &poly_dim,
     for (auto &component_poly : rand_rns_poly) {
         std::uniform_int_distribution uni_mod((u64)0, *(mod_ptr++) - 1);
         for (auto &coeff : component_poly) {
-            // here "coeff" can also be NTT value
+            // here "coeff" can also mean NTT value
             coeff = uni_mod(rand_engine);
         }
     }

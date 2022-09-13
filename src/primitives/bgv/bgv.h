@@ -63,6 +63,15 @@ struct bgv {
      */
     static RlwePt decrypt(const RlweCt &ct, const RlweSk &rlwe_sk,
                           u64 pt_modulus);
+
+    /**
+     * @brief TODO
+     * 
+     * @param ct 
+     * @param plain_modulus 
+     * @param dropping_primes 
+     */
+    static void mod_switch_inplace(RlweCt &ct, u64 plain_modulus, size_t dropping_primes = 1);
 };
 
 } // namespace hehub

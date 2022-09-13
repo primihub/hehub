@@ -4,6 +4,8 @@
 
 namespace hehub {
 
+using MulModLUT = std::tuple<u64, u64, u64>;
+
 void batched_barrett_lazy(const u64 modulus, const size_t vec_len, u64 vec[]) {
     u64 c = (u64)(-1) / modulus;
     for (size_t i = 0; i < vec_len; i++) {
@@ -44,7 +46,7 @@ std::tuple<i128, i128, i128> xgcd128(i128 a, i128 b) {
     return std::make_tuple(sign_a * prev_x, sign_b * prev_y, a);
 }
 
-inline u64 get_neg_q_inv(const u64 modulus) {
+inline u64 get_inv_neg_q_mod_2to64(const u64 modulus) {
     auto tmp = std::get<1>(xgcd128((i128)1 << 64, ((i128)1 << 64) - modulus));
     return (u64)(tmp + ((i128)1 << 64));
 }
@@ -54,7 +56,7 @@ inline u64 get_mont(const u64 modulus) {
     return mont_but_one + 1;
 }
 
-inline u64 get_mont_harvay(const u64 modulus) {
+inline u64 get_mont_harvey(const u64 modulus) {
     const u64 mont_but_one = (u64)(-1LL) % modulus;
     return (((u128)(mont_but_one + 1)) << 64) / modulus;
 }
@@ -67,25 +69,24 @@ void batched_mul_mod_hybrid_lazy(const u64 modulus, const size_t vec_len,
     auto it = lut_cache.find(modulus);
     if (it == lut_cache.end()) {
         lut_cache.insert(std::make_pair(
-            modulus, std::make_tuple(get_neg_q_inv(modulus), get_mont(modulus),
-                                     get_mont_harvay(modulus))));
+            modulus,
+            std::make_tuple(get_inv_neg_q_mod_2to64(modulus), get_mont(modulus),
+                            get_mont_harvey(modulus))));
         it = lut_cache.find(modulus);
     }
-    const auto &lut = it->second;
-
+    const auto [neg_qinv, mont, mont_harvey] = it->second;
     const u64 mshift = 64;
-    const u64 neg_qinv = std::get<0>(lut);
-    const u64 mont = std::get<1>(lut);
-    const u64 mont_harvay = std::get<2>(lut);
 
     for (size_t i = 0; i < vec_len; i++) {
+        // The Montgomery part
         u128 a = (u128)in_vec1[i] * in_vec2[i];
         u128 u = a * neg_qinv;
         u &= (((u128)1 << mshift) - 1);
         u *= modulus;
 
+        // The D. Harvey part
         u64 out_temp = (a + u) >> mshift;
-        u64 out_temp2 = (u128)out_temp * mont_harvay >> 64;
+        u64 out_temp2 = (u128)out_temp * mont_harvey >> 64;
         out_vec[i] = (u128)out_temp * mont - (u128)out_temp2 * modulus;
     }
 }
@@ -109,15 +110,17 @@ void batched_mul_mod_barrett_lazy(const u64 modulus, const size_t vec_len,
     }
 }
 
-void strict_reduce(RnsPolynomial &rns_poly) {
-    auto mod_ptr = rns_poly.moduli_vec().begin();
+std::map<std::pair<u64, u64>, u64> modular_inverse_table;
 
-    for (auto &component_poly : rns_poly) {
-        auto curr_mod = *(mod_ptr++);
-        for (auto &coeff : component_poly) {
-            // here "coeff" can also be NTT value
-            coeff -= (coeff >= curr_mod) ? curr_mod : 0;
-        }
+u64 inverse_mod_prime(const u64 elem, const u64 prime) {
+    auto it = modular_inverse_table.find(std::make_pair(elem, prime));
+    if (it != modular_inverse_table.end()) {
+        return it->second;
+    } else {
+        auto result = std::get<1>(xgcd128((i128)prime, (i128)elem));
+        modular_inverse_table.insert(
+            std::make_pair(std::make_pair(elem, prime), result));
+        return result;
     }
 }
 

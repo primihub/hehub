@@ -104,7 +104,7 @@ const RnsPolynomial &operator+=(RnsPolynomial &self, const RnsPolynomial &b) {
             "Operand b contains less components than self.");
     }
     auto components = self.component_count();
-    auto moduli(self.moduli_vec()), b_moduli(b.moduli_vec());
+    auto moduli(self.modulus_vec()), b_moduli(b.modulus_vec());
     b_moduli.resize(components);
     if (moduli != b_moduli) {
         throw std::invalid_argument("Operands' moduli mismatch.");
@@ -139,7 +139,7 @@ const RnsPolynomial &operator-=(RnsPolynomial &self, const RnsPolynomial &b) {
             "Operand b contains less components than self.");
     }
     auto components = self.component_count();
-    auto moduli(self.moduli_vec()), b_moduli(b.moduli_vec());
+    auto moduli(self.modulus_vec()), b_moduli(b.modulus_vec());
     b_moduli.resize(components);
     if (moduli != b_moduli) {
         throw std::invalid_argument("Operands' moduli mismatch.");
@@ -172,7 +172,7 @@ RnsPolynomial operator*(const RnsPolynomial &a, const RnsPolynomial &b) {
     }
     auto poly_len = a.poly_len();
     auto components = std::min(a.component_count(), b.component_count());
-    auto moduli(a.moduli_vec()), b_moduli(b.moduli_vec());
+    auto moduli(a.modulus_vec()), b_moduli(b.modulus_vec());
     moduli.resize(components);
     b_moduli.resize(components);
     if (moduli != b_moduli) {
@@ -182,7 +182,7 @@ RnsPolynomial operator*(const RnsPolynomial &a, const RnsPolynomial &b) {
     RnsPolynomial result(PolyDimensions{poly_len, components, moduli});
     result.rep_form = PolyRepForm::value;
     for (size_t k = 0; k < components; k++) {
-        batched_mul_mod_hybrid_lazy(moduli[k], poly_len, a[k], b[k], result[k]);
+        batched_mul_mod_hybrid_lazy(moduli[k], poly_len, a[k].data(), b[k].data(), result[k].data());
     }
 
     return result;
@@ -192,12 +192,12 @@ RnsPolynomial operator*(const RnsPolynomial &a, const RnsPolynomial &b) {
 std::ostream &operator<<(std::ostream &out, const RnsPolynomial &rns_poly) {
     auto component_count = rns_poly.component_count();
     auto poly_len = rns_poly.poly_len();
-    auto mod_ptr = rns_poly.moduli_vec().begin();
+    auto mod_ptr = rns_poly.modulus_vec().begin();
 
     for (const auto &component_poly : rns_poly) {
         out << "mod " << *(mod_ptr++) << ":\t[ ";
         for (const auto &coeff : component_poly) {
-            // here "coeff" can also be NTT value
+            // here "coeff" can also mean NTT value
             out << coeff << ", ";
         }
         out << "]" << std::endl;

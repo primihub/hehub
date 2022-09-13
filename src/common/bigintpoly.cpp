@@ -6,7 +6,7 @@ namespace hehub
 UBigIntPoly::UBigIntPoly(const RnsPolynomial &rns_poly) {
     const auto poly_len(rns_poly.poly_len());
     const auto component_count(rns_poly.component_count());
-    CRTComposer crt_composer(rns_poly.moduli_vec());
+    CRTComposer crt_composer(rns_poly.modulus_vec());
     for (size_t i = 0; i < poly_len; i++) {
         std::vector<u64> remainder_coeffs;
         for (size_t j = 0; j < component_count; j++) {

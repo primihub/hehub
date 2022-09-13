@@ -309,7 +309,7 @@ public:
      * @brief Get the moduli_ vector.
      * @return const std::vector<u64> &
      */
-    inline const std::vector<u64> &moduli_vec() const { return moduli_; }
+    inline const std::vector<u64> &modulus_vec() const { return moduli_; }
 
     /**
      * @brief Get the i-th component as non-const reference.
