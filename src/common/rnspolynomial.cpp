@@ -182,10 +182,41 @@ RnsPolynomial operator*(const RnsPolynomial &a, const RnsPolynomial &b) {
     RnsPolynomial result(PolyDimensions{poly_len, components, moduli});
     result.rep_form = PolyRepForm::value;
     for (size_t k = 0; k < components; k++) {
-        batched_mul_mod_hybrid_lazy(moduli[k], poly_len, a[k].data(), b[k].data(), result[k].data());
+        batched_mul_mod_hybrid_lazy(moduli[k], poly_len, a[k].data(),
+                                    b[k].data(), result[k].data());
     }
 
     return result;
+}
+
+const RnsPolynomial &operator*=(RnsPolynomial &self, const u64 small_scalar) {
+    for (size_t k = 0; k < self.component_count(); k++) {
+        auto curr_mod = self.moduli_[k];
+        auto scalar_reduced = small_scalar % curr_mod; // need opt?
+        auto scalar_harvey = ((u128)scalar_reduced << 64) / curr_mod;
+        for (auto &coeff : self[k]) {
+            coeff = mul_mod_harvey_lazy(curr_mod, coeff, scalar_reduced,
+                                        scalar_harvey);
+        }
+    }
+    return self;
+}
+
+const RnsPolynomial &operator*=(RnsPolynomial &self, const std::vector<u64> &rns_scalar) {
+    if (rns_scalar.size() != self.component_count()) {
+        throw std::invalid_argument("Numbers of RNS component mismatch.");
+    }
+
+    for (size_t k = 0; k < self.component_count(); k++) {
+        auto curr_mod = self.moduli_[k];
+        auto scalar_reduced = rns_scalar[k] % curr_mod; // need opt?
+        auto scalar_harvey = ((u128)scalar_reduced << 64) / curr_mod;
+        for (auto &coeff : self[k]) {
+            coeff = mul_mod_harvey_lazy(curr_mod, coeff, scalar_reduced,
+                                        scalar_harvey);
+        }
+    }
+    return self;
 }
 
 #ifdef FHE_DEBUG

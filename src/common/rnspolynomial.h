@@ -364,6 +364,12 @@ public:
     friend RnsPolynomial operator*(const RnsPolynomial &a,
                                    const RnsPolynomial &b);
 
+    friend const RnsPolynomial &operator*=(RnsPolynomial &self,
+                                           const u64 small_scalar);
+
+    friend const RnsPolynomial &operator*=(RnsPolynomial &self,
+                                           const std::vector<u64> &rns_scalar);
+
     // void save(std::stringstream &stream);
 
     // void load(std::stringstream &stream, u64 log_poly_len);
@@ -455,6 +461,25 @@ inline const RnsPolynomial &operator*=(RnsPolynomial &self,
     auto temp(self);
     return self = temp * b;
 }
+
+/**
+ * @brief TODO
+ *
+ * @param self
+ * @param small_scalar
+ * @return const RnsPolynomial&
+ */
+const RnsPolynomial &operator*=(RnsPolynomial &self, const u64 small_scalar);
+
+/**
+ * @brief TODO
+ *
+ * @param self
+ * @param rns_scalar
+ * @return const RnsPolynomial&
+ */
+const RnsPolynomial &operator*=(RnsPolynomial &self,
+                                const std::vector<u64> &rns_scalar);
 
 #ifdef FHE_DEBUG
 /**

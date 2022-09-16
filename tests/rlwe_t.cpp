@@ -5,15 +5,14 @@
 using namespace hehub;
 
 TEST_CASE("rlwe") {
-    std::vector<u64> moduli{35184358850561ULL, 36028796997599233ULL,
-                            576460752272228353ULL};
+    std::vector<u64> moduli{131530753, 130809857};
     size_t poly_len = 4096;
     PolyDimensions poly_dim{poly_len, moduli.size(), moduli};
     RlwePt pt(poly_dim);
     RlweSk sk(poly_dim);
 
     // plaintext data
-    const i64 DATUM_TEST = 1000000000;
+    const i64 DATUM_TEST = 123456;
     for (auto &component_poly : pt) {
         for (auto &datum : component_poly) {
             datum = DATUM_TEST;

@@ -45,7 +45,7 @@ RnsPolynomial rns_base_transform_to_single(const RnsPolynomial &input_rns_poly,
     auto &result_poly = result[0];
 
     // Check if the coefficients are smaller than each old modulus. If so then
-    // we can simply obtain them by taking any one component.
+    // their composed form is equivalent to any one component.
     bool small_coeff = true;
     auto first_old_mod = old_moduli[0];
     u64 half_first_old_mod = first_old_mod / 2;

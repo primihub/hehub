@@ -30,66 +30,43 @@ void mod_drop_one_prime_inplace(RlweCt &ct, u64 plain_modulus) {
     const auto q_last = ct_moduli[ct_mod_count - 1];
     const auto half_q_last = q_last / 2;
     const auto inv_t_mod_q_last = inverse_mod_prime(plain_modulus, q_last);
-    const auto inv_t_mod_q_last_harvay = (u128(inv_t_mod_q_last) << 64) / q_last;
-    std::vector<u64> q_last_mod_qk, inv_q_last_mod_qk, inv_q_last_mod_qk_harvey;
+    std::vector<u64> q_last_mod_qk, inv_q_last_mod_qk;
     for (size_t k = 0; k < ct_mod_count - 1; k++) {
-        q_last_mod_qk.push_back(q_last % ct_moduli[k]); // can be opt?
-
-        auto temp = inverse_mod_prime(q_last, ct_moduli[k]);
-        inv_q_last_mod_qk.push_back(temp);
-        inv_q_last_mod_qk_harvey.push_back(((u128)temp << 64) / ct_moduli[k]);
-    }
-
-    // In some practical cases plaintext modulus is greater than some or all
-    // of ciphertext moduli. Hence plain_modulus needs to be reduced before
-    // generation of harvay constants.
-    std::vector<u64> plain_mod_reduced, plain_mod_harvey;
-    for (const auto &ct_mod : ct_moduli) {
-        auto curr_plain_mod_reduced = plain_modulus % ct_mod; // need opt(?)
-        plain_mod_reduced.push_back(curr_plain_mod_reduced);
-        plain_mod_harvey.push_back(((u128)curr_plain_mod_reduced << 64) /
-                                   ct_mod);
+        q_last_mod_qk.push_back(q_last % ct_moduli[k]); // need opt?
+        inv_q_last_mod_qk.push_back(inverse_mod_prime(q_last, ct_moduli[k]));
     }
 
     for (auto &rns_poly : ct) {
-        RnsPolynomial::ComponentData coeffs_last(rns_poly[ct_mod_count - 1]);
-        intt_negacyclic_inplace_lazy(log_poly_len, q_last, coeffs_last.data());
-        for (auto &coeff : coeffs_last) {
-            coeff = mul_mod_harvey_lazy(q_last, coeff, inv_t_mod_q_last,
-                                        inv_t_mod_q_last_harvay);
-        }
-        batched_strict_reduce(q_last, poly_len, coeffs_last.data());
+        RnsPolynomial last_comp{poly_len, 1, std::vector{q_last}};
+        last_comp[0] = rns_poly[ct_mod_count - 1];
+        intt_negacyclic_inplace_lazy(last_comp);
+        last_comp *= inv_t_mod_q_last;
+        batched_strict_reduce(q_last, poly_len, last_comp[0].data());
 
+        auto &coeffs_last_with_inv_t = last_comp[0];
         RnsPolynomial subtract_part(poly_len, ct_mod_count - 1, ct_moduli);
         for (size_t k = 0; k < subtract_part.component_count(); k++) {
-            auto curr_mod = subtract_part.modulus_at(k);
-            subtract_part[k] = coeffs_last;
+            subtract_part[k] = coeffs_last_with_inv_t;
 
             /* Heuristically the ciphertext moduli are close in size, hence the
              * reduction step after copying can be skipped. */
-            // batched_barrett_lazy(curr_mod, poly_len, subtract_part[k].data());
+            // batched_barrett_lazy(
+            //     ct_moduli[k], poly_len, subtract_part[k].data());
 
+            // The multiple of t needs to be of smallest possible abs value.
             for (size_t i = 0; i < poly_len; i++) {
-                if (coeffs_last[i] >= half_q_last) {
+                if (coeffs_last_with_inv_t[i] >= half_q_last) {
                     subtract_part[k][i] += ct_moduli[k] - q_last_mod_qk[k];
                 }
-                subtract_part[k][i] = mul_mod_harvey_lazy(
-                    curr_mod, subtract_part[k][i], plain_mod_reduced[k],
-                    plain_mod_harvey[k]);
             }
         }
+        subtract_part *= plain_modulus;
         ntt_negacyclic_inplace_lazy(subtract_part);
 
         rns_poly.remove_components();
         rns_poly -= subtract_part;
-
-        for (size_t k = 0; k < rns_poly.component_count(); k++) {
-            for (auto &coeff : rns_poly[k]) {
-                coeff = mul_mod_harvey_lazy(ct_moduli[k], coeff,
-                                            inv_q_last_mod_qk[k],
-                                            inv_q_last_mod_qk_harvey[k]);
-            }
-        }
+        rns_poly *= inv_q_last_mod_qk;
+        rns_poly *= (q_last % plain_modulus);
     }
 }
 
