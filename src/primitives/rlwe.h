@@ -28,29 +28,74 @@ public:
 
 /**
  * @brief TODO
- * 
- * @param sk 
- * @param poly_dim 
- * @return RlweCt 
+ *
+ * @param sk
+ * @param poly_dim
+ * @return RlweCt
  */
 RlweCt get_rlwe_sample(const RlweSk &sk, const PolyDimensions &poly_dim);
 
 /**
  * @brief TODO
+ *
+ * @param pt
+ * @param sk
+ * @return RlweCt
+ */
+RlweCt encrypt_core(const RlwePt &pt, const RlweSk &sk);
+
+/**
+ * @brief TODO
+ *
+ * @param ct
+ * @param sk
+ * @return RlwePt
+ */
+RlwePt decrypt_core(const RlweCt &ct, const RlweSk &sk);
+
+/**
+ * @brief TODO
  * 
- * @param pt 
- * @param sk 
+ * @param ct1 
+ * @param ct2 
  * @return RlweCt 
  */
-RlweCt encrypt(const RlwePt &pt, const RlweSk &sk);
+RlweCt add(const RlweCt &ct1, const RlweCt &ct2);
 
 /**
  * @brief TODO
  * 
  * @param ct 
- * @param sk 
- * @return RlwePt 
+ * @param pt 
+ * @return RlweCt 
  */
-RlwePt decrypt(const RlweCt &ct, const RlweSk &sk);
+RlweCt add_plain_core(const RlweCt &ct, const RlwePt &pt);
+
+/**
+ * @brief TODO
+ * 
+ * @param ct1 
+ * @param ct2 
+ * @return RlweCt 
+ */
+RlweCt sub(const RlweCt &ct1, const RlweCt &ct2);
+
+/**
+ * @brief TODO
+ * 
+ * @param ct 
+ * @param pt 
+ * @return RlweCt 
+ */
+RlweCt sub_plain_core(const RlweCt &ct, const RlwePt &pt);
+
+/**
+ * @brief TODO
+ * 
+ * @param ct 
+ * @param pt 
+ * @return RlweCt 
+ */
+RlweCt mult_plain_core(const RlweCt &ct, const RlwePt &pt);
 
 } // namespace hehub

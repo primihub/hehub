@@ -91,4 +91,13 @@ RnsPolynomial get_rand_gaussian_poly(const PolyDimensions &poly_dim,
     return gaussian_poly;
 }
 
+RnsPolynomial get_zero_poly(const PolyDimensions &poly_dim, PolyRepForm form) {
+    RnsPolynomial rns_poly(poly_dim);
+    rns_poly.rep_form = form;
+    for (auto &component: rns_poly) {
+        std::fill(component.begin(), component.end(), 0);
+    }
+    return rns_poly;
+}
+
 } // namespace hehub

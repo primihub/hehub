@@ -38,4 +38,14 @@ RnsPolynomial get_rand_uniform_poly(const PolyDimensions &poly_dim,
 RnsPolynomial get_rand_gaussian_poly(const PolyDimensions &poly_dim,
                                      double std_dev = 3.2);
 
+/**
+ * @brief TODO
+ *
+ * @param poly_dim
+ * @param form
+ * @return RnsPolynomial
+ */
+RnsPolynomial get_zero_poly(const PolyDimensions &poly_dim,
+                            PolyRepForm form = PolyRepForm::value);
+
 } // namespace hehub

@@ -20,8 +20,8 @@ TEST_CASE("rlwe") {
     }
 
     // encrypt & decrypt
-    RlweCt ct = encrypt(pt, sk);
-    RlwePt pt_recovered = decrypt(ct, sk);
+    RlweCt ct = encrypt_core(pt, sk);
+    RlwePt pt_recovered = decrypt_core(ct, sk);
 
     // check
     auto component_count = pt.component_count();

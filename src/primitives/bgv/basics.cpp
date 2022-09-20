@@ -83,11 +83,6 @@ RlweCt bgv::get_rlwe_sample_lift_noise(const RlweSk &sk,
 
 RlweCt bgv::encrypt(const RlwePt &pt, const RlweSk &rlwe_sk,
                     std::vector<u64> ct_moduli) {
-    if (pt.poly_len() != rlwe_sk.poly_len()) {
-        throw std::invalid_argument(
-            "The length of BGV plaintext and secret key mismatch. \nNote: "
-            "may try to specify slot_count when encoding.");
-    }
     auto pt_modulus = pt.modulus_at(0);
 
     if (ct_moduli.empty()) {
@@ -101,20 +96,20 @@ RlweCt bgv::encrypt(const RlwePt &pt, const RlweSk &rlwe_sk,
     }
     PolyDimensions poly_dim{pt.poly_len(), ct_moduli.size(), ct_moduli};
     // Get a noise-lifted RLWE sample
-    auto [ax, bx] = get_rlwe_sample_lift_noise(rlwe_sk, poly_dim, pt_modulus);
+    auto [c0, c1] = get_rlwe_sample_lift_noise(rlwe_sk, poly_dim, pt_modulus);
 
     // Migrate the input plaintext to under needed ciphertext moduli
     auto pt_under_ct_mod = rns_base_transform(pt, ct_moduli);
     ntt_negacyclic_inplace_lazy(pt_under_ct_mod);
 
-    bx += pt_under_ct_mod;
-    return RlweCt{std::move(ax), std::move(bx)};
+    c0 += pt_under_ct_mod;
+    return RlweCt{std::move(c0), std::move(c1)};
 }
 
 RlwePt bgv::decrypt(const RlweCt &ct, const RlweSk &rlwe_sk, u64 pt_modulus) {
     // Apply RLWE decryption, obtaining the plaintext under ciphertext moduli
     // (and in coefficient form).
-    auto pt_under_ct_mod = hehub::decrypt(ct, rlwe_sk);
+    auto pt_under_ct_mod = hehub::decrypt_core(ct, rlwe_sk);
 
     // Migrate the decrypted plaintext back to under original modulus
     auto pt = rns_base_transform(pt_under_ct_mod, std::vector{pt_modulus});

@@ -72,6 +72,52 @@ struct bgv {
      * @param dropping_primes 
      */
     static void mod_switch_inplace(RlweCt &ct, u64 plain_modulus, size_t dropping_primes = 1);
+
+    /**
+     * @brief TODO
+     * 
+     * @param ct1 
+     * @param ct2 
+     * @return RlweCt 
+     */
+    static RlweCt add(const RlweCt &ct1, const RlweCt &ct2);
+
+    /**
+     * @brief TODO
+     * 
+     * @param ct 
+     * @param pt 
+     * @return RlweCt 
+     */
+    static RlweCt add_plain(const RlweCt &ct, const RlwePt &pt);
+
+    /**
+     * @brief TODO
+     * 
+     * @param ct1 
+     * @param ct2 
+     * @return RlweCt 
+     */
+    static RlweCt sub(const RlweCt &ct1, const RlweCt &ct2);
+
+    /**
+     * @brief TODO
+     * 
+     * @param ct 
+     * @param pt 
+     * @return RlweCt 
+     */
+    static RlweCt sub_plain(const RlweCt &ct, const RlwePt &pt);
+
+    /**
+     * @brief TODO
+     * 
+     * @param ct 
+     * @param pt 
+     * @return RlweCt 
+     */
+    static RlweCt mult_plain(const RlweCt &ct, const RlwePt &pt);
+
 };
 
 } // namespace hehub
