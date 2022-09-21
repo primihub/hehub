@@ -28,7 +28,7 @@ struct bgv {
      * @param data_size
      * @return std::vector<u64>
      */
-    static std::vector<u64> simd_decode(RlwePt pt, size_t data_size = 0);
+    static std::vector<u64> simd_decode(const RlwePt &pt, size_t data_size = 0);
 
     /**
      * @brief TODO Get the rlwe sample lift noise object

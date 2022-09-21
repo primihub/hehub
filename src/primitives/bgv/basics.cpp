@@ -40,7 +40,7 @@ RlwePt bgv::simd_encode(const std::vector<u64> &data, const u64 modulus,
     return pt;
 }
 
-std::vector<u64> bgv::simd_decode(RlwePt pt, size_t data_size) {
+std::vector<u64> bgv::simd_decode(const RlwePt &pt, size_t data_size) {
     if (data_size == 0) {
         data_size = pt.poly_len();
     }
@@ -50,9 +50,10 @@ std::vector<u64> bgv::simd_decode(RlwePt pt, size_t data_size) {
                                     "Use big int version of decoding.");
     }
 
-    ntt_negacyclic_inplace_lazy(pt);
-    strict_reduce(pt);
-    std::vector<u64> data(pt[0].begin(), pt[0].end());
+    auto pt_copy(pt);
+    ntt_negacyclic_inplace_lazy(pt_copy);
+    strict_reduce(pt_copy);
+    std::vector<u64> data(pt_copy[0].begin(), pt_copy[0].end());
     data.resize(data_size);
 
     return data;

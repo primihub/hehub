@@ -31,6 +31,19 @@ UBInt::UBInt(const char *str) {
     }
 }
 
+UBInt UBInt::from_double(const double d) {
+    if (d < 0) {
+        throw std::invalid_argument("Negative input.");
+    }
+
+    std::stringstream ss;
+    ss << std::fixed << d;
+    std::string str;
+    ss >> str;
+    str.erase(str.begin() + str.find('.'), str.end());
+    return UBInt(str);
+}
+
 UBInt &UBInt::operator++() {
     int i, n = digits_.size();
     for (i = 0; i < n && digits_[i] == 9; i++)

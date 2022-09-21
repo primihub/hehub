@@ -45,6 +45,13 @@ public:
     UBInt(const char *str);
 
     /**
+     * @brief Create and return a new unsigned big integer object from a
+     * double-presition float. This function will throw if the input is negative.
+     * @param d A double-precision float.
+     */
+    static UBInt from_double(const double d);
+
+    /**
      * @brief Construct a new unsigned big integer object by copying another
      * one.
      * @param other The source UBInt object.
