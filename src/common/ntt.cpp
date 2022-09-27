@@ -1,5 +1,6 @@
 #include "ntt.h"
 #include "mod_arith.h"
+#include "permutation.h"
 #include <cmath>
 #include <map>
 
@@ -22,7 +23,7 @@ u64 __pow_mod(u64 modulus, u64 base, size_t index) {
     return power;
 }
 
-u64 __find_a_2nth_unity_root(u64 modulus, u64 n) {
+u64 __get_2nth_unity_root(u64 modulus, u64 n) {
     if ((modulus - 1) % (2 * n) != 0) {
         throw std::invalid_argument("2N doesn't divide (modulus - 1)");
     }
@@ -37,23 +38,6 @@ u64 __find_a_2nth_unity_root(u64 modulus, u64 n) {
     return root;
 }
 
-u64 __reverse_bits(u64 x, const size_t bit_len) {
-    u64 mh = (1 << (bit_len - 1));
-    u64 ml = 1;
-    for (; mh >= ml; mh >>= 1, ml <<= 1) {
-        if ((mh & x) && (ml & x)) {
-        } else if (!(mh & x) && !(ml & x)) {
-        } else if (!(mh & x) && (ml & x)) {
-            x |= mh;
-            x ^= ml;
-        } else {
-            x |= ml;
-            x ^= mh;
-        }
-    }
-    return x;
-}
-
 struct NTTFactors {
     NTTFactors(u64 modulus, size_t log_poly_len, bool for_inverse = false) {
         const size_t log_modulus = (u64)(log2(modulus) + 0.5);
@@ -63,13 +47,13 @@ struct NTTFactors {
         }
         size_t poly_len = 1 << log_poly_len;
 
-        const u64 root_of_2nth = __find_a_2nth_unity_root(modulus, poly_len);
+        const u64 root_of_2nth = __get_2nth_unity_root(modulus, poly_len);
         if (!for_inverse) {
             seq.resize(poly_len);
             seq_harvey.resize(poly_len);
             for (size_t i = 0; i < poly_len; i++) {
                 seq[i] = __pow_mod(modulus, root_of_2nth,
-                                   __reverse_bits(i, log_poly_len));
+                                   __bit_rev_naive(i, log_poly_len));
                 seq_harvey[i] = ((u128)seq[i] << 64) / modulus;
             }
         } else {
@@ -84,7 +68,7 @@ struct NTTFactors {
                     auto idx = start + i;
                     seq[idx] =
                         __pow_mod(modulus, root_of_2nth_inv,
-                                  __reverse_bits(i, l) * power_index_factor);
+                                  __bit_rev_naive(i, l) * power_index_factor);
                     seq_harvey[idx] = ((u128)seq[idx] << 64) / modulus;
                 }
             }
@@ -102,7 +86,7 @@ struct NTTFactors {
 
             shuffled_indices.resize(poly_len);
             for (size_t i = 0; i < poly_len; i++) {
-                shuffled_indices[i] = __reverse_bits(i, log_poly_len);
+                shuffled_indices[i] = __bit_rev_naive(i, log_poly_len);
             }
         }
     }

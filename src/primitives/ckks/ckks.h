@@ -87,6 +87,10 @@ struct ckks {
     static std::vector<T> simd_decode(const CkksPt &pt,
                                       const double scaling_factor,
                                       size_t data_size = 0);
+
+private:
+    // Instantiation is diabled.
+    ckks();
 };
 
 } // namespace hehub

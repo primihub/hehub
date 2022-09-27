@@ -118,6 +118,10 @@ struct bgv {
      */
     static RlweCt mult_plain(const RlweCt &ct, const RlwePt &pt);
 
+private:
+    // Instantiation is diabled. 
+    bgv();
+
 };
 
 } // namespace hehub

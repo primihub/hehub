@@ -2,7 +2,9 @@
 #include "common/bigint.h"
 #include "common/bigintpoly.h"
 #include "common/mod_arith.h"
+#include "common/permutation.h"
 #include "common/rns_transform.h"
+#include <iostream>
 #include <numeric>
 
 using namespace std;
@@ -11,11 +13,60 @@ namespace hehub {
 
 void fft_negacyclic_inplace(cc_double *coeffs, size_t log_poly_len,
                             bool inverse = false) {
+    /**************************** Preparations ******************************/
+    struct FFTFactors {
+        FFTFactors(size_t log_poly_len, bool inverse = false) {
+            auto poly_len = 1ULL << log_poly_len;
+            cc_double zeta = polar(1.0, 2 * M_PI / poly_len);
+            if (inverse) {
+                zeta = conj(zeta);
+            }
+            for (size_t i = 0; i < poly_len; i++) {
+                coeff_trans.push_back(
+                    inverse ? polar(1.0 / poly_len, i * M_PI / poly_len * -1.0)
+                            : polar(1.0, i * M_PI / poly_len));
+            }
+
+            size_t level, local_idx, gap;
+            for (level = 1, gap = poly_len / 2; level <= log_poly_len;
+                 level++, gap >>= 1) {
+                for (local_idx = 0; local_idx < poly_len / gap / 2;
+                     local_idx++) {
+                    auto zeta_pow =
+                        pow(zeta, (__bit_rev_naive(local_idx, level - 1)
+                                   << (log_poly_len - level)));
+                    butterfly.push_back(zeta_pow);
+                }
+            }
+        }
+
+        vector<cc_double> coeff_trans;
+
+        vector<cc_double> butterfly;
+    };
+
+    static map<pair<size_t, bool>, FFTFactors> fft_factors_cache;
+
+    auto __find_or_create_fft_factors = [&](size_t log_poly_len, bool inverse) {
+        const auto args = make_pair(log_poly_len, inverse);
+        auto it = fft_factors_cache.find(args);
+        if (it == fft_factors_cache.end()) {
+            fft_factors_cache.insert(
+                std::make_pair(args, FFTFactors(log_poly_len, inverse)));
+            it = fft_factors_cache.find(args);
+        }
+        return it->second;
+    };
+
+    const FFTFactors &fft_factors =
+        __find_or_create_fft_factors(log_poly_len, inverse);
+    /************************* End of preparations ***************************/
+
     auto poly_len = 1ULL << log_poly_len;
     vector<cc_double> coeffs_copy(poly_len);
     if (!inverse) {
         for (size_t i = 0; i < poly_len; i++) {
-            coeffs_copy[i] = coeffs[i] * polar(1.0, i * M_PI / poly_len);
+            coeffs_copy[i] = coeffs[i] * fft_factors.coeff_trans[i];
         }
     } else {
         for (size_t i = 0; i < poly_len; i++) {
@@ -23,35 +74,25 @@ void fft_negacyclic_inplace(cc_double *coeffs, size_t log_poly_len,
         }
     }
 
-    cc_double zeta = polar(1.0, 2 * M_PI / poly_len);
-    if (inverse) {
-        zeta = complex{zeta.real(), -zeta.imag()};
-    }
-    vector<cc_double> zpow{1.0};
-    for (size_t i = 1; i < poly_len; i++) {
-        zpow.push_back(zpow[i - 1] * zeta);
-    }
-
-    auto subs_zpow = [&](auto index) {
-        cc_double sum = 0;
-        for (size_t i = 0; i < poly_len; i++) {
-            sum += coeffs_copy[i] * zpow[index * i % poly_len];
+    size_t level, start, gap, h, l, idx = 0;
+    for (level = 1, gap = poly_len / 2; level <= log_poly_len;
+         level++, gap >>= 1) {
+        for (start = 0; start < poly_len; start += 2 * gap, idx++) {
+            for (l = start; l < start + gap; l++) {
+                h = l + gap;
+                auto temp = coeffs_copy[h] * fft_factors.butterfly[idx];
+                coeffs_copy[h] = coeffs_copy[l] - temp;
+                coeffs_copy[l] = coeffs_copy[l] + temp;
+            }
         }
-        return sum;
-    };
-
-    vector<cc_double> values(poly_len);
-    for (size_t i = 0; i < poly_len; i++) {
-        values[i] = subs_zpow(i);
     }
 
     for (size_t i = 0; i < poly_len; i++) {
-        coeffs[i] = values[i];
+        coeffs[i] = coeffs_copy[__bit_rev_naive(i, log_poly_len)];
     }
     if (inverse) {
         for (size_t i = 0; i < poly_len; i++) {
-            coeffs[i] *= polar(1.0, i * M_PI / poly_len * -1.0);
-            coeffs[i] /= poly_len;
+            coeffs[i] *= fft_factors.coeff_trans[i];
         }
     }
 }
