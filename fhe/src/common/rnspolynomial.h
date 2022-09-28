@@ -275,28 +275,40 @@ public:
     }
 
     /**
-     * @brief Returns the begin of components_ vector as non-const reference.
+     * @brief Returns the begin of components_ vector as non-const iterator.
      * @return std::vector<ComponentData>::iterator
      */
     inline auto begin() { return components_.begin(); }
 
     /**
-     * @brief Returns the begin of components_ vector as const reference.
+     * @brief Returns the begin of components_ vector as const iterator.
      * @return const std::vector<ComponentData>::const_iterator
      */
     inline const auto begin() const { return components_.cbegin(); }
 
     /**
-     * @brief Returns the end of components_ vector as non-const reference.
+     * @brief Returns the end of components_ vector as non-const iterator.
      * @return std::vector<ComponentData>::iterator
      */
     inline auto end() { return components_.end(); }
 
     /**
-     * @brief Returns the end of components_ vector as const reference.
+     * @brief Returns the end of components_ vector as const iterator.
      * @return const std::vector<ComponentData>::const_iterator
      */
     inline const auto end() const { return components_.cend(); }
+
+    /**
+     * @brief Returns the last item of components_ vector as non-const iterator.
+     * @return std::vector<ComponentData>::iterator
+     */
+    inline auto last() { return components_.end() - 1; }
+
+    /**
+     * @brief Returns the last item of components_ vector as const iterator.
+     * @return const std::vector<ComponentData>::const_iterator
+     */
+    inline const auto last() const { return components_.cend() - 1; }
 
     /**
      * @brief Get the i-th modulus in moduli_.

@@ -34,7 +34,6 @@ TEST_CASE("bit rev", "[.]") {
     REQUIRE(__bit_rev_naive_16(12345, 15) == __bit_rev_naive(12345, 15));
     REQUIRE(__bit_rev_naive_16(12345, 16) == __bit_rev_naive(12345, 16));
 
-
 #ifdef HEHUB_DEBUG
     REQUIRE_NOTHROW(__bit_rev_naive(12345, 64));
     REQUIRE_THROWS(__bit_rev_naive(12345, -1));

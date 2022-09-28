@@ -6,7 +6,7 @@ project(cpp-project-template VERSION 0.0.1 LANGUAGES CXX)
 # this needs to be in the top level CMakeLists.txt to enable tests
 include(CTest)
 
-set(CMAKE_VERBOSE_MAKEFILE ON)
+set(CMAKE_VERBOSE_MAKEFILE OFF)
 
 Option(HEHUB_DEBUG OFF)
 if(CMAKE_BUILD_TYPE STREQUAL Debug)

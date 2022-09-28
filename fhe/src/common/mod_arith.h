@@ -7,8 +7,8 @@
 
 #include "rnspolynomial.h"
 #include "type_defs.h"
-#include <tuple>
 #include <map>
+#include <tuple>
 
 namespace hehub {
 
@@ -139,6 +139,17 @@ inline void batched_mul_mod_barrett(const u64 modulus, const size_t vec_len,
  * @brief TODO
  *
  * @param modulus
+ * @param len
+ * @param in
+ * @param out
+ */
+void batched_montgomery_128_lazy(const u64 modulus, const size_t len,
+                                 const u128 in[], u64 out[]);
+
+/**
+ * @brief TODO
+ *
+ * @param modulus
  * @param vec_len
  * @param vec
  */
@@ -181,16 +192,16 @@ inline u64 mul_mod_harvey_lazy(const u64 modulus, const u64 in1, const u64 in2,
 
 /**
  * @brief TODO
- * 
+ *
  */
 extern std::map<std::pair<u64, u64>, u64> modular_inverse_table;
 
 /**
- * @brief 
- * 
- * @param elem 
- * @param prime 
- * @return u64 
+ * @brief
+ *
+ * @param elem
+ * @param prime
+ * @return u64
  */
 u64 inverse_mod_prime(const u64 elem, const u64 prime);
 

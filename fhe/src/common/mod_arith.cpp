@@ -110,6 +110,29 @@ void batched_mul_mod_barrett_lazy(const u64 modulus, const size_t vec_len,
     }
 }
 
+void batched_montgomery_128_lazy(const u64 modulus, const size_t len,
+                                 const u128 in[], u64 out[]) {
+    static std::map<u64, u64> neg_q_inv_lut;
+    u64 neg_q_inv;
+
+    auto it = neg_q_inv_lut.find(modulus);
+    if (it == neg_q_inv_lut.end()) {
+        neg_q_inv = get_inv_neg_q_mod_2to64(modulus);
+        neg_q_inv_lut.insert(std::make_pair(modulus, neg_q_inv));
+    } else {
+        neg_q_inv = it->second;
+    }
+
+    for (int i = 0; i < len; i++) {
+        u128 a = in[i];
+        u128 u = a * neg_q_inv;
+        u = (u64)u;
+        u *= modulus;
+        a = (a + u) >> 64;
+        out[i] = a;
+    }
+}
+
 std::map<std::pair<u64, u64>, u64> modular_inverse_table;
 
 u64 inverse_mod_prime(const u64 elem, const u64 prime) {
