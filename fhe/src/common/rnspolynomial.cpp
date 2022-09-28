@@ -219,7 +219,7 @@ const RnsPolynomial &operator*=(RnsPolynomial &self, const std::vector<u64> &rns
     return self;
 }
 
-#ifdef FHE_DEBUG
+#ifdef HEHUB_DEBUG_FHE
 std::ostream &operator<<(std::ostream &out, const RnsPolynomial &rns_poly) {
     auto component_count = rns_poly.component_count();
     auto poly_len = rns_poly.poly_len();

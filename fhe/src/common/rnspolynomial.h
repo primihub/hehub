@@ -481,7 +481,7 @@ const RnsPolynomial &operator*=(RnsPolynomial &self, const u64 small_scalar);
 const RnsPolynomial &operator*=(RnsPolynomial &self,
                                 const std::vector<u64> &rns_scalar);
 
-#ifdef FHE_DEBUG
+#ifdef HEHUB_DEBUG_FHE
 /**
  * @brief TODO
  *

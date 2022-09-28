@@ -33,7 +33,7 @@ void fft_negacyclic_inplace(cc_double *coeffs, size_t log_poly_len,
                 for (local_idx = 0; local_idx < poly_len / gap / 2;
                      local_idx++) {
                     auto zeta_pow =
-                        pow(zeta, (__bit_rev_naive(local_idx, level - 1)
+                        pow(zeta, (__bit_rev_naive_16(local_idx, level - 1)
                                    << (log_poly_len - level)));
                     butterfly.push_back(zeta_pow);
                 }
@@ -88,7 +88,7 @@ void fft_negacyclic_inplace(cc_double *coeffs, size_t log_poly_len,
     }
 
     for (size_t i = 0; i < poly_len; i++) {
-        coeffs[i] = coeffs_copy[__bit_rev_naive(i, log_poly_len)];
+        coeffs[i] = coeffs_copy[__bit_rev_naive_16(i, log_poly_len)];
     }
     if (inverse) {
         for (size_t i = 0; i < poly_len; i++) {

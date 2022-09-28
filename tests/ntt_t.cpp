@@ -54,7 +54,7 @@ TEST_CASE("ntt", "[.]") {
 
         auto root = __get_2nth_unity_root(Q, N);
         for (size_t i = 0; i < N; i = i * 13 + 1) {
-            auto curr_index = 2 * __bit_rev_naive(i, LOGN) + 1;
+            auto curr_index = 2 * __bit_rev_naive_16(i, LOGN) + 1;
             auto curr_power = __pow_mod(Q, root, curr_index);
             REQUIRE(poly[i] % Q == curr_power);
         }
@@ -74,7 +74,7 @@ TEST_CASE("ntt", "[.]") {
         // naive NTT on selected points
         auto root = __get_2nth_unity_root(Q, N);
         for (size_t i = 0; i < N; i = i * 13 + 1) {
-            u64 curr_x = __pow_mod(Q, root, 2 * __bit_rev_naive(i, LOGN) + 1);
+            u64 curr_x = __pow_mod(Q, root, 2 * __bit_rev_naive_16(i, LOGN) + 1);
             u64 acc = 0;
             u64 x_power = 1;
             for (int j = 0; j < N; j++) {

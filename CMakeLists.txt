@@ -6,8 +6,18 @@ project(cpp-project-template VERSION 0.0.1 LANGUAGES CXX)
 # this needs to be in the top level CMakeLists.txt to enable tests
 include(CTest)
 
-# compile the library
-add_subdirectory(src)
+set(CMAKE_VERBOSE_MAKEFILE ON)
+
+Option(HEHUB_DEBUG OFF)
+if(CMAKE_BUILD_TYPE STREQUAL Debug)
+    set(HEHUB_DEBUG ON)
+endif()
+if(HEHUB_DEBUG)
+    add_compile_definitions(HEHUB_DEBUG)
+endif()
+
+# compile the FHE library
+add_subdirectory(fhe/src)
 
 # compile the tests
 add_subdirectory(tests)

@@ -53,7 +53,7 @@ struct NTTFactors {
             seq_harvey.resize(poly_len);
             for (size_t i = 0; i < poly_len; i++) {
                 seq[i] = __pow_mod(modulus, root_of_2nth,
-                                   __bit_rev_naive(i, log_poly_len));
+                                   __bit_rev_naive_16(i, log_poly_len));
                 seq_harvey[i] = ((u128)seq[i] << 64) / modulus;
             }
         } else {
@@ -68,7 +68,7 @@ struct NTTFactors {
                     auto idx = start + i;
                     seq[idx] =
                         __pow_mod(modulus, root_of_2nth_inv,
-                                  __bit_rev_naive(i, l) * power_index_factor);
+                                  __bit_rev_naive_16(i, l) * power_index_factor);
                     seq_harvey[idx] = ((u128)seq[idx] << 64) / modulus;
                 }
             }
@@ -86,7 +86,7 @@ struct NTTFactors {
 
             shuffled_indices.resize(poly_len);
             for (size_t i = 0; i < poly_len; i++) {
-                shuffled_indices[i] = __bit_rev_naive(i, log_poly_len);
+                shuffled_indices[i] = __bit_rev_naive_16(i, log_poly_len);
             }
         }
     }

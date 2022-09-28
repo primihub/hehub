@@ -9,13 +9,13 @@ RlweSk::RlweSk(const PolyDimensions &poly_dim)
     : RnsPolynomial(get_rand_ternary_poly(poly_dim)) {}
 
 RlweCt get_rlwe_sample(const RlweSk &sk, const PolyDimensions &poly_dim) {
-#ifdef RLWE_DEBUG_ZERO_C1
+#ifdef HEHUB_DEBUG_RLWE_ZERO_C1
     auto c1 = get_zero_poly(poly_dim);
 #else
     auto c1 = get_rand_uniform_poly(poly_dim, PolyRepForm::value);
 #endif
 
-#ifdef RLWE_DEBUG_ZERO_E
+#ifdef HEHUB_DEBUG_RLWE_ZERO_E
     auto ex = get_zero_poly(poly_dim);
 #else
     auto ex = get_rand_gaussian_poly(poly_dim);

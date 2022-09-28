@@ -1,5 +1,6 @@
 #include "catch2/catch.hpp"
 #include "common/rnspolynomial.h"
+#include "common/permutation.h"
 
 using namespace hehub;
 
@@ -25,4 +26,24 @@ TEST_CASE("RNS polynomial") {
     REQUIRE_THROWS(RnsPolynomial(PolyDimensions{4096, 4, std::vector<u64>(3)}));
     REQUIRE_THROWS(RnsPolynomial(PolyDimensions{4095, 3, std::vector<u64>(3)}));
     REQUIRE_THROWS(RnsPolynomial(PolyDimensions{4097, 3, std::vector<u64>(3)}));
+}
+
+
+TEST_CASE("bit rev", "[.]") {
+    REQUIRE(__bit_rev_naive_16(12345, 14) == __bit_rev_naive(12345, 14));
+    REQUIRE(__bit_rev_naive_16(12345, 15) == __bit_rev_naive(12345, 15));
+    REQUIRE(__bit_rev_naive_16(12345, 16) == __bit_rev_naive(12345, 16));
+
+
+#ifdef HEHUB_DEBUG
+    REQUIRE_NOTHROW(__bit_rev_naive(12345, 64));
+    REQUIRE_THROWS(__bit_rev_naive(12345, -1));
+    REQUIRE_THROWS(__bit_rev_naive(12345, 10000000));
+    REQUIRE_THROWS(__bit_rev_naive(12345, 13));
+
+    REQUIRE_NOTHROW(__bit_rev_naive_16(12345, 16));
+    REQUIRE_THROWS(__bit_rev_naive_16(12345, -1));
+    REQUIRE_THROWS(__bit_rev_naive_16(12345, 10000000));
+    REQUIRE_THROWS(__bit_rev_naive_16(12345, 13));
+#endif
 }
