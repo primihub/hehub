@@ -86,7 +86,7 @@ TEST_CASE("ckks encoding") {
         }
 
         CkksPt pt = ckks::simd_encode(data, scaling_factor, pt_dim);
-        auto data_recovered = ckks::simd_decode(pt, scaling_factor);
+        auto data_recovered = ckks::simd_decode(pt);
 
         REQUIRE(data_recovered.size() == data.size());
         REQUIRE(check_all_close(data, data_recovered));
@@ -99,7 +99,7 @@ TEST_CASE("ckks encoding") {
         }
 
         CkksPt pt = ckks::simd_encode(data, scaling_factor, pt_dim);
-        auto data_recovered = ckks::simd_decode(pt, scaling_factor);
+        auto data_recovered = ckks::simd_decode(pt);
 
         REQUIRE(data_recovered.size() == data.size());
         REQUIRE(check_all_close(data, data_recovered));
@@ -112,7 +112,7 @@ TEST_CASE("ckks encoding") {
         }
 
         CkksPt pt = ckks::simd_encode(data, scaling_factor, pt_dim);
-        auto data_recovered = ckks::simd_decode<cc_double>(pt, scaling_factor);
+        auto data_recovered = ckks::simd_decode<cc_double>(pt);
 
         REQUIRE(data_recovered.size() == data.size());
         REQUIRE(check_all_close(data, data_recovered));
@@ -125,7 +125,7 @@ TEST_CASE("ckks encoding") {
         }
 
         CkksPt pt = ckks::simd_encode(data, scaling_factor, pt_dim);
-        auto data_recovered = ckks::simd_decode<cc_double>(pt, scaling_factor);
+        auto data_recovered = ckks::simd_decode<cc_double>(pt);
 
         REQUIRE(data_recovered.size() == data.size());
         REQUIRE(check_all_close(data, data_recovered));

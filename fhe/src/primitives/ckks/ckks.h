@@ -12,7 +12,27 @@
 
 namespace hehub {
 
-using CkksPt = RlwePt;
+/**
+ * @brief TODO
+ * 
+ */
+struct CkksPt: public RlwePt {
+    using RlwePt::RlwePt;
+
+    /// @brief TODO
+    double scaling_factor = 1.0;
+};
+
+/**
+ * @brief TODO
+ * 
+ */
+struct CkksCt: public RlweCt {
+    using RlweCt::RlweCt;
+
+    /// @brief TODO
+    double scaling_factor = 1.0;
+};
 
 struct ckks {
     /**
@@ -26,18 +46,6 @@ struct ckks {
     static CkksPt simd_encode_cc(const std::vector<cc_double> &data,
                                  const double scaling_factor,
                                  const PolyDimensions &pt_poly_dim);
-
-    /**
-     * @brief TODO
-     *
-     * @param pt
-     * @param scaling_factor
-     * @param data_size
-     * @return std::vector<cc_double>
-     */
-    static std::vector<cc_double> simd_decode_cc(const CkksPt &pt,
-                                                 const double scaling_factor,
-                                                 size_t data_size = 0);
 
     /**
      * @brief TODO
@@ -74,9 +82,18 @@ struct ckks {
     /**
      * @brief TODO
      *
+     * @param pt
+     * @param data_size
+     * @return std::vector<cc_double>
+     */
+    static std::vector<cc_double> simd_decode_cc(const CkksPt &pt,
+                                                 size_t data_size = 0);
+
+    /**
+     * @brief TODO
+     *
      * @tparam T
      * @param pt
-     * @param scaling_factor
      * @param data_size
      * @return std::vector<T>
      */
@@ -85,8 +102,15 @@ struct ckks {
                                       std::is_same<T, cc_double>::value>::type
                   * = nullptr>
     static std::vector<T> simd_decode(const CkksPt &pt,
-                                      const double scaling_factor,
                                       size_t data_size = 0);
+
+    /**
+     * @brief TODO
+     * 
+     * @param ct 
+     * @param dropping_primes 
+     */
+    static void rescale_inplace(RlweCt &ct, size_t dropping_primes);
 
 private:
     // Instantiation is diabled.

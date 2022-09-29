@@ -20,8 +20,7 @@ TEST_CASE("batched barrett") {
     auto check_range = [=](bool status, u64 item) {
         return status && (item < 2 * modulus);
     };
-    REQUIRE(
-        std::accumulate(vec, vec + vec_len, true, check_range));
+    REQUIRE(std::accumulate(vec, vec + vec_len, true, check_range));
     u64 diff[vec_len];
     for (size_t i = 0; i < vec_len; i++) {
         diff[i] = vec[i] - vec_copy[i];
@@ -29,8 +28,7 @@ TEST_CASE("batched barrett") {
     auto check_equal = [=](bool status, u64 item) {
         return status && (item == 0 || item == modulus);
     };
-    REQUIRE(
-        std::accumulate(diff, diff + vec_len, true, check_equal));
+    REQUIRE(std::accumulate(diff, diff + vec_len, true, check_equal));
 }
 
 TEST_CASE("batched mul mod") {
@@ -57,5 +55,24 @@ TEST_CASE("batched mul mod") {
         for (size_t i = 1; i < vec_len; i *= 3) {
             REQUIRE(h[i] == (u128)f[i] * g[i] % modulus);
         }
+    }
+}
+
+TEST_CASE("montgomery") {
+    const u64 modulus = 38589379749438777;
+    const size_t vec_len = 8;
+
+    u128 seed = 42;
+    std::vector<u128> f(vec_len);
+    std::vector<u64> f_reduced(vec_len);
+    for (size_t i = 0; i < vec_len; i++) {
+        seed = seed * 3405898573857435 + 4385837453598385;
+        f[i] = seed % ((u128)modulus << 64);
+    }
+
+    batched_montgomery_128_lazy(modulus, vec_len, f.data(), f_reduced.data());
+    for (size_t i = 0; i < vec_len; i++) {
+        REQUIRE(f_reduced[i] < 2 * modulus);
+        REQUIRE(((u128)1 << 64) * f_reduced[i] % modulus == f[i] % modulus);
     }
 }

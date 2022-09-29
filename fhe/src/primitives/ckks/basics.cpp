@@ -190,12 +190,13 @@ CkksPt ckks::simd_encode_cc(const vector<cc_double> &data,
         }
     }
 
+    pt.scaling_factor = scaling_factor;
     return pt;
 }
 
 vector<cc_double> ckks::simd_decode_cc(const CkksPt &pt,
-                                       const double scaling_factor,
                                        size_t data_size) {
+    auto scaling_factor = pt.scaling_factor;
     if (scaling_factor <= 0) {
         throw invalid_argument("Scaling factor should be positive.");
     }
@@ -275,15 +276,13 @@ vector<cc_double> ckks::simd_decode_cc(const CkksPt &pt,
 
 template <>
 vector<cc_double> ckks::simd_decode(const CkksPt &pt,
-                                    const double scaling_factor,
                                     size_t data_size) {
-    return simd_decode_cc(pt, scaling_factor, data_size);
+    return simd_decode_cc(pt, data_size);
 }
 
 template <>
-vector<double> ckks::simd_decode(const CkksPt &pt, const double scaling_factor,
-                                 size_t data_size) {
-    auto data_cc = simd_decode_cc(pt, scaling_factor, data_size);
+vector<double> ckks::simd_decode(const CkksPt &pt, size_t data_size) {
+    auto data_cc = simd_decode_cc(pt, data_size);
     vector<double> data;
     for (const auto d : data_cc) {
         data.push_back(d.real());
