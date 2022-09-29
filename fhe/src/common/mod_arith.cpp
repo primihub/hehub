@@ -141,6 +141,7 @@ u64 inverse_mod_prime(const u64 elem, const u64 prime) {
         return it->second;
     } else {
         auto result = std::get<1>(xgcd128((i128)prime, (i128)elem));
+        if (result < 0) { result += prime; }
         modular_inverse_table.insert(
             std::make_pair(std::make_pair(elem, prime), result));
         return result;

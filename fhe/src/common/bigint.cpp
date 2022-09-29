@@ -291,6 +291,15 @@ u64 to_u64(const UBInt &a) {
     return result;
 }
 
+double to_double(const UBInt &a) {
+    std::stringstream ss;
+    ss.str("");
+    ss << a;
+    double result;
+    ss >> result;
+    return result;
+}
+
 void divide_by_2(UBInt &a) {
     int add = 0;
     for (int i = a.digits_.size() - 1; i >= 0; i--) {

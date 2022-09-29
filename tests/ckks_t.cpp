@@ -1,5 +1,8 @@
 #include "catch2/catch.hpp"
+#include "common/bigintpoly.h"
+#include "common/mod_arith.h"
 #include "common/permutation.h"
+#include "common/sampling.h"
 #include "primitives/ckks/ckks.h"
 #include <iomanip>
 #include <iostream>
@@ -129,5 +132,48 @@ TEST_CASE("ckks encoding") {
 
         REQUIRE(data_recovered.size() == data.size());
         REQUIRE(check_all_close(data, data_recovered));
+    }
+}
+
+TEST_CASE("ckks rescaling") {
+    size_t poly_len = 8;
+    std::vector<u64> moduli{17179672577, 17179410433,
+                            17176854529}; // ~34 bits each
+    PolyDimensions ct_dim{poly_len, 3, moduli};
+
+    CkksCt ct;
+    ct.scaling_factor = std::pow(2.0, 80);
+    for (auto &c : ct) {
+        c = get_rand_uniform_poly(ct_dim, PolyRepForm::coeff);
+    }
+
+    // Compose the coefficients
+    std::array composed{UBigIntPoly(ct[0]), UBigIntPoly(ct[1])};
+
+    // Rescale
+    for (auto &c : ct) {
+        ntt_negacyclic_inplace_lazy(c);
+    }
+    ckks::rescale_inplace(ct);
+    for (auto &c : ct) {
+        intt_negacyclic_inplace_lazy(c);
+        strict_reduce(c);
+    }
+
+    // Checks
+    auto dropped_mod = *moduli.crbegin();
+    auto half_dropped_mod = dropped_mod / 2;
+    REQUIRE(ct[0].component_count() == 2);
+    REQUIRE(ct[1].component_count() == 2);
+    double eps = std::pow(2.0, -60);
+    REQUIRE(abs(ct.scaling_factor - std::pow(2.0, 80) / dropped_mod) < eps);
+
+    std::array composed_new{UBigIntPoly(ct[0]), UBigIntPoly(ct[1])};
+
+    for (auto half : {0, 1}) {
+        for (size_t i = 0; i < poly_len; i++) {
+            REQUIRE((composed[half][i] + half_dropped_mod) / dropped_mod ==
+                    composed_new[half][i]);
+        }
     }
 }

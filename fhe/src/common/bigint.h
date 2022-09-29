@@ -253,6 +253,12 @@ public:
     friend u64 to_u64(const UBInt &);
 
     /**
+     * @brief Transform to type double.
+     * @return double
+     */
+    friend double to_double(const UBInt &);
+
+    /**
      * @brief Helper function: divide the input by 2.
      */
     friend void divide_by_2(UBInt &);

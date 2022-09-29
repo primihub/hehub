@@ -110,7 +110,7 @@ struct ckks {
      * @param ct 
      * @param dropping_primes 
      */
-    static void rescale_inplace(RlweCt &ct, size_t dropping_primes);
+    static void rescale_inplace(CkksCt &ct, size_t dropping_primes = 1);
 
 private:
     // Instantiation is diabled.

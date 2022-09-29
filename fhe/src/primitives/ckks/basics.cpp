@@ -248,15 +248,12 @@ vector<cc_double> ckks::simd_decode_cc(const CkksPt &pt,
                        UBInt(1), [](auto acc, auto x) { return acc * x; });
         auto half_whole_mod = whole_modulus / 2;
         for (size_t i = 0; i < poly_len; i++) {
-            stringstream ss;
             double abs_real;
             if (pt_poly_big_int[i] < half_whole_mod) {
-                ss << pt_poly_big_int[i];
-                ss >> abs_real;
+                abs_real = to_double(pt_poly_big_int[i]);
                 data[i] = abs_real;
             } else {
-                ss << whole_modulus - pt_poly_big_int[i];
-                ss >> abs_real;
+                abs_real = to_double(whole_modulus - pt_poly_big_int[i]);
                 data[i] = -abs_real;
             }
         }
