@@ -299,15 +299,29 @@ TEST_CASE("ckks arith") {
         // encrypt
         auto ct1 = ckks::encrypt(pt1, sk);
 
-        // add
+        // mult
         auto ct_prod = ckks::mult_plain(ct1, pt2);
 
-        // decrypt & decode
-        auto prod_recovered = ckks::simd_decode(ckks::decrypt(ct_prod, sk));
+        SECTION("without rescaling") {
+            // decrypt & decode
+            auto prod_recovered = ckks::simd_decode(ckks::decrypt(ct_prod, sk));
 
-        // check
-        double eps = pow(2, 3 + 5 - scaling_bits); // abs of data < 8σ
-                                                   // with σ = data's std dev
-        REQUIRE(all_close(data_prod, prod_recovered, eps));
+            // check
+            double eps = pow(2, 3 + 5 - scaling_bits); // abs of data < 8σ
+                                                       // with σ = data's std dev
+            REQUIRE(all_close(data_prod, prod_recovered, eps));
+        }
+        SECTION("with rescaling") {
+            // rescaling            
+            ckks::rescale_inplace(ct_prod);
+
+            // decrypt & decode
+            auto prod_recovered = ckks::simd_decode(ckks::decrypt(ct_prod, sk));
+
+            // check
+            double eps = pow(2, 3 + 5 - scaling_bits); // abs of data < 8σ
+                                                       // with σ = data's std dev
+            REQUIRE(all_close(data_prod, prod_recovered, eps));
+        }
     }
 }

@@ -65,6 +65,8 @@ void rescale_by_one_prime_inplace(CkksCt &ct) {
         rns_poly -= remainder_q_last;
         rns_poly *= inv_q_last_mod_qk;
     }
+
+    ct.scaling_factor /= q_last;
 }
 
 void ckks::rescale_inplace(CkksCt &ct, size_t dropping_primes) {

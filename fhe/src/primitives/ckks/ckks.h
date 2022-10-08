@@ -42,6 +42,17 @@ struct CkksCt : public RlweCt {
     double scaling_factor = 1.0;
 };
 
+/**
+ * @brief TODO
+ * 
+ */
+struct CkksQuadraticCt : public std::array<RnsPolynomial, 3> {
+    using std::array<RnsPolynomial, 3>::array;
+
+    /// @brief TODO
+    double scaling_factor = 1.0;
+};
+
 struct ckks {
     /**
      * @brief TODO
@@ -181,6 +192,15 @@ struct ckks {
      * @return CkksCt 
      */
     static CkksCt mult_plain(const CkksCt &ct, const CkksPt &pt);
+
+    /**
+     * @brief TODO
+     * 
+     * @param ct1 
+     * @param ct2 
+     * @return CkksQuadraticCt 
+     */
+    static CkksQuadraticCt mult_low_level(const CkksCt &ct1, const CkksCt &ct2);
 
     /**
      * @brief TODO

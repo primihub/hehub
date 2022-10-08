@@ -51,4 +51,13 @@ CkksCt ckks::mult_plain(const CkksCt &ct, const CkksPt &pt) {
     return prod_ct;
 }
 
+CkksQuadraticCt ckks::mult_low_level(const CkksCt &ct1, const CkksCt &ct2) {
+    CkksQuadraticCt ct_prod;
+    ct_prod[0] = ct1[0] * ct2[0];
+    ct_prod[1] = ct1[0] * ct2[1] + ct1[1] * ct2[0];
+    ct_prod[2] = ct1[1] * ct2[1];
+    ct_prod.scaling_factor = ct1.scaling_factor * ct2.scaling_factor;
+    return ct_prod;
+}
+
 } // namespace hehub
