@@ -14,10 +14,14 @@ namespace hehub {
 
 /**
  * @brief TODO
- * 
+ *
  */
-struct CkksPt: public RlwePt {
+struct CkksPt : public RlwePt {
     using RlwePt::RlwePt;
+
+    /// @brief TODO
+    /// @param other
+    CkksPt(RlwePt &&other) : RlwePt(std::move(other)) {}
 
     /// @brief TODO
     double scaling_factor = 1.0;
@@ -25,10 +29,14 @@ struct CkksPt: public RlwePt {
 
 /**
  * @brief TODO
- * 
+ *
  */
-struct CkksCt: public RlweCt {
+struct CkksCt : public RlweCt {
     using RlweCt::RlweCt;
+
+    /// @brief TODO
+    /// @param other
+    CkksCt(RlweCt &&other) : RlweCt(std::move(other)) {}
 
     /// @brief TODO
     double scaling_factor = 1.0;
@@ -101,14 +109,84 @@ struct ckks {
               typename std::enable_if<std::is_same<T, double>::value ||
                                       std::is_same<T, cc_double>::value>::type
                   * = nullptr>
-    static std::vector<T> simd_decode(const CkksPt &pt,
-                                      size_t data_size = 0);
+    static std::vector<T> simd_decode(const CkksPt &pt, size_t data_size = 0);
+
+    /**
+     * @brief TODO
+     *
+     * @param pt
+     * @param sk
+     * @return CkksCt
+     */
+    inline static CkksCt encrypt(const CkksPt &pt, const RlweSk &sk) {
+        CkksCt ct = ::hehub::encrypt_core(pt, sk);
+        ct.scaling_factor = pt.scaling_factor;
+        return ct;
+    }
+
+    /**
+     * @brief TODO
+     *
+     * @param ct
+     * @param sk
+     * @return CkksCt
+     */
+    inline static CkksPt decrypt(const CkksCt &ct, const RlweSk &sk) {
+        CkksPt pt = ::hehub::decrypt_core(ct, sk);
+        pt.scaling_factor = ct.scaling_factor;
+        return pt;
+    }
+
+    /**
+     * @brief TODO
+     * 
+     * @param ct1 
+     * @param ct2 
+     * @return CkksCt 
+     */
+    static CkksCt add(const CkksCt &ct1, const CkksCt &ct2);
 
     /**
      * @brief TODO
      * 
      * @param ct 
-     * @param dropping_primes 
+     * @param pt 
+     * @return CkksCt 
+     */
+    static CkksCt add_plain(const CkksCt &ct, const CkksPt &pt);
+
+    /**
+     * @brief TODO
+     * 
+     * @param ct1 
+     * @param ct2 
+     * @return CkksCt 
+     */
+    static CkksCt sub(const CkksCt &ct1, const CkksCt &ct2);
+
+    /**
+     * @brief TODO
+     * 
+     * @param ct 
+     * @param pt 
+     * @return CkksCt 
+     */
+    static CkksCt sub_plain(const CkksCt &ct, const CkksPt &pt);
+
+    /**
+     * @brief TODO
+     * 
+     * @param ct 
+     * @param pt 
+     * @return CkksCt 
+     */
+    static CkksCt mult_plain(const CkksCt &ct, const CkksPt &pt);
+
+    /**
+     * @brief TODO
+     *
+     * @param ct
+     * @param dropping_primes
      */
     static void rescale_inplace(CkksCt &ct, size_t dropping_primes = 1);
 

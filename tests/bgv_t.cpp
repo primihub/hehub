@@ -126,7 +126,7 @@ TEST_CASE("bgv arith") {
         // check
         REQUIRE(pt_diff == diff_recovered);
     }
-    SECTION("multiplication") {
+    SECTION("multiplication with plaintext") {
         u64 pt_modulus = 65537;
         PolyDimensions pt_poly_dim{poly_len, 1, std::vector{pt_modulus}};
 

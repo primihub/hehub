@@ -4,8 +4,6 @@
 #include "common/permutation.h"
 #include "common/sampling.h"
 #include "primitives/ckks/ckks.h"
-#include <iomanip>
-#include <iostream>
 
 using namespace hehub;
 
@@ -175,5 +173,141 @@ TEST_CASE("ckks rescaling") {
             REQUIRE((composed[half][i] + half_dropped_mod) / dropped_mod ==
                     composed_new[half][i]);
         }
+    }
+}
+
+bool all_close(const std::vector<double> &vec1, const std::vector<double> &vec2,
+               double eps) {
+    for (size_t i = 0; i < vec1.size(); i++) {
+        if (i >= vec2.size() || std::abs(vec1[i] - vec2[i]) > eps) {
+            return false;
+        }
+    }
+    return true;
+}
+
+TEST_CASE("ckks encryption") {
+    std::vector<u64> ct_moduli{1099510054913}; // 40-bit
+    size_t poly_len = 8;
+    PolyDimensions ct_poly_dim{poly_len, ct_moduli.size(), ct_moduli};
+    RlweSk sk(ct_poly_dim);
+
+    // random ckks plain data
+    auto data_count = poly_len / 2;
+    std::vector<double> plain_data(data_count);
+    std::default_random_engine generator;
+    std::normal_distribution<double> data_dist(0, 1);
+    for (auto &d : plain_data) {
+        d = data_dist(generator);
+    }
+
+    // encode
+    int scaling_bits = 30;
+    double scaling_factor = std::pow(2.0, scaling_bits);
+    auto pt = ckks::simd_encode(plain_data, scaling_factor, ct_poly_dim);
+
+    // encrypt
+    auto ct = ckks::encrypt(pt, sk);
+
+    // decrypt & decode
+    auto data_recovered = ckks::simd_decode(ckks::decrypt(ct, sk));
+
+    // check
+    REQUIRE(data_recovered.size() == poly_len / 2);
+    double eps = std::pow(2.0, 5 - scaling_bits); // noise's 6σ = 19.2 < 2^5
+    REQUIRE(all_close(plain_data, data_recovered, eps));
+}
+
+TEST_CASE("ckks arith") {
+    std::vector<u64> ct_moduli{1099510054913, 1073479681, 1072496641};
+    size_t poly_len = 8;
+    PolyDimensions ct_poly_dim{poly_len, ct_moduli.size(), ct_moduli};
+    RlweSk sk(ct_poly_dim);
+
+    // random ckks plain data
+    auto data_count = poly_len / 2;
+    std::vector<double> plain_data1(data_count);
+    std::vector<double> plain_data2(data_count);
+    std::vector<double> plain_data3(data_count);
+    std::default_random_engine generator;
+    std::normal_distribution<double> data_dist(0, 1);
+    for (auto &d : plain_data1) {
+        d = data_dist(generator);
+    }
+    for (auto &d : plain_data2) {
+        d = data_dist(generator);
+    }
+    for (auto &d : plain_data3) {
+        d = data_dist(generator);
+    }
+
+    // encode
+    int scaling_bits = 30;
+    double scaling_factor = std::pow(2.0, scaling_bits);
+    auto pt1 = ckks::simd_encode(plain_data1, scaling_factor, ct_poly_dim);
+    auto pt2 = ckks::simd_encode(plain_data2, scaling_factor, ct_poly_dim);
+    auto pt3 = ckks::simd_encode(plain_data3, scaling_factor, ct_poly_dim);
+
+    SECTION("addition") {
+        auto data_sum(plain_data1);
+        for (size_t i = 0; i < data_count; i++) {
+            data_sum[i] += plain_data2[i] + plain_data3[i];
+        }
+
+        // encrypt
+        auto ct1 = ckks::encrypt(pt1, sk);
+        auto ct2 = ckks::encrypt(pt2, sk);
+
+        // add
+        auto ct_sum = ckks::add(ct1, ct2);
+        ct_sum = ckks::add_plain(ct_sum, pt3);
+
+        // decrypt & decode
+        auto sum_recovered = ckks::simd_decode(ckks::decrypt(ct_sum, sk));
+
+        // check
+        double eps = std::pow(2.0, 5 + 1 - scaling_bits);
+        REQUIRE(all_close(data_sum, sum_recovered, eps));
+    }
+    SECTION("subtraction") {
+        auto data_diff(plain_data1);
+        for (size_t i = 0; i < data_count; i++) {
+            data_diff[i] -= plain_data2[i] + plain_data3[i];
+        }
+
+        // encrypt
+        auto ct1 = ckks::encrypt(pt1, sk);
+        auto ct2 = ckks::encrypt(pt2, sk);
+
+        // sub
+        auto ct_diff = ckks::sub(ct1, ct2);
+        ct_diff = ckks::sub_plain(ct_diff, pt3);
+
+        // decrypt & decode
+        auto diff_recovered = ckks::simd_decode(ckks::decrypt(ct_diff, sk));
+
+        // check
+        double eps = std::pow(2.0, 5 + 1 - scaling_bits);
+        REQUIRE(all_close(data_diff, diff_recovered, eps));
+    }
+    SECTION("multiplication with plaintext") {
+        auto data_prod(plain_data1);
+        for (size_t i = 0; i < data_count; i++) {
+            data_prod[i] *= plain_data2[i];
+        }
+
+        // encrypt
+        auto ct1 = ckks::encrypt(pt1, sk);
+
+        // add
+        auto ct_prod = ckks::mult_plain(ct1, pt2);
+
+        // decrypt & decode
+        auto prod_recovered = ckks::simd_decode(ckks::decrypt(ct_prod, sk));
+
+        // check
+        double eps = pow(2, 3 + 5 - scaling_bits); // abs of data < 8σ
+                                                   // with σ = data's std dev
+        REQUIRE(all_close(data_prod, prod_recovered, eps));
     }
 }
