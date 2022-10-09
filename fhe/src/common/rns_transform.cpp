@@ -119,8 +119,7 @@ RnsPolynomial rns_base_transform(RnsPolynomial input_rns_poly,
     } else if (new_moduli.size() == 1) {
         return rns_base_transform_to_single(input_rns_poly, new_moduli[0]);
     } else {
-        // TODO case
-        return RnsPolynomial();
+        throw;
     }
 }
 

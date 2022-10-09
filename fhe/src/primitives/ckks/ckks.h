@@ -8,6 +8,8 @@
 
 #include "common/type_defs.h"
 #include "primitives/rlwe.h"
+#include "primitives/rgsw.h"
+#include "primitives/keys.h"
 #include <complex>
 
 namespace hehub {
@@ -201,6 +203,15 @@ struct ckks {
      * @return CkksQuadraticCt 
      */
     static CkksQuadraticCt mult_low_level(const CkksCt &ct1, const CkksCt &ct2);
+
+    /**
+     * @brief TODO
+     * 
+     * @param ct 
+     * @param relin_key 
+     * @return CkksCt 
+     */
+    static CkksCt relinearize(const CkksQuadraticCt &ct, const RlweKsk &relin_key);
 
     /**
      * @brief TODO

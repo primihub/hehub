@@ -6,7 +6,49 @@ using namespace std;
 
 namespace hehub {
 
-RlweCt ext_prod(const RlwePt &pt, const RgswCt &rgsw) {
+RgswCt rgsw_encrypt(const RlweSk &sk, const RlwePt &pt,
+                    const vector<vector<u64>> &decomp_basis) {
+    auto sample_count = decomp_basis.size();
+    RgswCt rgsw(sample_count);
+
+    // generate the masks
+    for (auto &rlwe_sample : rgsw) {
+        rlwe_sample = get_rlwe_sample(sk);
+    }
+
+    // add pt multiplied by decomposition basis
+    for (size_t i = 0; i < sample_count; i++) {
+        rgsw[i][0] += pt * decomp_basis[i];
+    }
+
+    return rgsw;
+}
+
+RgswCt rgsw_encrypt_montgomery(const RlweSk &sk, const RlwePt &pt,
+                               const vector<vector<u64>> &decomp_basis) {
+    auto rgsw = rgsw_encrypt(sk, pt, decomp_basis);
+
+    auto get_2to64_reduced = [](const u64 modulus) {
+        const u64 _2to64_but_one = (u64)(-1LL) % modulus;
+        return _2to64_but_one + 1;
+    };
+
+    auto moduli = rgsw[0][0].modulus_vec();
+    std::vector<u64> mont_consts; // montgomery constants, which is 2^64 % q
+    for (auto &modulus : moduli) {
+        mont_consts.push_back(get_2to64_reduced(modulus));
+    }
+
+    for (auto &rlwe_sample: rgsw) {
+        for (auto &poly: rlwe_sample) {
+            poly *= mont_consts;
+        }
+    }
+
+    return rgsw;
+}
+
+RlweCt ext_prod_montgomery(const RlwePt &pt, const RgswCt &rgsw) {
     const auto &moduli = pt.modulus_vec();
     if (rgsw.empty()) {
         throw invalid_argument("Empty RGSW ciphertext.");

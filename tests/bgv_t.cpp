@@ -208,7 +208,7 @@ TEST_CASE("bgv mod switch") {
         }
     }
     ntt_negacyclic_inplace_lazy(fake_pt);
-    RlweCt ct = bgv::get_rlwe_sample_lift_noise(sk, ct_poly_dim, pt_modulus);
+    RlweCt ct = bgv::get_rlwe_sample_lift_noise(sk, pt_modulus);
     ct[1] += fake_pt;
 
     // the "actual" plaintext

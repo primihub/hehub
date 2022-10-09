@@ -5,7 +5,7 @@ namespace hehub {
 
 const double EPS = std::pow(2.0, -50);
 
-auto check_scaling_factor = [](const auto& in1, const auto& in2) {
+auto check_scaling_factor = [](const auto &in1, const auto &in2) {
     if (std::abs(in1.scaling_factor - in2.scaling_factor) > EPS) {
         throw std::invalid_argument("The scaling factors mismatch");
     }
@@ -58,6 +58,17 @@ CkksQuadraticCt ckks::mult_low_level(const CkksCt &ct1, const CkksCt &ct2) {
     ct_prod[2] = ct1[1] * ct2[1];
     ct_prod.scaling_factor = ct1.scaling_factor * ct2.scaling_factor;
     return ct_prod;
+}
+
+CkksCt ckks::relinearize(const CkksQuadraticCt &ct, const RlweKsk &relin_key) {
+    CkksCt ct_new = ext_prod_montgomery(ct[2], relin_key);
+    rescale_inplace(ct_new); // this rescaling step shouldn't
+                             // modify scaling factor
+    ct_new.scaling_factor = ct.scaling_factor;
+
+    ct_new[0] += ct[0];
+    ct_new[1] += ct[1];
+    return ct_new;
 }
 
 } // namespace hehub

@@ -30,7 +30,7 @@ public:
      */
     struct Dimensions {
         /// The length of polynomial.
-        size_t poly_len;
+        size_t poly_len = 0;
 
         /// The number of RNS components.
         size_t component_count;
@@ -486,12 +486,40 @@ const RnsPolynomial &operator*=(RnsPolynomial &self, const u64 small_scalar);
 /**
  * @brief TODO
  *
+ * @param poly
+ * @param small_scalar
+ * @return RnsPolynomial&
+ */
+inline RnsPolynomial operator*(const RnsPolynomial &poly,
+                               const u64 small_scalar) {
+    auto poly_copy(poly);
+    poly_copy *= small_scalar;
+    return poly_copy;
+}
+
+/**
+ * @brief TODO
+ *
  * @param self
  * @param rns_scalar
  * @return const RnsPolynomial&
  */
 const RnsPolynomial &operator*=(RnsPolynomial &self,
                                 const std::vector<u64> &rns_scalar);
+
+/**
+ * @brief TODO
+ *
+ * @param poly
+ * @param rns_scalar
+ * @return RnsPolynomial
+ */
+inline RnsPolynomial operator*(const RnsPolynomial &poly,
+                               const std::vector<u64> &rns_scalar) {
+    auto poly_copy(poly);
+    poly_copy *= rns_scalar;
+    return poly_copy;
+}
 
 #ifdef HEHUB_DEBUG_FHE
 /**

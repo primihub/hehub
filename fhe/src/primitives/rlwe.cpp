@@ -8,7 +8,11 @@ namespace hehub {
 RlweSk::RlweSk(const PolyDimensions &poly_dim)
     : RnsPolynomial(get_rand_ternary_poly(poly_dim)) {}
 
-RlweCt get_rlwe_sample(const RlweSk &sk, const PolyDimensions &poly_dim) {
+RlweCt get_rlwe_sample(const RlweSk &sk, size_t components) {
+    if (components == 0) {
+        components = sk.component_count(); // the actual argument
+    }
+    PolyDimensions poly_dim{sk.poly_len(), components, sk.modulus_vec()};
 #ifdef HEHUB_DEBUG_RLWE_ZERO_C1
     auto c1 = get_zero_poly(poly_dim);
 #else
@@ -37,7 +41,7 @@ RlweCt encrypt_core(const RlwePt &pt, const RlweSk &sk) {
     auto pt_ntt(pt);
     ntt_negacyclic_inplace_lazy(pt_ntt);
 
-    auto [c0, c1] = get_rlwe_sample(sk, poly_dim);
+    auto [c0, c1] = get_rlwe_sample(sk, components);
     c0 += pt_ntt;
 
     return RlweCt{std::move(c0), std::move(c1)};

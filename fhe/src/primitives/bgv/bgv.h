@@ -34,13 +34,13 @@ struct bgv {
      * @brief TODO Get the rlwe sample lift noise object
      *
      * @param sk
-     * @param poly_dim
      * @param lifting_factor
+     * @param components
      * @return RlweCt
      */
     static RlweCt get_rlwe_sample_lift_noise(const RlweSk &sk,
-                                             const PolyDimensions &poly_dim,
-                                             const u64 lifting_factor);
+                                             const u64 lifting_factor,
+                                             size_t components = 0);
 
     /**
      * @brief TODO
