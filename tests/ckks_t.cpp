@@ -326,46 +326,46 @@ TEST_CASE("ckks arith") {
             REQUIRE(all_close(data_prod, prod_recovered, eps));
         }
     }
-    SECTION("multiplication with ciphertext") {
-        auto data_prod(plain_data1);
-        for (size_t i = 0; i < data_count; i++) {
-            data_prod[i] *= plain_data2[i];
-        }
+    // SECTION("multiplication with ciphertext") {
+    //     auto data_prod(plain_data1);
+    //     for (size_t i = 0; i < data_count; i++) {
+    //         data_prod[i] *= plain_data2[i];
+    //     }
 
-        // encrypt
-        auto ct1 = ckks::encrypt(pt1, sk);
-        auto ct2 = ckks::encrypt(pt2, sk);
+    //     // encrypt
+    //     auto ct1 = ckks::encrypt(pt1, sk);
+    //     auto ct2 = ckks::encrypt(pt2, sk);
 
-        // gen relin key
-        auto additional_mod = 1099507695617;
-        auto relin_key = get_relin_key(sk, additional_mod);
+    //     // gen relin key
+    //     auto additional_mod = 1099507695617;
+    //     auto relin_key = get_relin_key(sk, additional_mod);
 
-        // mult
-        auto ct_prod_quadratic = ckks::mult_low_level(ct1, ct2);
-        auto ct_prod = ckks::relinearize(ct_prod_quadratic, relin_key);
+    //     // mult
+    //     auto ct_prod_quadratic = ckks::mult_low_level(ct1, ct2);
+    //     auto ct_prod = ckks::relinearize(ct_prod_quadratic, relin_key);
 
-        SECTION("without rescaling") {
-            // decrypt & decode
-            auto prod_recovered = ckks::simd_decode(ckks::decrypt(ct_prod, sk));
+    //     SECTION("without rescaling") {
+    //         // decrypt & decode
+    //         auto prod_recovered = ckks::simd_decode(ckks::decrypt(ct_prod, sk));
 
-            // check
-            double eps =
-                pow(2, 3 + 5 + 1 - scaling_bits); // abs of data < 6σ
-                                                  // with σ = data's std dev
-            REQUIRE(all_close(data_prod, prod_recovered, eps));
-        }
-        SECTION("with rescaling") {
-            // rescaling
-            ckks::rescale_inplace(ct_prod);
+    //         // check
+    //         double eps =
+    //             pow(2, 3 + 5 + 1 - scaling_bits); // abs of data < 6σ
+    //                                               // with σ = data's std dev
+    //         REQUIRE(all_close(data_prod, prod_recovered, eps));
+    //     }
+    //     SECTION("with rescaling") {
+    //         // rescaling
+    //         ckks::rescale_inplace(ct_prod);
 
-            // decrypt & decode
-            auto prod_recovered = ckks::simd_decode(ckks::decrypt(ct_prod, sk));
+    //         // decrypt & decode
+    //         auto prod_recovered = ckks::simd_decode(ckks::decrypt(ct_prod, sk));
 
-            // check
-            double eps =
-                pow(2, 3 + 5 + 1 - scaling_bits); // abs of data < 6σ
-                                                  // with σ = data's std dev
-            REQUIRE(all_close(data_prod, prod_recovered, eps));
-        }
-    }
+    //         // check
+    //         double eps =
+    //             pow(2, 3 + 5 + 1 - scaling_bits); // abs of data < 6σ
+    //                                               // with σ = data's std dev
+    //         REQUIRE(all_close(data_prod, prod_recovered, eps));
+    //     }
+    // }
 }

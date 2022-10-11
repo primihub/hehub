@@ -11,6 +11,7 @@
 
 #include "rnspolynomial.h"
 #include "type_defs.h"
+#include "mod_arith.h"
 #include <cmath>
 #include <stdexcept>
 #include <vector>
@@ -57,6 +58,16 @@ void intt_negacyclic_inplace_lazy(const size_t log_poly_len, const u64 modulus,
  * @param[inout] rns_poly
  */
 void intt_negacyclic_inplace_lazy(RnsPolynomial &rns_poly);
+
+/**
+ * @brief TODO
+ *
+ * @param[inout] rns_poly
+ */
+inline void intt_negacyclic_inplace(RnsPolynomial &rns_poly) {
+    intt_negacyclic_inplace_lazy(rns_poly);
+    strict_reduce(rns_poly);
+}
 
 /**
  * @brief Create the NTT factors for all the input moduli immediately, which
