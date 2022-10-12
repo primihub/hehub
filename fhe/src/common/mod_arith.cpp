@@ -46,7 +46,7 @@ std::tuple<i128, i128, i128> xgcd128(i128 a, i128 b) {
     return std::make_tuple(sign_a * prev_x, sign_b * prev_y, a);
 }
 
-inline u64 get_inv_neg_q_mod_2to64(const u64 modulus) {
+inline u64 get_inv_minus_q_mod_2to64(const u64 modulus) {
     auto tmp = std::get<1>(xgcd128((i128)1 << 64, ((i128)1 << 64) - modulus));
     return (u64)(tmp + ((i128)1 << 64));
 }
@@ -70,17 +70,17 @@ void batched_mul_mod_hybrid_lazy(const u64 modulus, const size_t vec_len,
     if (it == lut_cache.end()) {
         lut_cache.insert(std::make_pair(
             modulus,
-            std::make_tuple(get_inv_neg_q_mod_2to64(modulus), get_2to64_reduced(modulus),
+            std::make_tuple(get_inv_minus_q_mod_2to64(modulus), get_2to64_reduced(modulus),
                             get_2to64_harvey(modulus))));
         it = lut_cache.find(modulus);
     }
-    const auto [neg_qinv, _2to64_reduced, _2to64_harvey] = it->second;
+    const auto [minus_qinv, _2to64_reduced, _2to64_harvey] = it->second;
     const u64 mshift = 64;
 
     for (size_t i = 0; i < vec_len; i++) {
         // The Montgomery part
         u128 a = (u128)in_vec1[i] * in_vec2[i];
-        u128 u = a * neg_qinv;
+        u128 u = a * minus_qinv;
         u &= (((u128)1 << mshift) - 1);
         u *= modulus;
 
@@ -112,20 +112,20 @@ void batched_mul_mod_barrett_lazy(const u64 modulus, const size_t vec_len,
 
 void batched_montgomery_128_lazy(const u64 modulus, const size_t len,
                                  const u128 in[], u64 out[]) {
-    static std::map<u64, u64> neg_q_inv_lut;
-    u64 neg_q_inv;
+    static std::map<u64, u64> minus_q_inv_lut;
+    u64 minus_q_inv;
 
-    auto it = neg_q_inv_lut.find(modulus);
-    if (it == neg_q_inv_lut.end()) {
-        neg_q_inv = get_inv_neg_q_mod_2to64(modulus);
-        neg_q_inv_lut.insert(std::make_pair(modulus, neg_q_inv));
+    auto it = minus_q_inv_lut.find(modulus);
+    if (it == minus_q_inv_lut.end()) {
+        minus_q_inv = get_inv_minus_q_mod_2to64(modulus);
+        minus_q_inv_lut.insert(std::make_pair(modulus, minus_q_inv));
     } else {
-        neg_q_inv = it->second;
+        minus_q_inv = it->second;
     }
 
     for (int i = 0; i < len; i++) {
         u128 a = in[i];
-        u128 u = a * neg_q_inv;
+        u128 u = a * minus_q_inv;
         u = (u64)u;
         u *= modulus;
         a = (a + u) >> 64;

@@ -76,8 +76,12 @@ void RnsPolynomial::add_components(const std::vector<u64> &new_moduli,
             "No matching number of moduli provided to add components.");
     }
 
+    auto orig_size = components_.size();
     moduli_.insert(moduli_.end(), new_moduli.begin(), new_moduli.end());
     components_.resize(components_.size() + adding);
+    for (size_t i = orig_size; i < components_.size(); i++) {
+        components_[i] = ComponentData(poly_len_);
+    }
 }
 
 void RnsPolynomial::remove_components(size_t removing) {

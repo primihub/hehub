@@ -4,14 +4,11 @@
 
 namespace hehub {
 
-RlweKsk::RlweKsk(const RlweSk &sk_new, const RlweSk &sk_orig,
+RlweKsk::RlweKsk(const RlweSk &sk_curr, const RlweSk &sk_orig,
                  const u64 additional_mod) {
-    auto sk_new_mult_p_extended = sk_new * additional_mod;
-    strict_reduce(sk_new_mult_p_extended); // for more friendly debugging
-    // The component corresponding to p after extended is necessarily 0
-    sk_new_mult_p_extended.add_components({additional_mod});
-    std::fill(sk_new_mult_p_extended.last()->begin(),
-              sk_new_mult_p_extended.last()->end(), 0);
+    auto sk_curr_extended = sk_curr;
+    sk_curr_extended.add_components({additional_mod}); // no need to set 0 manually
+                                                       // since will be mult'd by p
 
     // To encapsulate
     auto extended_moduli = sk_orig.modulus_vec();
@@ -27,10 +24,10 @@ RlweKsk::RlweKsk(const RlweSk &sk_new, const RlweSk &sk_orig,
     std::vector<std::vector<u64>> rns_composition_basis(orig_components);
     for (size_t i = 0; i < orig_components; i++) {
         rns_composition_basis[i].resize(orig_components + 1, 0);
-        rns_composition_basis[i][i] = 1;
+        rns_composition_basis[i][i] = additional_mod % extended_moduli[i];
     }
-    *this = RgswCt(rgsw_encrypt_montgomery(
-        sk_orig_extended, sk_new_mult_p_extended, rns_composition_basis));
+    *this = RgswCt(rgsw_encrypt_montgomery(sk_orig_extended, sk_curr_extended,
+                                           rns_composition_basis));
 }
 
 } // namespace hehub
