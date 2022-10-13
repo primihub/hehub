@@ -8,8 +8,8 @@
 using namespace hehub;
 
 namespace hehub {
-void fft_negacyclic_inplace(cc_double *coeffs, size_t log_poly_len,
-                            bool inverse = false);
+void fft_negacyclic_natural_inout(cc_double *coeffs, size_t log_poly_len,
+                                  bool inverse = false);
 } // namespace hehub
 
 TEST_CASE("fft", "[.]") {
@@ -37,7 +37,7 @@ TEST_CASE("fft", "[.]") {
             return sum;
         };
 
-        fft_negacyclic_inplace(coeffs.data(), logn);
+        fft_negacyclic_natural_inout(coeffs.data(), logn);
 
         for (size_t i = 0; i < n; i = i * 3 + 1) {
             REQUIRE(abs(coeffs[i] - substitute(std::polar(
@@ -47,8 +47,8 @@ TEST_CASE("fft", "[.]") {
     SECTION("FFT round trip") {
         auto coeffs_copy(coeffs);
 
-        fft_negacyclic_inplace(coeffs.data(), logn);
-        fft_negacyclic_inplace(coeffs.data(), logn, true);
+        fft_negacyclic_natural_inout(coeffs.data(), logn);
+        fft_negacyclic_natural_inout(coeffs.data(), logn, true);
 
         bool all_close = true;
         for (size_t i = 0; i < n; i = i * 3 + 1) {
@@ -176,7 +176,8 @@ TEST_CASE("ckks rescaling") {
     }
 }
 
-bool all_close(const std::vector<double> &vec1, const std::vector<double> &vec2,
+template <typename T>
+bool all_close(const std::vector<T> &vec1, const std::vector<T> &vec2,
                double eps) {
     for (size_t i = 0; i < vec1.size(); i++) {
         if (i >= vec2.size() || std::abs(vec1[i] - vec2[i]) > eps) {
@@ -184,7 +185,7 @@ bool all_close(const std::vector<double> &vec1, const std::vector<double> &vec2,
         }
     }
     return true;
-}
+};
 
 TEST_CASE("ckks encryption") {
     std::vector<u64> ct_moduli{1099510054913}; // 40-bit
@@ -371,31 +372,93 @@ TEST_CASE("ckks arith") {
 }
 
 TEST_CASE("ckks key switch") {
-    std::vector<u64> ct_moduli{1099510054913, 1073479681, 1072496641};
-    size_t poly_len = 8;
-    PolyDimensions ct_poly_dim{poly_len, ct_moduli.size(), ct_moduli};
-    RlweSk sk1(ct_poly_dim);
-    RlweSk sk2(ct_poly_dim);
-    u64 additional_mod = 1099507695617;
-    auto ksk = RlweKsk(sk1, sk2, additional_mod);
+    SECTION("general key switching") {
+        std::vector<u64> ct_moduli{1099510054913, 1073479681, 1072496641};
+        size_t poly_len = 8;
+        PolyDimensions ct_poly_dim{poly_len, ct_moduli.size(), ct_moduli};
+        u64 additional_mod = 1099507695617;
 
-    auto data_count = poly_len / 2;
-    std::vector<double> plain_data(data_count);
-    std::default_random_engine generator;
-    std::normal_distribution<double> data_dist(0, 1);
-    for (auto &d : plain_data) {
-        d = data_dist(generator);
+        auto data_count = poly_len / 2;
+        std::vector<double> plain_data(data_count);
+        std::default_random_engine generator;
+        std::normal_distribution<double> data_dist(0, 1);
+        for (auto &d : plain_data) {
+            d = data_dist(generator);
+        }
+
+        RlweSk sk1(ct_poly_dim);
+        RlweSk sk2(ct_poly_dim);
+        auto ksk = RlweKsk(sk1, sk2, additional_mod);
+
+        auto pt = ckks::simd_encode(plain_data, pow(2.0, 30), ct_poly_dim);
+        auto ct = ckks::encrypt(pt, sk1);
+        CkksCt ct_new = ext_prod_montgomery(ct[1], ksk);
+        ckks::rescale_inplace(ct_new);
+        ct_new.scaling_factor = ct.scaling_factor;
+        ct_new[0] += ct[0];
+
+        auto pt_recovered = ckks::decrypt(ct_new, sk2);
+        auto data_recovered = ckks::simd_decode(pt_recovered);
+        double eps = pow(2.0, -25); // empirical, needs analysis
+        REQUIRE(all_close(plain_data, data_recovered, eps));
     }
+    SECTION("conjugation") {
+        std::vector<u64> ct_moduli{1099510054913, 1073479681, 1072496641};
+        size_t poly_len = 8;
+        PolyDimensions ct_poly_dim{poly_len, ct_moduli.size(), ct_moduli};
+        u64 additional_mod = 1099507695617;
 
-    auto pt = ckks::simd_encode(plain_data, pow(2.0, 30), ct_poly_dim);
-    auto ct = ckks::encrypt(pt, sk1);
-    CkksCt ct_new = ext_prod_montgomery(ct[1], ksk);
-    ckks::rescale_inplace(ct_new);
-    ct_new.scaling_factor = ct.scaling_factor;
-    ct_new[0] += ct[0];
+        auto data_count = poly_len / 2;
+        std::vector<cc_double> plain_data(data_count);
+        std::vector<cc_double> data_conj;
+        std::default_random_engine generator;
+        std::normal_distribution<double> data_dist(0, 1);
+        for (auto &d : plain_data) {
+            d = {data_dist(generator), data_dist(generator)};
+            data_conj.push_back(std::conj(d));
+        }
 
-    auto pt_recovered = ckks::decrypt(ct_new, sk2);
-    auto data_recovered = ckks::simd_decode(pt_recovered);
-    double eps = pow(2.0, -25); // empirical, needs analysis
-    REQUIRE(all_close(plain_data, data_recovered, eps));
+        RlweSk sk(ct_poly_dim);
+        auto conj_key = get_conj_key(sk, additional_mod);
+
+        auto pt = ckks::simd_encode(plain_data, pow(2.0, 30), ct_poly_dim);
+        auto ct = ckks::encrypt(pt, sk);
+        auto ct_conj = ckks::conjugate(ct, conj_key);
+
+        auto pt_recovered = ckks::decrypt(ct_conj, sk);
+        auto data_recovered = ckks::simd_decode<cc_double>(pt_recovered);
+        double eps = pow(2.0, -25); // empirical, needs analysis
+        REQUIRE(all_close(data_conj, data_recovered, eps));
+    }
+    SECTION("rotation") {
+        std::vector<u64> ct_moduli{1099510054913, 1073479681, 1072496641};
+        size_t poly_len = 8;
+        PolyDimensions ct_poly_dim{poly_len, ct_moduli.size(), ct_moduli};
+        u64 additional_mod = 1099507695617;
+
+        auto data_count = poly_len / 2;
+        std::vector<cc_double> plain_data(data_count);
+        std::vector<cc_double> data_rotated(data_count);
+        std::default_random_engine generator;
+        std::normal_distribution<double> data_dist(0, 1);
+        for (auto &d : plain_data) {
+            d = {data_dist(generator), data_dist(generator)};
+        }
+        size_t step = GENERATE(1, 2, 3);
+        for (size_t i = 0; i < data_count; i++) {
+            data_rotated[(i + step) % data_count] = plain_data[i];
+        }
+
+        RlweSk sk(ct_poly_dim);
+        auto rot_key_for_the_step = get_rot_key(sk, additional_mod, step);
+
+        auto pt = ckks::simd_encode(plain_data, pow(2.0, 30), ct_poly_dim);
+        auto ct = ckks::encrypt(pt, sk);
+        auto ct_conj = ckks::rotate(ct, rot_key_for_the_step, step);
+
+        auto pt_recovered = ckks::decrypt(ct_conj, sk);
+        auto data_recovered = ckks::simd_decode<cc_double>(pt_recovered);
+        double eps = pow(2.0, -25); // empirical, needs analysis
+        REQUIRE(all_close(data_rotated, data_recovered, eps));
+    }
 }

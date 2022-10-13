@@ -4,7 +4,7 @@ namespace hehub {
 
 const size_t GALOIS_GEN = 3;
 
-std::vector<u32> &root_index_factors() {
+const std::vector<u32> &root_index_factors() {
     struct RootIndexFactors : public std::vector<u32> {
         RootIndexFactors()
             : vector(1 << 17) // enables a param n <= 2^16
@@ -21,33 +21,6 @@ std::vector<u32> &root_index_factors() {
     return global_root_index_factors;
 }
 
-const std::vector<size_t> &dlog_mod_2power_table(size_t loglen) {
-    static std::vector<std::vector<size_t>> tables;
-    
-    if (tables.size() < loglen + 1) {
-        tables.resize(loglen + 1);
-    }
-    if (!tables[loglen].empty()) {
-        return tables[loglen];
-    }
-
-    auto &table = tables[loglen];
-    auto len = 1 << loglen;
-    auto doubled_len = 1 << (loglen + 1);
-    table.resize(doubled_len);
-    auto mask = doubled_len - 1; // for fast reduction
-    size_t exp = 1;
-    size_t dlog = 0;
-    do {
-        table[exp] = dlog;
-        table[doubled_len - exp] = len - 1 - dlog;
-        exp = exp * GALOIS_GEN & mask;
-        dlog++;
-    } while (exp != 1);
-
-    return table;        
-}
-
 RnsPolynomial cycle(const RnsPolynomial &poly_ntt, const size_t step) {
     if (poly_ntt.rep_form != PolyRepForm::value) {
         throw std::invalid_argument(
@@ -61,14 +34,17 @@ RnsPolynomial cycle(const RnsPolynomial &poly_ntt, const size_t step) {
     cycled.rep_form = PolyRepForm::value;
 
     auto mask = (1 << (loglen + 1)) - 1; // for fast modulo 2*len
-    auto index_factor = root_index_factors()[step] & mask;
-    for (size_t i = 0; i < len; i++) {
-        auto orig_root_index = __bit_rev_naive_16(i, loglen) * 2 + 1;
-        auto new_root_index = orig_root_index * index_factor & mask;
-        auto new_index = __bit_rev_naive_16((new_root_index - 1) / 2, loglen);
+    auto &root_indices = root_index_factors();
+    auto index_factor = root_indices[step] & mask;
+    for (size_t i = 0; i < len / 2; i++) {
+        auto old_root_index = root_indices[i] & mask;
+        auto from_position = __bit_rev_naive_16((old_root_index - 1) / 2, loglen);
+        auto new_root_index = old_root_index * index_factor & mask;
+        auto to_position = __bit_rev_naive_16((new_root_index - 1) / 2, loglen);
 
         for (size_t k = 0; k < components; k++) {
-            cycled[k][new_index] = poly_ntt[k][i];
+            cycled[k][to_position] = poly_ntt[k][from_position];
+            cycled[k][len - 1 - to_position] = poly_ntt[k][len - 1 - from_position];
         }
     }
 

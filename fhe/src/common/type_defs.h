@@ -22,5 +22,6 @@ using u64 = __uint64_t;
 using u128 = __uint128_t;
 
 using cc_double = std::complex<double>;
+using cc_long_double = std::complex<long double>;
 
 } // namespace hehub

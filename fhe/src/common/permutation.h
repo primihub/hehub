@@ -84,12 +84,7 @@ inline u64 __bit_rev_naive_16(u64 x, int bit_len) {
 /// @note This table can also be viewed as the data encoding order when using
 /// SIMD encoding (after minor processing such as bit reversal), since a next
 /// datum should be place in the rotated position of the previous one.
-std::vector<u32> &root_index_factors();
-
-/// @brief TODO
-/// @param loglen
-/// @return
-const std::vector<size_t> &dlog_mod_2power_table(size_t loglen);
+const std::vector<u32> &root_index_factors();
 
 /**
  * @brief Perform a cycle on the values of the polynomial, which is induced from
@@ -97,12 +92,13 @@ const std::vector<size_t> &dlog_mod_2power_table(size_t loglen);
  * @note The Galois group of Q(ξ)/Q with ξ being a 2-power m-th primitive unity
  * root is of structure Z_{m/4}⊕Z_2, hence a Galois transformations of Q(ξ)/Q is
  * either a cycle from a subgroup of order m/4, or an involution. On the other
- * hand, when q is an unramified prime in Q(ξ) (or product of such primes), the
- * ring R_q = Z_q[X]/(X^n + 1) is isomorphic to an n-dimensional q-linear space,
- * whose automorphism group is the group of all n-dimensional q-linear
- * transformations. It is homomorphic encryption that requires the automorphism
- * to be bounded (resp. to inf. norm). Hence we cannot utilize arbituary
- * q-linear transformations but only those induced by the Galois ones.
+ * hand, when q is a prime splitting completely in Q(ξ) (or product of such
+ * primes), the ring R_q = Z_q[X]/(X^n + 1) is isomorphic to an n-dimensional
+ * q-linear space, whose automorphism group is just the group of all
+ * n-dimensional q-linear transformations. It is homomorphic encryption that
+ * requires the automorphism to be bounded (resp. to inf. norm). Hence here we
+ * cannot utilize arbituary q-linear transformations but only those induced by
+ * the Galois ones.
  * @param poly_ntt An RnsPolynomial in NTT value form.
  * @param step The cycle step resp. to the (poly_len / 2)-ordered subgroup.
  * @return RnsPolynomial
@@ -115,12 +111,13 @@ RnsPolynomial cycle(const RnsPolynomial &poly_ntt, const size_t step);
  * @note The Galois group of Q(ξ)/Q with ξ being a 2-power m-th primitive unity
  * root is of structure Z_{m/4}⊕Z_2, hence a Galois transformations of Q(ξ)/Q is
  * either a cycle from a subgroup of order m/4, or an involution. On the other
- * hand, when q is an unramified prime in Q(ξ) (or product of such primes), the
- * ring R_q = Z_q[X]/(X^n + 1) is isomorphic to an n-dimensional q-linear space,
- * whose automorphism group is the group of all n-dimensional q-linear
- * transformations. It is homomorphic encryption that requires the automorphism
- * to be bounded (resp. to inf. norm). Hence we cannot utilize arbituary
- * q-linear transformations but only those induced by the Galois ones.
+ * hand, when q is a prime splitting completely in Q(ξ) (or product of such
+ * primes), the ring R_q = Z_q[X]/(X^n + 1) is isomorphic to an n-dimensional
+ * q-linear space, whose automorphism group is just the group of all
+ * n-dimensional q-linear transformations. It is homomorphic encryption that
+ * requires the automorphism to be bounded (resp. to inf. norm). Hence here we
+ * cannot utilize arbituary q-linear transformations but only those induced by
+ * the Galois ones.
  * @note There are three involutions in the Galois transformation set. This
  * function performs the one that corresponds to complex conjugation.
  * @param poly_ntt An RnsPolynomial in NTT value form.

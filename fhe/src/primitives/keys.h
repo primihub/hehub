@@ -6,6 +6,7 @@
 
 #pragma once
 
+#include "common/permutation.h"
 #include "rgsw.h"
 #include "rlwe.h"
 
@@ -31,8 +32,8 @@ struct RlweKsk : public RgswCt {
 };
 
 /**
- * @brief Generate and return a relinearization key. A relinearize key is an
- * RGSW encryption for sk^2 under sk, where sk is the secret key.
+ * @brief Generate and return a relinearization key which is an RGSW encryption
+ * for sk^2 under sk, where sk is the secret key.
  * @param sk The secret key.
  * @param additional_mod The additional modulus for extending the RNS of the
  * relinearization key and the ciphertext to relinearize.
@@ -40,6 +41,32 @@ struct RlweKsk : public RgswCt {
  */
 inline RlweKsk get_relin_key(const RlweSk &sk, const u64 additional_mod) {
     return RlweKsk(sk * sk, sk, additional_mod);
+}
+
+/**
+ * @brief Generate and return a conjugation key which is an RGSW encryption for
+ * involuted sk, where sk is the secret key.
+ * @param sk The secret key.
+ * @param additional_mod The additional modulus for extending the RNS of the
+ * conjugation key and the ciphertext to conjugate.
+ * @return RlweKsk
+ */
+inline RlweKsk get_conj_key(const RlweSk &sk, const u64 additional_mod) {
+    return RlweKsk(involute(sk), sk, additional_mod);
+}
+
+/**
+ * @brief Generate and return a rotation key for a specific rotating step, which
+ * is an RGSW encryption for cycled sk, where sk is the secret key.
+ * @param sk The secret key.
+ * @param additional_mod The additional modulus for extending the RNS of the
+ * conjugation key and the ciphertext to rotate.
+ * @param step The rotating step supported by this key.
+ * @return RlweKsk
+ */
+inline RlweKsk get_rot_key(const RlweSk &sk, const u64 additional_mod,
+                           const size_t step) {
+    return RlweKsk(cycle(sk, step), sk, additional_mod);
 }
 
 } // namespace hehub

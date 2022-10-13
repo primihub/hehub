@@ -71,4 +71,24 @@ CkksCt ckks::relinearize(const CkksQuadraticCt &ct, const RlweKsk &relin_key) {
     return ct_new;
 }
 
+CkksCt ckks::conjugate(const CkksCt &ct, const RlweKsk &conj_key) {
+    auto involuted = RlweCt{involute(ct[0]), involute(ct[1])};
+    CkksCt ct_conj = ext_prod_montgomery(involuted[1], conj_key);
+    ckks::rescale_inplace(ct_conj);
+    ct_conj.scaling_factor = ct.scaling_factor; // the scaling factor
+                                                // should remain
+    ct_conj[0] += involuted[0];
+    return ct_conj;
+}
+
+CkksCt ckks::rotate(const CkksCt &ct, const RlweKsk &rot_key, const size_t step) {
+    auto rotated = RlweCt{cycle(ct[0], step), cycle(ct[1], step)};
+    CkksCt ct_rot = ext_prod_montgomery(rotated[1], rot_key);
+    ckks::rescale_inplace(ct_rot);
+    ct_rot.scaling_factor = ct.scaling_factor; // the scaling factor
+                                               // should remain
+    ct_rot[0] += rotated[0];
+    return ct_rot;
+}
+
 } // namespace hehub

@@ -3,6 +3,7 @@
 #include "common/ntt.h"
 #include "common/permutation.h"
 #include "common/rnspolynomial.h"
+#include "primitives/ckks/ckks.h"
 
 using namespace hehub;
 
@@ -74,22 +75,22 @@ u64 simple_inf_norm(const RnsPolynomial &poly) {
     return norm;
 }
 
-TEST_CASE("automorphism") {
-    SECTION("tables") {
-        size_t logn = 3;
-        size_t n = 1 << logn;
-        auto dlog_table = dlog_mod_2power_table(logn);
-        std::vector<size_t> dlog_table_compact(n);
-        for (size_t i = 0; i < n; i++) {
-            dlog_table_compact[i] = dlog_table[2 * i + 1];
+template <typename T>
+bool all_close(const std::vector<T> &vec1, const std::vector<T> &vec2,
+               double eps) {
+    for (size_t i = 0; i < vec1.size(); i++) {
+        if (i >= vec2.size() || std::abs(vec1[i] - vec2[i]) > eps) {
+            return false;
         }
-
-        REQUIRE(dlog_table_compact ==
-                std::vector<size_t>{0, 1, 4, 5, 2, 3, 6, 7});
     }
+    return true;
+};
+
+TEST_CASE("automorphism") {
     SECTION("involution") {
         u64 q = 65537;
-        RnsPolynomial poly(4096, 1, {q});
+        size_t poly_len = 8;
+        RnsPolynomial poly(poly_len, 1, {q});
 
         // random polynomial with not too large norm
         u64 seed = 42;
@@ -110,8 +111,8 @@ TEST_CASE("automorphism") {
     }
     SECTION("cycles") {
         u64 q = 65537;
-        size_t poly_len = 4096;
-        RnsPolynomial poly(4096, 1, {q});
+        size_t poly_len = 8;
+        RnsPolynomial poly(poly_len, 1, {q});
 
         // random polynomial with not too large norm
         u64 seed = 42;
@@ -133,5 +134,54 @@ TEST_CASE("automorphism") {
         intt_negacyclic_inplace(two_step);
         REQUIRE(simple_inf_norm(poly) == simple_inf_norm(one_step));
         REQUIRE(simple_inf_norm(poly) == simple_inf_norm(two_step));
+    }
+    SECTION("involution on plain") {
+        u64 q = 36028797017456641;
+        size_t poly_len = 8;
+        auto data_count = poly_len / 2;
+        std::vector<cc_double> plain_data(data_count);
+        std::vector<cc_double> data_conj;
+        std::default_random_engine generator;
+        std::normal_distribution<double> data_dist(0, 1);
+        for (auto &d : plain_data) {
+            d = {data_dist(generator), data_dist(generator)};
+            data_conj.push_back(std::conj(d));
+        }
+
+        auto pt =
+            ckks::simd_encode(plain_data, pow(2.0, 50), {poly_len, 1, {q}});
+        ntt_negacyclic_inplace_lazy(pt);
+        CkksPt involuted_pt = involute(pt);
+        involuted_pt.scaling_factor = pt.scaling_factor;
+        intt_negacyclic_inplace(involuted_pt);
+        auto data_recovered = ckks::simd_decode<cc_double>(involuted_pt);
+
+        REQUIRE(all_close(data_recovered, data_conj, pow(2.0, -45)));
+    }
+    SECTION("cycle on plain") {
+        u64 q = 36028797017456641;
+        size_t poly_len = 8;
+        auto data_count = poly_len / 2;
+        std::vector<cc_double> plain_data(data_count);
+        std::vector<cc_double> data_rot(data_count);
+        std::default_random_engine generator;
+        std::normal_distribution<double> data_dist(0, 1);
+        for (auto &d : plain_data) {
+            d = {data_dist(generator), data_dist(generator)};
+        }
+        size_t step = GENERATE(1, 2, 3);
+        for (size_t i = 0; i < data_count; i++) {
+            data_rot[(i + step) % data_count] = plain_data[i];
+        }
+
+        auto pt =
+            ckks::simd_encode(plain_data, pow(2.0, 50), {poly_len, 1, {q}});
+        ntt_negacyclic_inplace_lazy(pt);
+        CkksPt cycled_pt = cycle(pt, step);
+        cycled_pt.scaling_factor = pt.scaling_factor;
+        intt_negacyclic_inplace(cycled_pt);
+        auto data_recovered = ckks::simd_decode<cc_double>(cycled_pt);
+
+        REQUIRE(all_close(data_recovered, data_rot, pow(2.0, -45)));
     }
 }

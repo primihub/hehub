@@ -7,9 +7,9 @@
 #pragma once
 
 #include "common/type_defs.h"
-#include "primitives/rlwe.h"
-#include "primitives/rgsw.h"
 #include "primitives/keys.h"
+#include "primitives/rgsw.h"
+#include "primitives/rlwe.h"
 #include <complex>
 
 namespace hehub {
@@ -46,7 +46,7 @@ struct CkksCt : public RlweCt {
 
 /**
  * @brief TODO
- * 
+ *
  */
 struct CkksQuadraticCt : public std::array<RnsPolynomial, 3> {
     using std::array<RnsPolynomial, 3>::array;
@@ -152,66 +152,87 @@ struct ckks {
 
     /**
      * @brief TODO
-     * 
-     * @param ct1 
-     * @param ct2 
-     * @return CkksCt 
+     *
+     * @param ct1
+     * @param ct2
+     * @return CkksCt
      */
     static CkksCt add(const CkksCt &ct1, const CkksCt &ct2);
 
     /**
      * @brief TODO
-     * 
-     * @param ct 
-     * @param pt 
-     * @return CkksCt 
+     *
+     * @param ct
+     * @param pt
+     * @return CkksCt
      */
     static CkksCt add_plain(const CkksCt &ct, const CkksPt &pt);
 
     /**
      * @brief TODO
-     * 
-     * @param ct1 
-     * @param ct2 
-     * @return CkksCt 
+     *
+     * @param ct1
+     * @param ct2
+     * @return CkksCt
      */
     static CkksCt sub(const CkksCt &ct1, const CkksCt &ct2);
 
     /**
      * @brief TODO
-     * 
-     * @param ct 
-     * @param pt 
-     * @return CkksCt 
+     *
+     * @param ct
+     * @param pt
+     * @return CkksCt
      */
     static CkksCt sub_plain(const CkksCt &ct, const CkksPt &pt);
 
     /**
      * @brief TODO
-     * 
-     * @param ct 
-     * @param pt 
-     * @return CkksCt 
+     *
+     * @param ct
+     * @param pt
+     * @return CkksCt
      */
     static CkksCt mult_plain(const CkksCt &ct, const CkksPt &pt);
 
     /**
      * @brief TODO
-     * 
-     * @param ct1 
-     * @param ct2 
-     * @return CkksQuadraticCt 
+     *
+     * @param ct1
+     * @param ct2
+     * @return CkksQuadraticCt
      */
     static CkksQuadraticCt mult_low_level(const CkksCt &ct1, const CkksCt &ct2);
 
     /**
      * @brief TODO
-     * 
-     * @param ct 
-     * @param relin_key 
-     * @return CkksCt 
+     *
+     * @param ct
+     * @param relin_key
+     * @return CkksCt
      */
-    static CkksCt relinearize(const CkksQuadraticCt &ct, const RlweKsk &relin_key);
+    static CkksCt relinearize(const CkksQuadraticCt &ct,
+                              const RlweKsk &relin_key);
+
+    /**
+     * @brief TODO
+     *
+     * @param ct
+     * @param conj_key
+     * @return CkksCt
+     */
+    static CkksCt conjugate(const CkksCt &ct, const RlweKsk &conj_key);
+
+    /**
+     * @brief TODO
+     *
+     * @param ct
+     * @param rot_key
+     * @param step
+     * @return CkksCt
+     */
+    static CkksCt rotate(const CkksCt &ct, const RlweKsk &rot_key,
+                         const size_t step);
 
     /**
      * @brief TODO

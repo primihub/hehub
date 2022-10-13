@@ -4,15 +4,16 @@
 #include "common/mod_arith.h"
 #include "common/permutation.h"
 #include "common/rns_transform.h"
-#include <iostream>
 #include <numeric>
 
 using namespace std;
 
 namespace hehub {
 
-void fft_negacyclic_inplace(cc_double *coeffs, size_t log_poly_len,
-                            bool inverse = false) {
+/// @brief Inplace FFT with coefficients/point values input and output in
+/// natural order.
+void fft_negacyclic_natural_inout(cc_double *coeffs, size_t log_poly_len,
+                                  bool inverse = false) {
     /**************************** Preparations ******************************/
     struct FFTFactors {
         FFTFactors(size_t log_poly_len, bool inverse = false) {
@@ -103,7 +104,9 @@ CkksPt ckks::simd_encode_cc(const vector<cc_double> &data,
     if (scaling_factor <= 0) {
         throw invalid_argument("Scaling factor should be positive.");
     }
-    auto slot_count = pt_poly_dim.poly_len / 2;
+    auto poly_len = pt_poly_dim.poly_len;
+    size_t log_poly_len = round(log2(poly_len));
+    auto slot_count = poly_len / 2;
     auto data_size = data.size();
     if (data_size > slot_count) {
         throw invalid_argument("Cannot encode " + to_string(data_size) +
@@ -111,16 +114,20 @@ CkksPt ckks::simd_encode_cc(const vector<cc_double> &data,
                                " slots.");
     }
 
-    vector<cc_double> interpolated(slot_count * 2, 0.0);
+    vector<cc_double> interpolated(poly_len, 0.0);
+    auto &root_indices = root_index_factors();
+    auto mask = (1 << (log_poly_len + 1)) - 1; // for fast modulo 2*len
     for (size_t i = 0; i < data.size(); i++) {
-        interpolated[i] = data[i];
-        interpolated[slot_count * 2 - 1 - i] = conj(data[i]);
+        auto root_index = root_indices[i] & mask;
+        auto position = (root_index - 1) / 2;
+        interpolated[position] = data[i];
+        interpolated[poly_len - 1 - position] = conj(data[i]);
     }
 
     // Interpolate the data into element in C[X]/(X^n+1).
-    fft_negacyclic_inplace(interpolated.data(),
-                           size_t(log2(interpolated.size())),
-                           /*inverse=*/true);
+    fft_negacyclic_natural_inout(interpolated.data(),
+                                 size_t(log2(interpolated.size())),
+                                 /*inverse=*/true);
 
     CkksPt pt(pt_poly_dim);
 
@@ -194,8 +201,7 @@ CkksPt ckks::simd_encode_cc(const vector<cc_double> &data,
     return pt;
 }
 
-vector<cc_double> ckks::simd_decode_cc(const CkksPt &pt,
-                                       size_t data_size) {
+vector<cc_double> ckks::simd_decode_cc(const CkksPt &pt, size_t data_size) {
     auto scaling_factor = pt.scaling_factor;
     if (scaling_factor <= 0) {
         throw invalid_argument("Scaling factor should be positive.");
@@ -209,11 +215,11 @@ vector<cc_double> ckks::simd_decode_cc(const CkksPt &pt,
                                " items from " + to_string(slot_count) +
                                " slots.");
     }
-    vector<cc_double> data(pt.poly_len());
 
     auto pt_reduced(pt);
     strict_reduce(pt_reduced);
     auto poly_len = pt.poly_len();
+    size_t log_poly_len = round(log2(poly_len));
     auto components = pt.component_count();
 
     // Decide whether the coefficients when in composed form will be all smaller
@@ -231,14 +237,15 @@ vector<cc_double> ckks::simd_decode_cc(const CkksPt &pt,
         }
     }
 
+    vector<cc_double> interpolated(pt.poly_len());
     if (small_coeff) {
         auto first_mod = pt_reduced.modulus_at(0);
         auto half_first_mod = first_mod / 2;
         for (size_t i = 0; i < poly_len; i++) {
             if (pt_reduced[0][i] < half_first_mod) {
-                data[i] = (double)pt_reduced[0][i];
+                interpolated[i] = (double)pt_reduced[0][i];
             } else {
-                data[i] = -(double)(first_mod - pt_reduced[0][i]);
+                interpolated[i] = -(double)(first_mod - pt_reduced[0][i]);
             }
         }
     } else {
@@ -251,29 +258,35 @@ vector<cc_double> ckks::simd_decode_cc(const CkksPt &pt,
             double abs_real;
             if (pt_poly_big_int[i] < half_whole_mod) {
                 abs_real = to_double(pt_poly_big_int[i]);
-                data[i] = abs_real;
+                interpolated[i] = abs_real;
             } else {
                 abs_real = to_double(whole_modulus - pt_poly_big_int[i]);
-                data[i] = -abs_real;
+                interpolated[i] = -abs_real;
             }
         }
     }
 
     // Recover the data by scaling back and FFT
-    for (auto &d : data) {
-        d /= scaling_factor;
+    for (auto &i : interpolated) {
+        i /= scaling_factor;
     }
-    // currently data.size() == poly_len
-    fft_negacyclic_inplace(data.data(), size_t(log2(data.size())));
+    // interpolated.size() == poly_len
+    fft_negacyclic_natural_inout(interpolated.data(), log_poly_len);
 
-    // Resize while removing conjugate part
-    data.resize(data_size);
+    // extract the original conjugation half
+    vector<cc_double> data(slot_count);
+    auto &root_indices = root_index_factors();
+    auto mask = (1 << (log_poly_len + 1)) - 1; // for fast modulo 2*len
+    for (size_t i = 0; i < slot_count; i++) {
+        auto root_index = root_indices[i] & mask;
+        auto position = (root_index - 1) / 2;
+        data[i] = interpolated[position];
+    }
     return data;
 }
 
 template <>
-vector<cc_double> ckks::simd_decode(const CkksPt &pt,
-                                    size_t data_size) {
+vector<cc_double> ckks::simd_decode(const CkksPt &pt, size_t data_size) {
     return simd_decode_cc(pt, data_size);
 }
 
