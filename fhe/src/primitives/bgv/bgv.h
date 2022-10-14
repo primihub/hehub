@@ -5,9 +5,42 @@
  */
 
 #pragma once
+#include "primitives/keys.h"
 #include "primitives/rlwe.h"
 
 namespace hehub {
+
+/**
+ * @brief TODO
+ *
+ */
+using BgvPt = RlwePt;
+
+/**
+ * @brief TODO
+ *
+ */
+struct BgvCt : public RlweCt {
+    using RlweCt::RlweCt;
+
+    /// @brief TODO
+    /// @param other
+    BgvCt(RlweCt &&other) : RlweCt(std::move(other)) {}
+
+    /// @brief TODO
+    u64 plain_modulus = 1;
+};
+
+/**
+ * @brief TODO
+ *
+ */
+struct BgvQuadraticCt : public std::array<RnsPolynomial, 3> {
+    using std::array<RnsPolynomial, 3>::array;
+
+    /// @brief TODO
+    u64 plain_modulus = 1;
+};
 
 struct bgv {
     /**
@@ -16,10 +49,10 @@ struct bgv {
      * @param modulus
      * @param data
      * @param slot_count
-     * @return RlwePt
+     * @return BgvPt
      */
-    static RlwePt simd_encode(const std::vector<u64> &data, const u64 modulus,
-                              size_t slot_count = 0);
+    static BgvPt simd_encode(const std::vector<u64> &data, const u64 modulus,
+                             size_t slot_count = 0);
 
     /**
      * @brief TODO
@@ -28,10 +61,10 @@ struct bgv {
      * @param data_size
      * @return std::vector<u64>
      */
-    static std::vector<u64> simd_decode(const RlwePt &pt, size_t data_size = 0);
+    static std::vector<u64> simd_decode(const BgvPt &pt, size_t data_size = 0);
 
     /**
-     * @brief TODO Get the rlwe sample lift noise object
+     * @brief TODO
      *
      * @param sk
      * @param lifting_factor
@@ -48,80 +81,95 @@ struct bgv {
      * @param pt
      * @param rlwe_sk
      * @param ct_moduli
-     * @return RlweCt
+     * @return BgvCt
      */
-    static RlweCt encrypt(const RlwePt &pt, const RlweSk &rlwe_sk,
-                          std::vector<u64> ct_moduli = std::vector<u64>{});
+    static BgvCt encrypt(const BgvPt &pt, const RlweSk &rlwe_sk,
+                         std::vector<u64> ct_moduli = std::vector<u64>{});
 
     /**
      * @brief TODO
      *
      * @param ct
      * @param rlwe_sk
-     * @param pt_modulus
-     * @return RlwePt
+     * @return BgvPt
      */
-    static RlwePt decrypt(const RlweCt &ct, const RlweSk &rlwe_sk,
-                          u64 pt_modulus);
+    static BgvPt decrypt(const BgvCt &ct, const RlweSk &rlwe_sk);
 
     /**
      * @brief TODO
-     * 
-     * @param ct 
-     * @param plain_modulus 
-     * @param dropping_primes 
+     *
+     * @param ct1
+     * @param ct2
+     * @return BgvCt
      */
-    static void mod_switch_inplace(RlweCt &ct, u64 plain_modulus, size_t dropping_primes = 1);
+    static BgvCt add(const BgvCt &ct1, const BgvCt &ct2);
 
     /**
      * @brief TODO
-     * 
-     * @param ct1 
-     * @param ct2 
-     * @return RlweCt 
+     *
+     * @param ct
+     * @param pt
+     * @return BgvCt
      */
-    static RlweCt add(const RlweCt &ct1, const RlweCt &ct2);
+    static BgvCt add_plain(const BgvCt &ct, const BgvPt &pt);
 
     /**
      * @brief TODO
-     * 
-     * @param ct 
-     * @param pt 
-     * @return RlweCt 
+     *
+     * @param ct1
+     * @param ct2
+     * @return BgvCt
      */
-    static RlweCt add_plain(const RlweCt &ct, const RlwePt &pt);
+    static BgvCt sub(const BgvCt &ct1, const BgvCt &ct2);
 
     /**
      * @brief TODO
-     * 
-     * @param ct1 
-     * @param ct2 
-     * @return RlweCt 
+     *
+     * @param ct
+     * @param pt
+     * @return BgvCt
      */
-    static RlweCt sub(const RlweCt &ct1, const RlweCt &ct2);
+    static BgvCt sub_plain(const BgvCt &ct, const BgvPt &pt);
 
     /**
      * @brief TODO
-     * 
-     * @param ct 
-     * @param pt 
-     * @return RlweCt 
+     *
+     * @param ct
+     * @param pt
+     * @return BgvCt
      */
-    static RlweCt sub_plain(const RlweCt &ct, const RlwePt &pt);
+    static BgvCt mult_plain(const BgvCt &ct, const BgvPt &pt);
 
     /**
      * @brief TODO
-     * 
-     * @param ct 
-     * @param pt 
-     * @return RlweCt 
+     *
+     * @param ct1
+     * @param ct2
+     * @return BgvQuadraticCt
      */
-    static RlweCt mult_plain(const RlweCt &ct, const RlwePt &pt);
+    static BgvQuadraticCt mult_low_level(const BgvCt &ct1, const BgvCt &ct2);
+
+    /**
+     * @brief TODO
+     *
+     * @param ct
+     * @param relin_key
+     * @return BgvCt
+     */
+    static BgvCt relinearize(const BgvQuadraticCt &ct,
+                             const RlweKsk &relin_key);
+
+    /**
+     * @brief TODO
+     *
+     * @param ct
+     * @param dropping_primes
+     */
+    static void mod_switch_inplace(BgvCt &ct, size_t dropping_primes = 1);
 
 private:
-    // Instantiation is diabled. 
+    // Instantiation is diabled.
     bgv();
-
 };
 
 } // namespace hehub

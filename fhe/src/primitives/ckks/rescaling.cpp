@@ -3,6 +3,7 @@
 #include "common/ntt.h"
 #include <algorithm>
 #include <numeric>
+#include <iostream>
 
 namespace hehub {
 
@@ -46,10 +47,9 @@ void rescale_by_one_prime_inplace(CkksCt &ct) {
         for (size_t k = 0; k < remainder_q_last.component_count(); k++) {
             remainder_q_last[k] = last_comp_coeffs;
 
-            /* Heuristically the ciphertext moduli are close in size, hence the
-             * reduction step after copying can be skipped. */
-            // batched_barrett_lazy(
-            //     ct_moduli[k], poly_len, remainder_q_last[k].data());
+            /* This reduction step needs further optimization. */
+            batched_barrett(
+                ct_moduli[k], poly_len, remainder_q_last[k].data());
 
             // The remainder needs to be of smallest possible abs value, i.e. in
             // [-q_last/2, q_last/2).

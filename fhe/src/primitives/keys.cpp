@@ -26,7 +26,7 @@ RlweKsk::RlweKsk(const RlweSk &sk_curr, const RlweSk &sk_orig,
         rns_composition_basis[i].resize(orig_components + 1, 0);
         rns_composition_basis[i][i] = additional_mod % extended_moduli[i];
     }
-    *this = RgswCt(rgsw_encrypt_montgomery(sk_orig_extended, sk_curr_extended,
+    *this = RgswCt(rgsw_encrypt_montgomery(sk_curr_extended, sk_orig_extended, 
                                            rns_composition_basis));
 }
 

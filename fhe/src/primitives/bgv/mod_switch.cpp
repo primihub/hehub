@@ -70,14 +70,15 @@ void mod_drop_one_prime_inplace(RlweCt &ct, u64 plain_modulus) {
     }
 }
 
-void bgv::mod_switch_inplace(RlweCt &ct, u64 plain_modulus,
-                             size_t dropping_primes) {
+void bgv::mod_switch_inplace(BgvCt &ct, size_t dropping_primes) {
     if (dropping_primes == 1) {
-        mod_drop_one_prime_inplace(ct, plain_modulus);
+        mod_drop_one_prime_inplace(ct, ct.plain_modulus);
     } else if (dropping_primes >= 2) {
         // TODO case
+        throw "under development";
     } else {
-        // TODO: throw error
+        throw std::invalid_argument(
+            "The number of primes to be dropped is not positive.");
     }
 }
 

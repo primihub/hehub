@@ -6,8 +6,12 @@ using namespace std;
 
 namespace hehub {
 
-RgswCt rgsw_encrypt(const RlweSk &sk, const RlwePt &pt,
+RgswCt rgsw_encrypt(const RlwePt &pt_ntt, const RlweSk &sk, 
                     const vector<vector<u64>> &decomp_basis) {
+    if (pt_ntt.rep_form == PolyRepForm::coeff) {
+        throw invalid_argument("Plaintext is expected in NTT form.");
+    }
+
     auto sample_count = decomp_basis.size();
     RgswCt rgsw(sample_count);
 
@@ -18,15 +22,15 @@ RgswCt rgsw_encrypt(const RlweSk &sk, const RlwePt &pt,
 
     // add pt multiplied by decomposition basis
     for (size_t i = 0; i < sample_count; i++) {
-        rgsw[i][0] += pt * decomp_basis[i];
+        rgsw[i][0] += pt_ntt * decomp_basis[i];
     }
 
     return rgsw;
 }
 
-RgswCt rgsw_encrypt_montgomery(const RlweSk &sk, const RlwePt &pt,
+RgswCt rgsw_encrypt_montgomery(const RlwePt &pt_ntt, const RlweSk &sk, 
                                const vector<vector<u64>> &decomp_basis) {
-    auto rgsw = rgsw_encrypt(sk, pt, decomp_basis);
+    auto rgsw = rgsw_encrypt(pt_ntt, sk, decomp_basis);
 
     auto get_2to64_reduced = [](const u64 modulus) {
         const u64 _2to64_but_one = (u64)(-1LL) % modulus;

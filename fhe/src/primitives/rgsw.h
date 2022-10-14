@@ -22,23 +22,23 @@ using RgswCt = std::vector<RlweCt>;
 /**
  * @brief TODO
  *
+ * @param pt_ntt
  * @param sk
- * @param pt
  * @param decomp_basis
  * @return RgswCt
  */
-RgswCt rgsw_encrypt(const RlweSk &sk, const RlwePt &pt,
+RgswCt rgsw_encrypt(const RlwePt &pt_ntt, const RlweSk &sk, 
                     const std::vector<std::vector<u64>> &decomp_basis);
 
 /**
  * @brief TODO
  *
+ * @param pt_ntt
  * @param sk
- * @param pt
  * @param decomp_basis
  * @return RgswCt
  */
-RgswCt rgsw_encrypt_montgomery(const RlweSk &sk, const RlwePt &pt,
+RgswCt rgsw_encrypt_montgomery(const RlwePt &pt_ntt, const RlweSk &sk, 
                                const std::vector<std::vector<u64>> &decomp_basis);
 
 /**

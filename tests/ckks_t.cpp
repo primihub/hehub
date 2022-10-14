@@ -4,6 +4,7 @@
 #include "common/permutation.h"
 #include "common/sampling.h"
 #include "primitives/ckks/ckks.h"
+#include <type_traits>
 
 using namespace hehub;
 
@@ -11,6 +12,15 @@ namespace hehub {
 void fft_negacyclic_natural_inout(cc_double *coeffs, size_t log_poly_len,
                                   bool inverse = false);
 } // namespace hehub
+
+#define REQUIRE_ALL_CLOSE(vec1, vec2, eps)                                     \
+    do {                                                                       \
+        static_assert(std::is_same<decltype(vec1), decltype(vec2)>::value);    \
+        REQUIRE((vec1).size() == (vec2).size());                               \
+        for (size_t i = 0; i < (vec1).size(); i++) {                           \
+            REQUIRE(std::abs((vec1)[i] - (vec2)[i]) < (eps));                  \
+        }                                                                      \
+    } while (false);
 
 TEST_CASE("fft", "[.]") {
     size_t logn = 8;
@@ -69,16 +79,6 @@ TEST_CASE("ckks encoding") {
     std::default_random_engine generator;
     std::normal_distribution<double> distribution(0, 1);
 
-    auto eps = std::pow(2, -35);
-    auto check_all_close = [=](const auto &vec1, const auto &vec2) {
-        for (size_t i = 0; i < data_size; i++) {
-            if (abs(vec1.at(i) - vec2.at(i)) > eps) {
-                return false;
-            }
-        }
-        return true;
-    };
-
     SECTION("small real") {
         double scaling_factor = std::pow(2.0, 40);
         std::vector<double> data(data_size);
@@ -90,7 +90,7 @@ TEST_CASE("ckks encoding") {
         auto data_recovered = ckks::simd_decode(pt);
 
         REQUIRE(data_recovered.size() == data.size());
-        REQUIRE(check_all_close(data, data_recovered));
+        REQUIRE_ALL_CLOSE(data, data_recovered, pow(2.0, -35));
     }
     SECTION("big real") {
         double scaling_factor = std::pow(2.0, 80);
@@ -103,7 +103,7 @@ TEST_CASE("ckks encoding") {
         auto data_recovered = ckks::simd_decode(pt);
 
         REQUIRE(data_recovered.size() == data.size());
-        REQUIRE(check_all_close(data, data_recovered));
+        REQUIRE_ALL_CLOSE(data, data_recovered, pow(2.0, -35));
     }
     SECTION("small complex") {
         double scaling_factor = std::pow(2.0, 40);
@@ -116,7 +116,7 @@ TEST_CASE("ckks encoding") {
         auto data_recovered = ckks::simd_decode<cc_double>(pt);
 
         REQUIRE(data_recovered.size() == data.size());
-        REQUIRE(check_all_close(data, data_recovered));
+        REQUIRE_ALL_CLOSE(data, data_recovered, pow(2.0, -35));
     }
     SECTION("big complex") {
         double scaling_factor = std::pow(2.0, 80);
@@ -129,7 +129,7 @@ TEST_CASE("ckks encoding") {
         auto data_recovered = ckks::simd_decode<cc_double>(pt);
 
         REQUIRE(data_recovered.size() == data.size());
-        REQUIRE(check_all_close(data, data_recovered));
+        REQUIRE_ALL_CLOSE(data, data_recovered, pow(2.0, -35));
     }
 }
 
@@ -176,17 +176,6 @@ TEST_CASE("ckks rescaling") {
     }
 }
 
-template <typename T>
-bool all_close(const std::vector<T> &vec1, const std::vector<T> &vec2,
-               double eps) {
-    for (size_t i = 0; i < vec1.size(); i++) {
-        if (i >= vec2.size() || std::abs(vec1[i] - vec2[i]) > eps) {
-            return false;
-        }
-    }
-    return true;
-};
-
 TEST_CASE("ckks encryption") {
     std::vector<u64> ct_moduli{1099510054913}; // 40-bit
     size_t poly_len = 8;
@@ -216,7 +205,7 @@ TEST_CASE("ckks encryption") {
     // check
     REQUIRE(data_recovered.size() == poly_len / 2);
     double eps = std::pow(2.0, 5 - scaling_bits); // noise's 6σ = 19.2 < 2^5
-    REQUIRE(all_close(plain_data, data_recovered, eps));
+    REQUIRE_ALL_CLOSE(plain_data, data_recovered, eps);
 }
 
 TEST_CASE("ckks arith") {
@@ -268,7 +257,7 @@ TEST_CASE("ckks arith") {
 
         // check
         double eps = std::pow(2.0, 5 + 1 - scaling_bits);
-        REQUIRE(all_close(data_sum, sum_recovered, eps));
+        REQUIRE_ALL_CLOSE(data_sum, sum_recovered, eps);
     }
     SECTION("subtraction") {
         auto data_diff(plain_data1);
@@ -289,7 +278,7 @@ TEST_CASE("ckks arith") {
 
         // check
         double eps = std::pow(2.0, 5 + 1 - scaling_bits);
-        REQUIRE(all_close(data_diff, diff_recovered, eps));
+        REQUIRE_ALL_CLOSE(data_diff, diff_recovered, eps);
     }
     SECTION("multiplication with plaintext") {
         auto data_prod(plain_data1);
@@ -311,7 +300,7 @@ TEST_CASE("ckks arith") {
             double eps =
                 pow(2, 3 + 5 - scaling_bits); // abs of data < 6σ
                                               // with σ = data's std dev
-            REQUIRE(all_close(data_prod, prod_recovered, eps));
+            REQUIRE_ALL_CLOSE(data_prod, prod_recovered, eps);
         }
         SECTION("with rescaling") {
             // rescaling
@@ -324,7 +313,7 @@ TEST_CASE("ckks arith") {
             double eps =
                 pow(2, 3 + 5 - scaling_bits); // abs of data < 6σ
                                               // with σ = data's std dev
-            REQUIRE(all_close(data_prod, prod_recovered, eps));
+            REQUIRE_ALL_CLOSE(data_prod, prod_recovered, eps);
         }
     }
     SECTION("multiplication with ciphertext") {
@@ -353,11 +342,13 @@ TEST_CASE("ckks arith") {
             double eps =
                 pow(2, 3 + 5 + 1 - scaling_bits); // abs of data < 6σ
                                                   // with σ = data's std dev
-            REQUIRE(all_close(data_prod, prod_recovered, eps));
+            REQUIRE_ALL_CLOSE(data_prod, prod_recovered, eps);
         }
         SECTION("with rescaling") {
             // rescaling
             ckks::rescale_inplace(ct_prod);
+            REQUIRE(ct_prod[0].component_count() == 2);
+            REQUIRE(ct_prod[1].component_count() == 2);
 
             // decrypt & decode
             auto prod_recovered = ckks::simd_decode(ckks::decrypt(ct_prod, sk));
@@ -366,7 +357,7 @@ TEST_CASE("ckks arith") {
             double eps =
                 pow(2, 3 + 5 + 1 - scaling_bits); // abs of data < 6σ
                                                   // with σ = data's std dev
-            REQUIRE(all_close(data_prod, prod_recovered, eps));
+            REQUIRE_ALL_CLOSE(data_prod, prod_recovered, eps);
         }
     }
 }
@@ -400,7 +391,7 @@ TEST_CASE("ckks key switch") {
         auto pt_recovered = ckks::decrypt(ct_new, sk2);
         auto data_recovered = ckks::simd_decode(pt_recovered);
         double eps = pow(2.0, -25); // empirical, needs analysis
-        REQUIRE(all_close(plain_data, data_recovered, eps));
+        REQUIRE_ALL_CLOSE(plain_data, data_recovered, eps);
     }
     SECTION("conjugation") {
         std::vector<u64> ct_moduli{1099510054913, 1073479681, 1072496641};
@@ -427,8 +418,8 @@ TEST_CASE("ckks key switch") {
 
         auto pt_recovered = ckks::decrypt(ct_conj, sk);
         auto data_recovered = ckks::simd_decode<cc_double>(pt_recovered);
-        double eps = pow(2.0, -25); // empirical, needs analysis
-        REQUIRE(all_close(data_conj, data_recovered, eps));
+        double eps = pow(2.0, -24); // empirical, needs analysis
+        REQUIRE_ALL_CLOSE(data_conj, data_recovered, eps);
     }
     SECTION("rotation") {
         std::vector<u64> ct_moduli{1099510054913, 1073479681, 1072496641};
@@ -458,7 +449,7 @@ TEST_CASE("ckks key switch") {
 
         auto pt_recovered = ckks::decrypt(ct_conj, sk);
         auto data_recovered = ckks::simd_decode<cc_double>(pt_recovered);
-        double eps = pow(2.0, -25); // empirical, needs analysis
-        REQUIRE(all_close(data_rotated, data_recovered, eps));
+        double eps = pow(2.0, -23); // empirical, needs analysis
+        REQUIRE_ALL_CLOSE(data_rotated, data_recovered, eps);
     }
 }
