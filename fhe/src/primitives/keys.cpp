@@ -7,8 +7,12 @@ namespace hehub {
 RlweKsk::RlweKsk(const RlweSk &sk_curr, const RlweSk &sk_orig,
                  const u64 additional_mod) {
     auto sk_curr_extended = sk_curr;
-    sk_curr_extended.add_components({additional_mod}); // no need to set 0 manually
-                                                       // since will be mult'd by p
+    sk_curr_extended.add_components({additional_mod});
+    // no need to set 0 manually unless debugging mem since will be mult'd by p
+#ifdef HEHUB_DEBUG
+    std::fill(sk_curr_extended.last()->begin(), sk_curr_extended.last()->end(),
+              (u64)0);
+#endif
 
     // To encapsulate
     auto extended_moduli = sk_orig.modulus_vec();
