@@ -3,6 +3,7 @@
 #include "common/ntt.h"
 #include "common/permutation.h"
 #include "common/rnspolynomial.h"
+#include "common/sampling.h"
 #include "primitives/ckks/ckks.h"
 
 using namespace hehub;
@@ -47,6 +48,56 @@ TEST_CASE("bit rev", "[.]") {
     REQUIRE_THROWS(__bit_rev_naive_16(12345, 10000000));
     REQUIRE_THROWS(__bit_rev_naive_16(12345, 13));
 #endif
+}
+
+TEST_CASE("sampling", "[.]") {
+    u64 mod = 65537;
+    PolyDimensions poly_dim{4096, 1, std::vector<u64>{mod}};
+
+    SECTION("ternary") {
+        auto tern_poly = get_rand_ternary_poly(poly_dim);
+        intt_negacyclic_inplace(tern_poly);
+
+        for (const auto &coeff : tern_poly[0]) {
+            REQUIRE(((coeff == 0) || (coeff == 1) || (coeff == mod - 1)));
+        }
+
+        bool all_zero = true;
+        for (const auto &coeff : tern_poly[0]) {
+            if (coeff != 0) {
+                all_zero = false;
+            }
+        }
+        REQUIRE_FALSE(all_zero);
+    }
+    SECTION("gaussian") {
+        auto gauss_poly = get_rand_gaussian_poly(poly_dim);
+        intt_negacyclic_inplace(gauss_poly);
+
+        for (const auto &coeff : gauss_poly[0]) {
+            REQUIRE(((coeff < 20) || (coeff > mod - 20)));
+        }
+
+        bool all_zero = true;
+        for (const auto &coeff : gauss_poly[0]) {
+            if (coeff != 0) {
+                all_zero = false;
+            }
+        }
+        REQUIRE_FALSE(all_zero);
+    }
+    SECTION("uniform") {
+        auto uniform_poly = get_rand_uniform_poly(poly_dim);
+        intt_negacyclic_inplace(uniform_poly);
+
+        bool all_zero = true;
+        for (const auto &coeff : uniform_poly[0]) {
+            if (coeff != 0) {
+                all_zero = false;
+            }
+        }
+        REQUIRE_FALSE(all_zero);
+    }
 }
 
 /// Infinity norm on a simple (not RNS) polynomial

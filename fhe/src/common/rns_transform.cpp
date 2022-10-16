@@ -1,8 +1,10 @@
 #include "rns_transform.h"
 #include "bigintpoly.h"
 #include "mod_arith.h"
-#include <cassert>
+#include "range/v3/view/zip.hpp"
 #include <numeric>
+
+using namespace ranges::views;
 
 namespace hehub {
 
@@ -16,20 +18,18 @@ rns_base_transform_from_single(const RnsPolynomial &input_rns_poly,
     PolyDimensions output_dim{poly_len, new_moduli.size(), new_moduli};
     RnsPolynomial result(output_dim);
     auto &input_poly = input_rns_poly[0];
-    auto mod_ptr = new_moduli.begin();
-    for (auto &component_poly : result) {
-        auto curr_mod = *(mod_ptr++);
-        auto curr_mod_multiple = (old_modulus / curr_mod + 1) * curr_mod;
-        for (size_t i = 0; i < poly_len; i++) {
-            if (input_poly[i] < half_old_modulus) {
-                component_poly[i] = input_poly[i];
+    for (auto [component, modulus] : zip(result, new_moduli)) {
+        auto modulus_multiple = (old_modulus / modulus + 1) * modulus;
+        for (auto [component_coeff, input_coeff] : zip(component, input_poly)) {
+            if (input_coeff < half_old_modulus) {
+                component_coeff = input_coeff;
             } else {
-                component_poly[i] = curr_mod_multiple - old_modulus + input_poly[i];
+                component_coeff = modulus_multiple - old_modulus + input_coeff;
             }
         }
 
-        if (curr_mod < old_modulus) {
-            batched_barrett_lazy(curr_mod, poly_len, component_poly.data());
+        if (modulus < old_modulus) {
+            batched_barrett_lazy(modulus, poly_len, component.data());
         }
     }
 
@@ -70,12 +70,13 @@ RnsPolynomial rns_base_transform_to_single(const RnsPolynomial &input_rns_poly,
     if (small_coeff) {
         u64 new_modulus_multiple =
             (first_old_mod / new_modulus + 1) * new_modulus;
-        for (size_t i = 0; i < poly_len; i++) {
-            if (input_rns_poly[0][i] < half_first_old_mod) {
-                result_poly[i] = input_rns_poly[0][i];
+        for (auto [result_coeff, input_coeff] :
+             zip(result_poly, input_rns_poly[0])) {
+            if (input_coeff < half_first_old_mod) {
+                result_coeff = input_coeff;
             } else {
-                result_poly[i] =
-                    new_modulus_multiple - first_old_mod + input_rns_poly[0][i];
+                result_coeff =
+                    new_modulus_multiple - first_old_mod + input_coeff;
             }
         }
         batched_barrett(new_modulus, poly_len, result_poly.data());
@@ -119,7 +120,7 @@ RnsPolynomial rns_base_transform(RnsPolynomial input_rns_poly,
     } else if (new_moduli.size() == 1) {
         return rns_base_transform_to_single(input_rns_poly, new_moduli[0]);
     } else {
-        throw;
+        throw "under development";
     }
 }
 

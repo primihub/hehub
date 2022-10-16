@@ -1,12 +1,14 @@
 #include "rgsw.h"
 #include "common/mod_arith.h"
 #include "common/ntt.h"
+#include "range/v3/view/zip.hpp"
 
 using namespace std;
+using namespace ranges::views;
 
 namespace hehub {
 
-RgswCt rgsw_encrypt(const RlwePt &pt_ntt, const RlweSk &sk, 
+RgswCt rgsw_encrypt(const RlwePt &pt_ntt, const RlweSk &sk,
                     const vector<vector<u64>> &decomp_basis) {
     if (pt_ntt.rep_form == PolyRepForm::coeff) {
         throw invalid_argument("Plaintext is expected in NTT form.");
@@ -21,14 +23,14 @@ RgswCt rgsw_encrypt(const RlwePt &pt_ntt, const RlweSk &sk,
     }
 
     // add pt multiplied by decomposition basis
-    for (size_t i = 0; i < sample_count; i++) {
-        rgsw[i][0] += pt_ntt * decomp_basis[i];
+    for (auto [rlwe_sample, basis_component] : zip(rgsw, decomp_basis)) {
+        rlwe_sample[0] += pt_ntt * basis_component;
     }
 
     return rgsw;
 }
 
-RgswCt rgsw_encrypt_montgomery(const RlwePt &pt_ntt, const RlweSk &sk, 
+RgswCt rgsw_encrypt_montgomery(const RlwePt &pt_ntt, const RlweSk &sk,
                                const vector<vector<u64>> &decomp_basis) {
     auto rgsw = rgsw_encrypt(pt_ntt, sk, decomp_basis);
 
@@ -43,8 +45,8 @@ RgswCt rgsw_encrypt_montgomery(const RlwePt &pt_ntt, const RlweSk &sk,
         mont_consts.push_back(get_2to64_reduced(modulus));
     }
 
-    for (auto &rlwe_sample: rgsw) {
-        for (auto &poly: rlwe_sample) {
+    for (auto &rlwe_sample : rgsw) {
+        for (auto &poly : rlwe_sample) {
             poly *= mont_consts;
         }
     }

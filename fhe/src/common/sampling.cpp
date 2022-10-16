@@ -1,8 +1,11 @@
 #include "sampling.h"
 #include "ntt.h"
+#include "range/v3/view/zip.hpp"
 #include "rnspolynomial.h"
 #include "type_defs.h"
 #include <random>
+
+using namespace ranges::views;
 
 namespace hehub {
 
@@ -15,20 +18,16 @@ RnsPolynomial get_rand_ternary_poly(const PolyDimensions &poly_dim) {
     auto poly_len = poly_dim.poly_len;
 
     // Sampling.
-    i8 temp[poly_len];
-    for (auto &temp_item : temp) {
-        temp_item = rand_ternary(rand_engine);
+    std::vector<i8> ternary_integers(poly_len);
+    for (auto &t : ternary_integers) {
+        t = rand_ternary(rand_engine);
     }
 
     // Transform to RNS representation.
-    auto mod_ptr = tern_poly.modulus_vec().begin();
-    for (auto &component_poly : tern_poly) {
-        auto curr_mod = *(mod_ptr++);
-        auto temp_item_ptr = temp;
-        for (auto &coeff : component_poly) {
-            auto temp_item = u64(*(temp_item_ptr++));
-            coeff = curr_mod + temp_item;
-            coeff -= (coeff >= curr_mod) ? curr_mod : 0;
+    for (auto [component, modulus] : zip(tern_poly, tern_poly.modulus_vec())) {
+        for (auto [coeff, ternary_int] : zip(component, ternary_integers)) {
+            coeff = modulus + (u64)ternary_int;
+            coeff -= (coeff >= modulus) ? modulus : 0;
         }
     }
 
@@ -40,13 +39,13 @@ RnsPolynomial get_rand_ternary_poly(const PolyDimensions &poly_dim) {
 RnsPolynomial get_rand_uniform_poly(const PolyDimensions &poly_dim,
                                     PolyRepForm form) {
     auto poly_len = poly_dim.poly_len;
-    auto mod_ptr = poly_dim.moduli.begin();
     RnsPolynomial rand_rns_poly(poly_dim);
 
     // Sampling.
-    for (auto &component_poly : rand_rns_poly) {
-        std::uniform_int_distribution uni_mod((u64)0, *(mod_ptr++) - 1);
-        for (auto &coeff : component_poly) {
+    for (auto [component, modulus] :
+         zip(rand_rns_poly, rand_rns_poly.modulus_vec())) {
+        std::uniform_int_distribution uni_mod((u64)0, modulus - 1);
+        for (auto &coeff : component) {
             // here "coeff" can also mean NTT value
             coeff = uni_mod(rand_engine);
         }
@@ -60,7 +59,6 @@ RnsPolynomial get_rand_uniform_poly(const PolyDimensions &poly_dim,
 
 RnsPolynomial get_rand_gaussian_poly(const PolyDimensions &poly_dim,
                                      double std_dev) {
-    auto mod_ptr = poly_dim.moduli.begin();
     auto poly_len = poly_dim.poly_len;
     RnsPolynomial gaussian_poly(poly_dim);
 
@@ -68,21 +66,19 @@ RnsPolynomial get_rand_gaussian_poly(const PolyDimensions &poly_dim,
     std::normal_distribution<double> rand_gaussian(0, std_dev);
 
     // Sampling.
-    double temp[poly_len];
-    for (auto &temp_item : temp) {
+    std::vector<double> gassians(poly_len);
+    for (auto &g : gassians) {
         do {
-            temp_item = rand_gaussian(rand_engine);
-        } while (std::abs(temp_item) > bound);
+            g = rand_gaussian(rand_engine);
+        } while (std::abs(g) > bound);
     }
 
     // Transform to RNS representation.
-    for (auto &component_poly : gaussian_poly) {
-        auto curr_mod = *(mod_ptr++);
-        auto temp_item_ptr = temp;
-        for (auto &coeff : component_poly) {
-            auto temp_item = u64(*(temp_item_ptr++));
-            coeff = curr_mod + temp_item;
-            coeff -= (coeff >= curr_mod) ? curr_mod : 0;
+    for (auto [component, modulus] :
+         zip(gaussian_poly, gaussian_poly.modulus_vec())) {
+        for (auto [coeff, gaussian] : zip(component, gassians)) {
+            coeff = modulus + gaussian;
+            coeff -= (coeff >= modulus) ? modulus : 0;
         }
     }
 
@@ -94,7 +90,7 @@ RnsPolynomial get_rand_gaussian_poly(const PolyDimensions &poly_dim,
 RnsPolynomial get_zero_poly(const PolyDimensions &poly_dim, PolyRepForm form) {
     RnsPolynomial rns_poly(poly_dim);
     rns_poly.rep_form = form;
-    for (auto &component: rns_poly) {
+    for (auto &component : rns_poly) {
         std::fill(component.begin(), component.end(), 0);
     }
     return rns_poly;
