@@ -1,6 +1,6 @@
 #pragma once
 
-#include "rnspolynomial.h"
+#include "rns.h"
 
 namespace hehub {
 

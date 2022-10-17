@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "common/rnspolynomial.h"
+#include "common/rns.h"
 #include <array>
 
 namespace hehub {
@@ -31,8 +31,8 @@ struct RlweSk : public RnsPolynomial {
 
     /// @brief Initialize the polynomial parameters and sample ternary
     /// coefficients. For efficiency the secret key is stored in NTT form.
-    /// @param poly_dim
-    RlweSk(const PolyDimensions &poly_dim);
+    /// @param params
+    RlweSk(const RlweParams &params);
 };
 
 /**

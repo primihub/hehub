@@ -9,7 +9,7 @@
 using namespace hehub;
 
 namespace hehub {
-void fft_negacyclic_natural_inout(cc_double *coeffs, size_t log_poly_len,
+void fft_negacyclic_natural_inout(cc_double *coeffs, size_t log_dimension,
                                   bool inverse = false);
 } // namespace hehub
 
@@ -69,13 +69,13 @@ TEST_CASE("fft", "[.]") {
 }
 
 TEST_CASE("ckks encoding") {
-    size_t poly_len = 32;
-    PolyDimensions pt_dim{
-        poly_len,
+    size_t dimension = 32;
+    RlweParams pt_dim{
+        dimension,
         2,
         {144115188075593729, 144115188068319233}}; // ~114 bits in total
 
-    auto data_size = poly_len / 2;
+    auto data_size = dimension / 2;
     std::default_random_engine generator;
     std::normal_distribution<double> distribution(0, 1);
 
@@ -134,10 +134,10 @@ TEST_CASE("ckks encoding") {
 }
 
 TEST_CASE("ckks rescaling") {
-    size_t poly_len = 8;
+    size_t dimension = 8;
     std::vector<u64> moduli{17179672577, 17179410433,
                             17176854529}; // ~34 bits each
-    PolyDimensions ct_dim{poly_len, 3, moduli};
+    RlweParams ct_dim{dimension, 3, moduli};
 
     CkksCt ct;
     ct.scaling_factor = std::pow(2.0, 80);
@@ -169,7 +169,7 @@ TEST_CASE("ckks rescaling") {
     std::array composed_new{UBigIntPoly(ct[0]), UBigIntPoly(ct[1])};
 
     for (auto half : {0, 1}) {
-        for (size_t i = 0; i < poly_len; i++) {
+        for (size_t i = 0; i < dimension; i++) {
             REQUIRE((composed[half][i] + half_dropped_mod) / dropped_mod ==
                     composed_new[half][i]);
         }
@@ -178,12 +178,12 @@ TEST_CASE("ckks rescaling") {
 
 TEST_CASE("ckks encryption") {
     std::vector<u64> ct_moduli{1099510054913}; // 40-bit
-    size_t poly_len = 8;
-    PolyDimensions ct_poly_dim{poly_len, ct_moduli.size(), ct_moduli};
-    RlweSk sk(ct_poly_dim);
+    size_t dimension = 8;
+    RlweParams ct_params{dimension, ct_moduli.size(), ct_moduli};
+    RlweSk sk(ct_params);
 
     // random ckks plain data
-    auto data_count = poly_len / 2;
+    auto data_count = dimension / 2;
     std::vector<double> plain_data(data_count);
     std::default_random_engine generator;
     std::normal_distribution<double> data_dist(0, 1);
@@ -194,7 +194,7 @@ TEST_CASE("ckks encryption") {
     // encode
     int scaling_bits = 30;
     double scaling_factor = std::pow(2.0, scaling_bits);
-    auto pt = ckks::simd_encode(plain_data, scaling_factor, ct_poly_dim);
+    auto pt = ckks::simd_encode(plain_data, scaling_factor, ct_params);
 
     // encrypt
     auto ct = ckks::encrypt(pt, sk);
@@ -203,19 +203,19 @@ TEST_CASE("ckks encryption") {
     auto data_recovered = ckks::simd_decode(ckks::decrypt(ct, sk));
 
     // check
-    REQUIRE(data_recovered.size() == poly_len / 2);
+    REQUIRE(data_recovered.size() == dimension / 2);
     double eps = std::pow(2.0, 5 - scaling_bits); // noise's 6σ = 19.2 < 2^5
     REQUIRE_ALL_CLOSE(plain_data, data_recovered, eps);
 }
 
 TEST_CASE("ckks arith") {
     std::vector<u64> ct_moduli{1099510054913, 1073479681, 1072496641};
-    size_t poly_len = 8;
-    PolyDimensions ct_poly_dim{poly_len, ct_moduli.size(), ct_moduli};
-    RlweSk sk(ct_poly_dim);
+    size_t dimension = 8;
+    RlweParams ct_params{dimension, ct_moduli.size(), ct_moduli};
+    RlweSk sk(ct_params);
 
     // random ckks plain data
-    auto data_count = poly_len / 2;
+    auto data_count = dimension / 2;
     std::vector<double> plain_data1(data_count);
     std::vector<double> plain_data2(data_count);
     std::vector<double> plain_data3(data_count);
@@ -234,9 +234,9 @@ TEST_CASE("ckks arith") {
     // encode
     int scaling_bits = 30;
     double scaling_factor = std::pow(2.0, scaling_bits);
-    auto pt1 = ckks::simd_encode(plain_data1, scaling_factor, ct_poly_dim);
-    auto pt2 = ckks::simd_encode(plain_data2, scaling_factor, ct_poly_dim);
-    auto pt3 = ckks::simd_encode(plain_data3, scaling_factor, ct_poly_dim);
+    auto pt1 = ckks::simd_encode(plain_data1, scaling_factor, ct_params);
+    auto pt2 = ckks::simd_encode(plain_data2, scaling_factor, ct_params);
+    auto pt3 = ckks::simd_encode(plain_data3, scaling_factor, ct_params);
 
     SECTION("addition") {
         auto data_sum(plain_data1);
@@ -365,11 +365,11 @@ TEST_CASE("ckks arith") {
 TEST_CASE("ckks key switch") {
     SECTION("general key switching") {
         std::vector<u64> ct_moduli{1099510054913, 1073479681, 1072496641};
-        size_t poly_len = 8;
-        PolyDimensions ct_poly_dim{poly_len, ct_moduli.size(), ct_moduli};
+        size_t dimension = 8;
+        RlweParams ct_params{dimension, ct_moduli.size(), ct_moduli};
         u64 additional_mod = 1099507695617;
 
-        auto data_count = poly_len / 2;
+        auto data_count = dimension / 2;
         std::vector<double> plain_data(data_count);
         std::default_random_engine generator;
         std::normal_distribution<double> data_dist(0, 1);
@@ -377,11 +377,11 @@ TEST_CASE("ckks key switch") {
             d = data_dist(generator);
         }
 
-        RlweSk sk1(ct_poly_dim);
-        RlweSk sk2(ct_poly_dim);
+        RlweSk sk1(ct_params);
+        RlweSk sk2(ct_params);
         auto ksk = RlweKsk(sk1, sk2, additional_mod);
 
-        auto pt = ckks::simd_encode(plain_data, pow(2.0, 30), ct_poly_dim);
+        auto pt = ckks::simd_encode(plain_data, pow(2.0, 30), ct_params);
         auto ct = ckks::encrypt(pt, sk1);
         CkksCt ct_new = ext_prod_montgomery(ct[1], ksk);
         ckks::rescale_inplace(ct_new);
@@ -395,11 +395,11 @@ TEST_CASE("ckks key switch") {
     }
     SECTION("conjugation") {
         std::vector<u64> ct_moduli{1099510054913, 1073479681, 1072496641};
-        size_t poly_len = 8;
-        PolyDimensions ct_poly_dim{poly_len, ct_moduli.size(), ct_moduli};
+        size_t dimension = 8;
+        RlweParams ct_params{dimension, ct_moduli.size(), ct_moduli};
         u64 additional_mod = 1099507695617;
 
-        auto data_count = poly_len / 2;
+        auto data_count = dimension / 2;
         std::vector<cc_double> plain_data(data_count);
         std::vector<cc_double> data_conj;
         std::default_random_engine generator;
@@ -409,10 +409,10 @@ TEST_CASE("ckks key switch") {
             data_conj.push_back(std::conj(d));
         }
 
-        RlweSk sk(ct_poly_dim);
+        RlweSk sk(ct_params);
         auto conj_key = get_conj_key(sk, additional_mod);
 
-        auto pt = ckks::simd_encode(plain_data, pow(2.0, 30), ct_poly_dim);
+        auto pt = ckks::simd_encode(plain_data, pow(2.0, 30), ct_params);
         auto ct = ckks::encrypt(pt, sk);
         auto ct_conj = ckks::conjugate(ct, conj_key);
 
@@ -423,11 +423,11 @@ TEST_CASE("ckks key switch") {
     }
     SECTION("rotation") {
         std::vector<u64> ct_moduli{1099510054913, 1073479681, 1072496641};
-        size_t poly_len = 8;
-        PolyDimensions ct_poly_dim{poly_len, ct_moduli.size(), ct_moduli};
+        size_t dimension = 8;
+        RlweParams ct_params{dimension, ct_moduli.size(), ct_moduli};
         u64 additional_mod = 1099507695617;
 
-        auto data_count = poly_len / 2;
+        auto data_count = dimension / 2;
         std::vector<cc_double> plain_data(data_count);
         std::vector<cc_double> data_rotated(data_count);
         std::default_random_engine generator;
@@ -440,10 +440,10 @@ TEST_CASE("ckks key switch") {
             data_rotated[(i + step) % data_count] = plain_data[i];
         }
 
-        RlweSk sk(ct_poly_dim);
+        RlweSk sk(ct_params);
         auto rot_key_for_the_step = get_rot_key(sk, additional_mod, step);
 
-        auto pt = ckks::simd_encode(plain_data, pow(2.0, 30), ct_poly_dim);
+        auto pt = ckks::simd_encode(plain_data, pow(2.0, 30), ct_params);
         auto ct = ckks::encrypt(pt, sk);
         auto ct_conj = ckks::rotate(ct, rot_key_for_the_step, step);
 

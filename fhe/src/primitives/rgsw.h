@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "common/rnspolynomial.h"
+#include "common/rns.h"
 #include "rlwe.h"
 #include <array>
 

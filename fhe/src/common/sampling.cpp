@@ -1,7 +1,7 @@
 #include "sampling.h"
 #include "ntt.h"
 #include "range/v3/view/zip.hpp"
-#include "rnspolynomial.h"
+#include "rns.h"
 #include "type_defs.h"
 #include <random>
 
@@ -13,12 +13,12 @@ std::random_device rand_dvc;
 std::default_random_engine rand_engine;
 std::uniform_int_distribution rand_ternary((i8)-1, (i8)1);
 
-RnsPolynomial get_rand_ternary_poly(const PolyDimensions &poly_dim) {
-    RnsPolynomial tern_poly(poly_dim);
-    auto poly_len = poly_dim.poly_len;
+RnsPolynomial get_rand_ternary_poly(const RlweParams &params) {
+    RnsPolynomial tern_poly(params);
+    auto dimension = params.dimension;
 
     // Sampling.
-    std::vector<i8> ternary_integers(poly_len);
+    std::vector<i8> ternary_integers(dimension);
     for (auto &t : ternary_integers) {
         t = rand_ternary(rand_engine);
     }
@@ -36,10 +36,10 @@ RnsPolynomial get_rand_ternary_poly(const PolyDimensions &poly_dim) {
     return tern_poly;
 }
 
-RnsPolynomial get_rand_uniform_poly(const PolyDimensions &poly_dim,
+RnsPolynomial get_rand_uniform_poly(const RlweParams &params,
                                     PolyRepForm form) {
-    auto poly_len = poly_dim.poly_len;
-    RnsPolynomial rand_rns_poly(poly_dim);
+    auto dimension = params.dimension;
+    RnsPolynomial rand_rns_poly(params);
 
     // Sampling.
     for (auto [component, modulus] :
@@ -57,16 +57,16 @@ RnsPolynomial get_rand_uniform_poly(const PolyDimensions &poly_dim,
     return rand_rns_poly;
 }
 
-RnsPolynomial get_rand_gaussian_poly(const PolyDimensions &poly_dim,
+RnsPolynomial get_rand_gaussian_poly(const RlweParams &params,
                                      double std_dev) {
-    auto poly_len = poly_dim.poly_len;
-    RnsPolynomial gaussian_poly(poly_dim);
+    auto dimension = params.dimension;
+    RnsPolynomial gaussian_poly(params);
 
     auto bound = std_dev * 6;
     std::normal_distribution<double> rand_gaussian(0, std_dev);
 
     // Sampling.
-    std::vector<double> gassians(poly_len);
+    std::vector<double> gassians(dimension);
     for (auto &g : gassians) {
         do {
             g = rand_gaussian(rand_engine);
@@ -87,8 +87,8 @@ RnsPolynomial get_rand_gaussian_poly(const PolyDimensions &poly_dim,
     return gaussian_poly;
 }
 
-RnsPolynomial get_zero_poly(const PolyDimensions &poly_dim, PolyRepForm form) {
-    RnsPolynomial rns_poly(poly_dim);
+RnsPolynomial get_zero_poly(const RlweParams &params, PolyRepForm form) {
+    RnsPolynomial rns_poly(params);
     rns_poly.rep_form = form;
     for (auto &component : rns_poly) {
         std::fill(component.begin(), component.end(), 0);

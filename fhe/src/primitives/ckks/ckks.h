@@ -61,25 +61,25 @@ struct ckks {
      *
      * @param data
      * @param scaling_factor
-     * @param pt_poly_dim
+     * @param pt_params
      * @return CkksPt
      */
     static CkksPt simd_encode_cc(const std::vector<cc_double> &data,
                                  const double scaling_factor,
-                                 const PolyDimensions &pt_poly_dim);
+                                 const RlweParams &pt_params);
 
     /**
      * @brief TODO
      *
      * @param data
      * @param scaling_factor
-     * @param pt_poly_dim
+     * @param pt_params
      * @return CkksPt
      */
     static CkksPt simd_encode(const std::vector<cc_double> &data,
                               const double scaling_factor,
-                              const PolyDimensions &pt_poly_dim) {
-        return simd_encode_cc(data, scaling_factor, pt_poly_dim);
+                              const RlweParams &pt_params) {
+        return simd_encode_cc(data, scaling_factor, pt_params);
     }
 
     /**
@@ -87,17 +87,17 @@ struct ckks {
      *
      * @param data
      * @param scaling_factor
-     * @param pt_poly_dim
+     * @param pt_params
      * @return CkksPt
      */
     static CkksPt simd_encode(const std::vector<double> &data,
                               const double scaling_factor,
-                              const PolyDimensions &pt_poly_dim) {
+                              const RlweParams &pt_params) {
         std::vector<cc_double> data_cc;
         for (auto d : data) {
             data_cc.push_back(cc_double(d));
         }
-        return simd_encode_cc(data_cc, scaling_factor, pt_poly_dim);
+        return simd_encode_cc(data_cc, scaling_factor, pt_params);
     }
 
     /**

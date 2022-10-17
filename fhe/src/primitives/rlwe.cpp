@@ -5,24 +5,24 @@
 
 namespace hehub {
 
-RlweSk::RlweSk(const PolyDimensions &poly_dim)
-    : RnsPolynomial(get_rand_ternary_poly(poly_dim)) {}
+RlweSk::RlweSk(const RlweParams &params)
+    : RnsPolynomial(get_rand_ternary_poly(params)) {}
 
 RlweCt get_rlwe_sample(const RlweSk &sk, size_t components) {
     if (components == 0) {
         components = sk.component_count(); // the actual argument
     }
-    PolyDimensions poly_dim{sk.poly_len(), components, sk.modulus_vec()};
+    RlweParams params{sk.dimension(), components, sk.modulus_vec()};
 #ifdef HEHUB_DEBUG_RLWE_ZERO_C1
-    auto c1 = get_zero_poly(poly_dim);
+    auto c1 = get_zero_poly(params);
 #else
-    auto c1 = get_rand_uniform_poly(poly_dim, PolyRepForm::value);
+    auto c1 = get_rand_uniform_poly(params, PolyRepForm::value);
 #endif
 
 #ifdef HEHUB_DEBUG_RLWE_ZERO_E
-    auto ex = get_zero_poly(poly_dim);
+    auto ex = get_zero_poly(params);
 #else
-    auto ex = get_rand_gaussian_poly(poly_dim);
+    auto ex = get_rand_gaussian_poly(params);
 #endif
 
     auto c0 = ex - c1 * sk;
@@ -30,10 +30,10 @@ RlweCt get_rlwe_sample(const RlweSk &sk, size_t components) {
 }
 
 RlweCt encrypt_core(const RlwePt &pt, const RlweSk &sk) {
-    const auto poly_len = pt.poly_len();
+    const auto dimension = pt.dimension();
     const auto &moduli = pt.modulus_vec();
     const auto components = moduli.size();
-    PolyDimensions poly_dim{poly_len, components, moduli};
+    RlweParams params{dimension, components, moduli};
 
     if (pt.rep_form == PolyRepForm::value) {
         throw std::invalid_argument("Plaintext not in coeff representation.");

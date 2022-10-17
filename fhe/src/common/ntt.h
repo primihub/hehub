@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include "rnspolynomial.h"
+#include "rns.h"
 #include "type_defs.h"
 #include "mod_arith.h"
 #include <cmath>
@@ -23,12 +23,12 @@ namespace hehub {
  * output of which is an element of the negacyclic ring Z_q[X]/(X^n + 1) where q
  * and log2(n) are provided from parameters. This element is viewed as a
  * polynomial in coefficient form. The output values are left in [0, 2*modulus).
- * @param[in] log_poly_len The log value of the length of the polynomial, i.e.
+ * @param[in] log_dimension The log value of the length of the polynomial, i.e.
  * the number of coefficients.
  * @param[in] modulus The modulus q.
  * @param[inout] coeffs The polynomial in coefficient form.
  */
-void ntt_negacyclic_inplace_lazy(const size_t log_poly_len, const u64 modulus,
+void ntt_negacyclic_inplace_lazy(const size_t log_dimension, const u64 modulus,
                                  u64 coeffs[]);
 
 /**
@@ -44,12 +44,12 @@ void ntt_negacyclic_inplace_lazy(RnsPolynomial &rns_poly);
  * and log2(n) are provided from parameters. This element is viewed as the
  * values evaluated from itself viewed as an integral polynomial modulo q.  The
  * output values are left in [0, 2*modulus).
- * @param[in] log_poly_len The log value of the length of the polynomial,
+ * @param[in] log_dimension The log value of the length of the polynomial,
  * which is the number of input values.
  * @param[in] modulus The modulus q.
  * @param[inout] values The values evaluated from the polynomial.
  */
-void intt_negacyclic_inplace_lazy(const size_t log_poly_len, const u64 modulus,
+void intt_negacyclic_inplace_lazy(const size_t log_dimension, const u64 modulus,
                                   u64 values[]);
 
 /**
@@ -74,10 +74,10 @@ inline void intt_negacyclic_inplace(RnsPolynomial &rns_poly) {
  * will be used in the process of NTT and INTT. N.B., this functionality is
  * _optional_ in use since we use a lazy strategy in creating these NTT factors,
  * i.e. create and store them when needed the first time.
- * @param[in] log_poly_len The log value of the length of the polynomial.
+ * @param[in] log_dimension The log value of the length of the polynomial.
  * @param[in] moduli The moduli modulo which the NTT factors are produced.
  */
-void cache_ntt_factors_strict(const u64 log_poly_len,
+void cache_ntt_factors_strict(const u64 log_dimension,
                               const std::vector<u64> &moduli);
 
 } // namespace hehub

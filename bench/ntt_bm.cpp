@@ -1,6 +1,6 @@
 #include "catch2/catch.hpp"
 #include "common/ntt.h"
-#include "common/rnspolynomial.h"
+#include "common/rns.h"
 #include <random>
 
 using namespace hehub;

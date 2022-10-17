@@ -5,7 +5,7 @@
  */
 #pragma once
 
-#include "rnspolynomial.h"
+#include "rns.h"
 #include "type_defs.h"
 #include <map>
 #include <tuple>
@@ -167,11 +167,11 @@ inline void batched_strict_reduce(const u64 modulus, const size_t vec_len,
  */
 inline void strict_reduce(RnsPolynomial &rns_poly) {
     auto mod_ptr = rns_poly.modulus_vec().begin();
-    auto poly_len = rns_poly.poly_len();
+    auto dimension = rns_poly.dimension();
 
     for (auto &component_poly : rns_poly) {
         auto curr_mod = *(mod_ptr++);
-        batched_strict_reduce(curr_mod, poly_len, component_poly.data());
+        batched_strict_reduce(curr_mod, dimension, component_poly.data());
     }
 }
 

@@ -1,43 +1,43 @@
-#include "rnspolynomial.h"
+#include "rns.h"
 #include "mod_arith.h"
 #include <cmath>
 
 namespace hehub {
 
-RnsPolynomial::ComponentData::ComponentData(const size_t poly_len)
-    : poly_len_(poly_len), data_(new u64[poly_len]) {}
+RnsIntVec::ComponentData::ComponentData(const size_t dimension)
+    : dimension_(dimension), data_(new u64[dimension]) {}
 
-RnsPolynomial::ComponentData::ComponentData(const ComponentData &other)
-    : poly_len_(other.poly_len_), data_(new u64[other.poly_len_]) {
-    std::copy(other.data_, other.data_ + poly_len_, data_);
+RnsIntVec::ComponentData::ComponentData(const ComponentData &other)
+    : dimension_(other.dimension_), data_(new u64[other.dimension_]) {
+    std::copy(other.data_, other.data_ + dimension_, data_);
 }
 
-RnsPolynomial::ComponentData::~ComponentData() {
+RnsIntVec::ComponentData::~ComponentData() {
     if (data_ != nullptr) {
         delete[] data_;
     }
 }
 
-RnsPolynomial::ComponentData &
-RnsPolynomial::ComponentData::operator=(const ComponentData &copying) {
-    if (poly_len_ != copying.poly_len_) {
+RnsIntVec::ComponentData &
+RnsIntVec::ComponentData::operator=(const ComponentData &copying) {
+    if (dimension_ != copying.dimension_) {
         if (data_ != nullptr) {
             delete[] data_;
         }
-        poly_len_ = copying.poly_len_;
-        data_ = new u64[copying.poly_len_];
+        dimension_ = copying.dimension_;
+        data_ = new u64[copying.dimension_];
     }
-    std::copy(copying.data_, copying.data_ + poly_len_, data_);
+    std::copy(copying.data_, copying.data_ + dimension_, data_);
     return *this;
 }
 
-RnsPolynomial::ComponentData &
-RnsPolynomial::ComponentData::operator=(ComponentData &&moving) noexcept {
+RnsIntVec::ComponentData &
+RnsIntVec::ComponentData::operator=(ComponentData &&moving) noexcept {
     if (this == &moving) {
         return *this;
     }
 
-    poly_len_ = moving.poly_len_;
+    dimension_ = moving.dimension_;
     if (data_ != nullptr) {
         delete[] data_;
     }
@@ -46,30 +46,31 @@ RnsPolynomial::ComponentData::operator=(ComponentData &&moving) noexcept {
     return *this;
 }
 
-RnsPolynomial::RnsPolynomial(const size_t poly_len, const size_t components,
+RnsIntVec::RnsIntVec(const size_t dimension, const size_t components,
                              const std::vector<u64> &moduli)
-    : poly_len_(poly_len), components_(components),
-      log_poly_len_(std::log2(poly_len) + 0.5) {
+    : dimension_(dimension), components_(components),
+      log_dimension_(std::log2(dimension) + 0.5) {
 
-    if (poly_len_ != 1 << log_poly_len_) {
-        throw std::invalid_argument("poly_len should be a 2-power.");
+    // This condition should be moved to RnsPolynomial
+    if (dimension_ != 1 << log_dimension_) {
+        throw std::invalid_argument("dimension should be a 2-power.");
     }
 
     if (moduli.size() < component_count()) {
         throw std::invalid_argument(
-            "No matching number of moduli provided to create RnsPolynomial.");
+            "No matching number of moduli provided to create RnsIntVec.");
     }
     moduli_.assign(moduli.begin(), moduli.begin() + component_count());
     for (auto &component : components_) {
-        component = ComponentData(poly_len_);
+        component = ComponentData(dimension_);
     }
 }
 
-RnsPolynomial::RnsPolynomial(const PolyDimensions &poly_dim)
-    : RnsPolynomial(poly_dim.poly_len, poly_dim.component_count,
-                    poly_dim.moduli) {}
+RnsIntVec::RnsIntVec(const RnsIntVec::Params &params)
+    : RnsIntVec(params.dimension, params.component_count,
+                    params.moduli) {}
 
-void RnsPolynomial::add_components(const std::vector<u64> &new_moduli,
+void RnsIntVec::add_components(const std::vector<u64> &new_moduli,
                                    size_t adding) {
     if (new_moduli.size() < adding) {
         throw std::invalid_argument(
@@ -80,11 +81,11 @@ void RnsPolynomial::add_components(const std::vector<u64> &new_moduli,
     moduli_.insert(moduli_.end(), new_moduli.begin(), new_moduli.end());
     components_.resize(components_.size() + adding);
     for (size_t i = orig_size; i < components_.size(); i++) {
-        components_[i] = ComponentData(poly_len_);
+        components_[i] = ComponentData(dimension_);
     }
 }
 
-void RnsPolynomial::remove_components(size_t removing) {
+void RnsIntVec::remove_components(size_t removing) {
     if (component_count() < removing) {
         throw std::invalid_argument(
             "Trying to remove components more than existing.");
@@ -94,15 +95,11 @@ void RnsPolynomial::remove_components(size_t removing) {
     components_.erase(components_.end() - removing, components_.end());
 }
 
-const RnsPolynomial &operator+=(RnsPolynomial &self, const RnsPolynomial &b) {
-    if (self.rep_form != b.rep_form) {
-        throw std::invalid_argument(
-            "Operands are in different representation form.");
-    }
-    if (self.poly_len() != b.poly_len()) {
+const RnsIntVec &operator+=(RnsIntVec &self, const RnsIntVec &b) {
+    if (self.dimension() != b.dimension()) {
         throw std::invalid_argument("Operands' poly len mismatch.");
     }
-    auto poly_len = self.poly_len();
+    auto dimension = self.dimension();
     if (b.component_count() < self.component_count()) {
         throw std::invalid_argument(
             "Operand b contains less components than self.");
@@ -119,7 +116,7 @@ const RnsPolynomial &operator+=(RnsPolynomial &self, const RnsPolynomial &b) {
         m *= 2;
     }
     for (size_t k = 0; k < components; k++) {
-        for (size_t i = 0; i < poly_len; i++) {
+        for (size_t i = 0; i < dimension; i++) {
             self[k][i] += b[k][i];
             self[k][i] -=
                 (self[k][i] >= moduli_doubled[k]) ? moduli_doubled[k] : 0;
@@ -129,15 +126,11 @@ const RnsPolynomial &operator+=(RnsPolynomial &self, const RnsPolynomial &b) {
     return self;
 }
 
-const RnsPolynomial &operator-=(RnsPolynomial &self, const RnsPolynomial &b) {
-    if (self.rep_form != b.rep_form) {
-        throw std::invalid_argument(
-            "Operands are in different representation form.");
-    }
-    if (self.poly_len() != b.poly_len()) {
+const RnsIntVec &operator-=(RnsIntVec &self, const RnsIntVec &b) {
+    if (self.dimension() != b.dimension()) {
         throw std::invalid_argument("Operands' poly len mismatch.");
     }
-    auto poly_len = self.poly_len();
+    auto dimension = self.dimension();
     if (b.component_count() < self.component_count()) {
         throw std::invalid_argument(
             "Operand b contains less components than self.");
@@ -154,7 +147,7 @@ const RnsPolynomial &operator-=(RnsPolynomial &self, const RnsPolynomial &b) {
         m *= 2;
     }
     for (size_t k = 0; k < components; k++) {
-        for (size_t i = 0; i < poly_len; i++) {
+        for (size_t i = 0; i < dimension; i++) {
             self[k][i] += moduli_doubled[k] - b[k][i];
             self[k][i] -=
                 (self[k][i] >= moduli_doubled[k]) ? moduli_doubled[k] : 0;
@@ -164,17 +157,11 @@ const RnsPolynomial &operator-=(RnsPolynomial &self, const RnsPolynomial &b) {
     return self;
 }
 
-RnsPolynomial operator*(const RnsPolynomial &a, const RnsPolynomial &b) {
-    if (a.rep_form == PolyRepForm::coeff) {
-        throw std::invalid_argument("Operand a is in coefficient form.");
-    }
-    if (b.rep_form == PolyRepForm::coeff) {
-        throw std::invalid_argument("Operand b is in coefficient form.");
-    }
-    if (a.poly_len() != b.poly_len()) {
+RnsIntVec operator*(const RnsIntVec &a, const RnsIntVec &b) {
+    if (a.dimension() != b.dimension()) {
         throw std::invalid_argument("Operands' poly len mismatch.");
     }
-    auto poly_len = a.poly_len();
+    auto dimension = a.dimension();
     auto components = std::min(a.component_count(), b.component_count());
     auto moduli(a.modulus_vec()), b_moduli(b.modulus_vec());
     moduli.resize(components);
@@ -183,17 +170,16 @@ RnsPolynomial operator*(const RnsPolynomial &a, const RnsPolynomial &b) {
         throw std::invalid_argument("Operands' moduli mismatch.");
     }
 
-    RnsPolynomial result(PolyDimensions{poly_len, components, moduli});
-    result.rep_form = PolyRepForm::value;
+    RnsIntVec result(RnsIntVec::Params{dimension, components, moduli});
     for (size_t k = 0; k < components; k++) {
-        batched_mul_mod_hybrid_lazy(moduli[k], poly_len, a[k].data(),
+        batched_mul_mod_hybrid_lazy(moduli[k], dimension, a[k].data(),
                                     b[k].data(), result[k].data());
     }
 
     return result;
 }
 
-const RnsPolynomial &operator*=(RnsPolynomial &self, const u64 small_scalar) {
+const RnsIntVec &operator*=(RnsIntVec &self, const u64 small_scalar) {
     for (size_t k = 0; k < self.component_count(); k++) {
         auto curr_mod = self.moduli_[k];
         auto scalar_reduced = small_scalar % curr_mod; // need opt?
@@ -206,7 +192,7 @@ const RnsPolynomial &operator*=(RnsPolynomial &self, const u64 small_scalar) {
     return self;
 }
 
-const RnsPolynomial &operator*=(RnsPolynomial &self, const std::vector<u64> &rns_scalar) {
+const RnsIntVec &operator*=(RnsIntVec &self, const std::vector<u64> &rns_scalar) {
     if (rns_scalar.size() != self.component_count()) {
         throw std::invalid_argument("Numbers of RNS component mismatch.");
     }
@@ -224,9 +210,9 @@ const RnsPolynomial &operator*=(RnsPolynomial &self, const std::vector<u64> &rns
 }
 
 #ifdef HEHUB_DEBUG_FHE
-std::ostream &operator<<(std::ostream &out, const RnsPolynomial &rns_poly) {
+std::ostream &operator<<(std::ostream &out, const RnsIntVec &rns_poly) {
     auto component_count = rns_poly.component_count();
-    auto poly_len = rns_poly.poly_len();
+    auto dimension = rns_poly.dimension();
     auto mod_ptr = rns_poly.modulus_vec().begin();
 
     for (const auto &component_poly : rns_poly) {

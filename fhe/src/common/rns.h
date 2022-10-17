@@ -1,6 +1,6 @@
 /**
- * @file RnsPolynomial.h
- * @brief RnsPolynomial class.
+ * @file rns.h
+ * @brief TODO
  *
  */
 #pragma once
@@ -12,8 +12,8 @@
 namespace hehub {
 
 /**
- * @class RnsPolynomial
- * @brief A RnsPolynomial represents an element of Z_q[X]/(X^n + 1), where q is
+ * @class RnsIntVec
+ * @brief An RnsIntVec represents an element of Z_q[X]/(X^n + 1), where q is
  * a big composite integer, and n is a certain power of 2. The object contains a
  * group of polynomials whose coefficients of terms of same degree constitute an
  * residue number system (RNS) whose basis is the co-prime factors of q. The
@@ -21,16 +21,16 @@ namespace hehub {
  * the transformation of NTT). The X^n + 1 is sometimes called the
  * polynomial modulus of this object.
  */
-class RnsPolynomial {
+class RnsIntVec {
 public:
     /**
-     * @brief Specifying the dimensions of an RnsPolynomial, i.e. the length of
+     * @brief Specifying the dimensions of an RnsIntVec, i.e. the length of
      * polynomial, the number of RNS components and the set of moduli. Used for
-     * initializing an RnsPolynomial object.
+     * initializing an RnsIntVec object.
      */
-    struct Dimensions {
+    struct Params {
         /// The length of polynomial.
-        size_t poly_len = 0;
+        size_t dimension = 0;
 
         /// The number of RNS components.
         size_t component_count;
@@ -42,7 +42,7 @@ public:
     /**
      * @class ComponentData
      * @brief A dynamic array for storing all coefficients of a component
-     * polynomial of an RnsPolynomial object.
+     * polynomial of an RnsIntVec object.
      */
     class ComponentData {
     public:
@@ -53,9 +53,9 @@ public:
 
         /**
          * @brief Construct a new ComponentData object.
-         * @param poly_len The length of the polynomial.
+         * @param dimension The length of the polynomial.
          */
-        ComponentData(const size_t poly_len);
+        ComponentData(const size_t dimension);
 
         /**
          * @brief Create a ComponentData object by copying from another one.
@@ -110,9 +110,9 @@ public:
          * @return bool
          */
         inline bool operator==(const ComponentData &other) const {
-            if (poly_len_ != other.poly_len_)
+            if (dimension_ != other.dimension_)
                 return false;
-            for (int i = 0; i < poly_len_; i++) {
+            for (int i = 0; i < dimension_; i++) {
                 if ((*this)[i] != other[i]) {
                     return false;
                 }
@@ -158,13 +158,13 @@ public:
          * @brief Returns the end of data as a non-const pointer.
          * @return u64 *
          */
-        inline u64 *end() { return data_ + poly_len_; }
+        inline u64 *end() { return data_ + dimension_; }
 
         /**
          * @brief Returns the end of data as a const pointer.
          * @return const u64 *
          */
-        inline const u64 *end() const { return data_ + poly_len_; }
+        inline const u64 *end() const { return data_ + dimension_; }
 
     private:
         /// Pointer as a dynamic array for storing the coefficients.
@@ -172,7 +172,7 @@ public:
 
         /// The length of the polynomial, i.e. the number of coefficients or NTT
         /// values.
-        size_t poly_len_ = 0;
+        size_t dimension_ = 0;
     };
 
     /**
@@ -181,63 +181,63 @@ public:
     enum class RepForm { coeff, value };
 
     /**
-     * @brief Construct an empty RnsPolynomial object.
+     * @brief Construct an empty RnsIntVec object.
      */
-    RnsPolynomial() {}
+    RnsIntVec() {}
 
     /**
-     * @brief Construct a new RnsPolynomial object.
-     * @param poly_len The length of each component polynomial, i.e. the number
+     * @brief Construct a new RnsIntVec object.
+     * @param dimension The length of each component polynomial, i.e. the number
      * of coefficients (or NTT values). This should be a power of 2.
      * @param components The number of components, i.e. polynomials each
      * modulo different integer.
      * @param moduli The modulus set of the RNS of coefficients.
      */
-    RnsPolynomial(const size_t poly_len, const size_t components,
-                  const std::vector<u64> &moduli);
+    RnsIntVec(const size_t dimension, const size_t components,
+              const std::vector<u64> &moduli);
 
     /**
-     * @brief Construct a new RnsPolynomial object.
-     * @param poly_dim A parameter set specifying the length of polynomial, the
+     * @brief Construct a new RnsIntVec object.
+     * @param params A parameter set specifying the length of polynomial, the
      * number of RNS components and the modulus set.
      */
-    RnsPolynomial(const Dimensions &poly_dim);
+    RnsIntVec(const Params &params);
 
     /**
-     * @brief Creates an RnsPolynomial object by copying from another one.
-     * @param other The source RnsPolynomial object.
+     * @brief Creates an RnsIntVec object by copying from another one.
+     * @param other The source RnsIntVec object.
      */
-    RnsPolynomial(const RnsPolynomial &other) = default;
+    RnsIntVec(const RnsIntVec &other) = default;
 
     /**
-     * @brief Creates an RnsPolynomial object by moving another one.
-     * @param other The source RnsPolynomial object.
+     * @brief Creates an RnsIntVec object by moving another one.
+     * @param other The source RnsIntVec object.
      */
-    RnsPolynomial(RnsPolynomial &&other) = default;
+    RnsIntVec(RnsIntVec &&other) = default;
 
     /**
-     * @brief Copies a given RnsPolynomial to this.
-     * @param other The given RnsPolynomial object.
-     * @return RnsPolynomial &
+     * @brief Copies a given RnsIntVec to this.
+     * @param other The given RnsIntVec object.
+     * @return RnsIntVec &
      */
-    RnsPolynomial &operator=(const RnsPolynomial &other) = default;
+    RnsIntVec &operator=(const RnsIntVec &other) = default;
 
     /**
-     * @brief Moves a given RnsPolynomial to replace this.
-     * @param other The given RnsPolynomial object.
-     * @return RnsPolynomial &
+     * @brief Moves a given RnsIntVec to replace this.
+     * @param other The given RnsIntVec object.
+     * @return RnsIntVec &
      */
-    RnsPolynomial &operator=(RnsPolynomial &&other) = default;
+    RnsIntVec &operator=(RnsIntVec &&other) = default;
 
     /**
-     * @brief Compares this with another RnsPolynomial, returning true only when
+     * @brief Compares this with another RnsIntVec, returning true only when
      * all spec and data coincide.
-     * @param other The RnsPolynomial object for comparison.
+     * @param other The RnsIntVec object for comparison.
      * @return const bool
      */
-    inline const bool operator==(const RnsPolynomial &other) const {
-        return log_poly_len_ == other.log_poly_len_ &&
-               poly_len_ == other.poly_len_ && moduli_ == other.moduli_ &&
+    inline const bool operator==(const RnsIntVec &other) const {
+        return log_dimension_ == other.log_dimension_ &&
+               dimension_ == other.dimension_ && moduli_ == other.moduli_ &&
                components_ == other.components_;
     }
 
@@ -252,13 +252,13 @@ public:
      * @brief Returns log2 value of component polynomials' length.
      * @return const size_t
      */
-    inline const size_t log_poly_len() const { return log_poly_len_; }
+    inline const size_t log_dimension() const { return log_dimension_; }
 
     /**
      * @brief Returns component polynomials' length.
      * @return const size_t
      */
-    inline const size_t poly_len() const { return poly_len_; }
+    inline const size_t dimension() const { return dimension_; }
 
     /**
      * @brief Returns the components_ vector as non-const reference.
@@ -340,7 +340,7 @@ public:
     }
 
     /**
-     * @brief Modify the RnsPolynomial to enlarge the RNS, i.e. add some
+     * @brief Modify the RnsIntVec to enlarge the RNS, i.e. add some
      * components and corresponding moduli.
      * @param new_moduli The new moduli to be added into the RNS basis.
      * @param adding The number of components which are to be added.
@@ -348,11 +348,53 @@ public:
     void add_components(const std::vector<u64> &new_moduli, size_t adding = 1);
 
     /**
-     * @brief Modify the RnsPolynomial to shrink the RNS, i.e. remove some
+     * @brief Modify the RnsIntVec to shrink the RNS, i.e. remove some
      * components and corresponding moduli.
      * @param removing The number of components which are to be removed.
      */
     void remove_components(size_t removing = 1);
+
+    friend const RnsIntVec &operator+=(RnsIntVec &self, const RnsIntVec &b);
+
+    friend RnsIntVec operator+(const RnsIntVec &a, const RnsIntVec &b);
+
+    friend const RnsIntVec &operator-=(RnsIntVec &self, const RnsIntVec &b);
+
+    friend RnsIntVec operator-(const RnsIntVec &a, const RnsIntVec &b);
+
+    friend const RnsIntVec &operator*=(RnsIntVec &self, const RnsIntVec &b);
+
+    friend RnsIntVec operator*(const RnsIntVec &a, const RnsIntVec &b);
+
+    friend const RnsIntVec &operator*=(RnsIntVec &self, const u64 small_scalar);
+
+    friend const RnsIntVec &operator*=(RnsIntVec &self,
+                                       const std::vector<u64> &rns_scalar);
+
+private:
+    /// log2 value of component polynomials' length.
+    size_t log_dimension_ = 0;
+
+    /// Component polynomials' length.
+    size_t dimension_ = 0;
+
+    /// A vector storing all polynomial coefficients.
+    std::vector<ComponentData> components_;
+
+    /// A vector of RNS basis, i.e. all the moduli of coefficients.
+    std::vector<u64> moduli_;
+};
+
+class RnsPolynomial : public RnsIntVec {
+public:
+    using RnsIntVec::RnsIntVec;
+
+    /**
+     * @brief Representation form of the polynomial.
+     */
+    enum class RepForm { coeff, value };
+
+    RnsPolynomial(RnsIntVec &&rns_int_vec) : RnsIntVec(rns_int_vec) {}
 
     friend void ntt_negacyclic_inplace_lazy(RnsPolynomial &);
 
@@ -361,14 +403,12 @@ public:
     friend const RnsPolynomial &operator+=(RnsPolynomial &self,
                                            const RnsPolynomial &b);
 
-    friend RnsPolynomial operator+(const RnsPolynomial &a,
-                                   const RnsPolynomial &b);
+    friend RnsPolynomial operator+(const RnsPolynomial &a, const RnsPolynomial &b);
 
     friend const RnsPolynomial &operator-=(RnsPolynomial &self,
                                            const RnsPolynomial &b);
 
-    friend RnsPolynomial operator-(const RnsPolynomial &a,
-                                   const RnsPolynomial &b);
+    friend RnsPolynomial operator-(const RnsPolynomial &a, const RnsPolynomial &b);
 
     friend const RnsPolynomial &operator*=(RnsPolynomial &self,
                                            const RnsPolynomial &b);
@@ -382,29 +422,12 @@ public:
     friend const RnsPolynomial &operator*=(RnsPolynomial &self,
                                            const std::vector<u64> &rns_scalar);
 
-    // void save(std::stringstream &stream);
-
-    // void load(std::stringstream &stream, u64 log_poly_len);
-
     /// Representation form of the polynomial, default being coefficients.
-    /// This is set to be publicly visible in order to enable some tweaks.
+    /// This is set to be publicly visible in order to enable possible tweaks.
     RepForm rep_form = RepForm::coeff;
-
-private:
-    /// log2 value of component polynomials' length.
-    size_t log_poly_len_ = 0;
-
-    /// Component polynomials' length.
-    size_t poly_len_ = 0;
-
-    /// A vector storing all polynomial coefficients.
-    std::vector<ComponentData> components_;
-
-    /// A vector of RNS basis, i.e. all the moduli of coefficients.
-    std::vector<u64> moduli_;
 };
 
-using PolyDimensions = RnsPolynomial::Dimensions;
+using RlweParams = RnsPolynomial::Params;
 
 using PolyRepForm = RnsPolynomial::RepForm;
 
@@ -413,18 +436,18 @@ using PolyRepForm = RnsPolynomial::RepForm;
  *
  * @param self
  * @param b
- * @return RnsPolynomial
+ * @return RnsIntVec
  */
-const RnsPolynomial &operator+=(RnsPolynomial &self, const RnsPolynomial &b);
+const RnsIntVec &operator+=(RnsIntVec &self, const RnsIntVec &b);
 
 /**
  * @brief TODO
  *
  * @param a
  * @param b
- * @return RnsPolynomial
+ * @return RnsIntVec
  */
-inline RnsPolynomial operator+(const RnsPolynomial &a, const RnsPolynomial &b) {
+inline RnsIntVec operator+(const RnsIntVec &a, const RnsIntVec &b) {
     auto result(a);
     result += b;
     return result;
@@ -435,18 +458,18 @@ inline RnsPolynomial operator+(const RnsPolynomial &a, const RnsPolynomial &b) {
  *
  * @param self
  * @param b
- * @return RnsPolynomial
+ * @return RnsIntVec
  */
-const RnsPolynomial &operator-=(RnsPolynomial &self, const RnsPolynomial &b);
+const RnsIntVec &operator-=(RnsIntVec &self, const RnsIntVec &b);
 
 /**
  * @brief TODO
  *
  * @param a
  * @param b
- * @return RnsPolynomial
+ * @return RnsIntVec
  */
-inline RnsPolynomial operator-(const RnsPolynomial &a, const RnsPolynomial &b) {
+inline RnsIntVec operator-(const RnsIntVec &a, const RnsIntVec &b) {
     auto result(a);
     result -= b;
     return result;
@@ -457,19 +480,18 @@ inline RnsPolynomial operator-(const RnsPolynomial &a, const RnsPolynomial &b) {
  *
  * @param a
  * @param b
- * @return RnsPolynomial
+ * @return RnsIntVec
  */
-RnsPolynomial operator*(const RnsPolynomial &a, const RnsPolynomial &b);
+RnsIntVec operator*(const RnsIntVec &a, const RnsIntVec &b);
 
 /**
  * @brief TODO
  *
  * @param self
  * @param b
- * @return RnsPolynomial
+ * @return RnsIntVec
  */
-inline const RnsPolynomial &operator*=(RnsPolynomial &self,
-                                       const RnsPolynomial &b) {
+inline const RnsIntVec &operator*=(RnsIntVec &self, const RnsIntVec &b) {
     auto temp(self);
     return self = temp * b;
 }
@@ -479,22 +501,21 @@ inline const RnsPolynomial &operator*=(RnsPolynomial &self,
  *
  * @param self
  * @param small_scalar
- * @return const RnsPolynomial&
+ * @return const RnsIntVec&
  */
-const RnsPolynomial &operator*=(RnsPolynomial &self, const u64 small_scalar);
+const RnsIntVec &operator*=(RnsIntVec &self, const u64 small_scalar);
 
 /**
  * @brief TODO
  *
  * @param poly
  * @param small_scalar
- * @return RnsPolynomial&
+ * @return RnsIntVec&
  */
-inline RnsPolynomial operator*(const RnsPolynomial &poly,
-                               const u64 small_scalar) {
-    auto poly_copy(poly);
-    poly_copy *= small_scalar;
-    return poly_copy;
+inline RnsIntVec operator*(const RnsIntVec &int_vec, const u64 small_scalar) {
+    auto int_vec_copy(int_vec);
+    int_vec_copy *= small_scalar;
+    return int_vec_copy;
 }
 
 /**
@@ -502,23 +523,23 @@ inline RnsPolynomial operator*(const RnsPolynomial &poly,
  *
  * @param self
  * @param rns_scalar
- * @return const RnsPolynomial&
+ * @return const RnsIntVec&
  */
-const RnsPolynomial &operator*=(RnsPolynomial &self,
-                                const std::vector<u64> &rns_scalar);
+const RnsIntVec &operator*=(RnsIntVec &self,
+                            const std::vector<u64> &rns_scalar);
 
 /**
  * @brief TODO
  *
  * @param poly
  * @param rns_scalar
- * @return RnsPolynomial
+ * @return RnsIntVec
  */
-inline RnsPolynomial operator*(const RnsPolynomial &poly,
-                               const std::vector<u64> &rns_scalar) {
-    auto poly_copy(poly);
-    poly_copy *= rns_scalar;
-    return poly_copy;
+inline RnsIntVec operator*(const RnsIntVec &int_vec,
+                           const std::vector<u64> &rns_scalar) {
+    auto int_vec_copy(int_vec);
+    int_vec_copy *= rns_scalar;
+    return int_vec_copy;
 }
 
 #ifdef HEHUB_DEBUG_FHE
@@ -529,7 +550,82 @@ inline RnsPolynomial operator*(const RnsPolynomial &poly,
  * @param rns_poly
  * @return std::ostream&
  */
-std::ostream &operator<<(std::ostream &out, const RnsPolynomial &rns_poly);
+std::ostream &operator<<(std::ostream &out, const RnsIntVec &rns_poly);
 #endif
+
+inline const RnsPolynomial &operator+=(RnsPolynomial &self,
+                                       const RnsPolynomial &b) {
+    if (self.rep_form != b.rep_form) {
+        throw std::invalid_argument(
+            "Operands are in different representation form.");
+    }
+
+    self += (RnsIntVec &)b;
+    return self;
+}
+
+inline RnsPolynomial operator+(const RnsPolynomial &a, const RnsPolynomial &b) {
+    auto result(a);
+    result += b;
+    return result;
+}
+
+inline const RnsPolynomial &operator-=(RnsPolynomial &self,
+                                       const RnsPolynomial &b) {
+    if (self.rep_form != b.rep_form) {
+        throw std::invalid_argument(
+            "Operands are in different representation form.");
+    }
+
+    self -= (const RnsIntVec &)b;
+    return self;
+}
+
+inline RnsPolynomial operator-(const RnsPolynomial &a, const RnsPolynomial &b) {
+    auto result(a);
+    result -= b;
+    return result;
+}
+
+inline RnsPolynomial operator*(const RnsPolynomial &a, const RnsPolynomial &b) {
+    if (a.rep_form == PolyRepForm::coeff) {
+        throw std::invalid_argument("Operand a is in coefficient form.");
+    }
+    if (b.rep_form == PolyRepForm::coeff) {
+        throw std::invalid_argument("Operand b is in coefficient form.");
+    }
+
+    RnsPolynomial result = (const RnsIntVec &)a * (const RnsIntVec &)b;
+    result.rep_form = PolyRepForm::value;
+
+    return result;
+}
+
+inline const RnsPolynomial &operator*=(RnsPolynomial &self,
+                                       const RnsPolynomial &b) {
+    auto temp(self);
+    return self = temp * b;
+}
+
+inline const RnsPolynomial &operator*=(RnsPolynomial &self,
+                                       const u64 small_scalar) {
+    RnsIntVec &self_ref = self;
+    self_ref *= small_scalar;
+    return self;
+}
+
+inline const RnsPolynomial &operator*=(RnsPolynomial &self,
+                                       const std::vector<u64> &rns_scalar) {
+    RnsIntVec &self_ref = self;
+    self_ref *= rns_scalar;
+    return self;
+}
+
+inline RnsPolynomial operator*(const RnsPolynomial &poly,
+                               const std::vector<u64> &rns_scalar) {
+    auto poly_copy(poly);
+    poly_copy *= rns_scalar;
+    return poly_copy;
+}
 
 } // namespace hehub

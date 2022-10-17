@@ -5,7 +5,7 @@
  */
 
 #pragma once
-#include "rnspolynomial.h"
+#include "rns.h"
 #include "type_defs.h"
 
 namespace hehub {
@@ -88,7 +88,7 @@ const std::vector<u32> &root_index_factors();
 
 /**
  * @brief Perform a cycle on the values of the polynomial, which is induced from
- * the Galois transformation from a cyclic subgroup of order poly_len / 2.
+ * the Galois transformation from a cyclic subgroup of order dimension / 2.
  * @note The Galois group of Q(ξ)/Q with ξ being a 2-power m-th primitive unity
  * root is of structure Z_{m/4}⊕Z_2, hence a Galois transformations of Q(ξ)/Q is
  * either a cycle from a subgroup of order m/4, or an involution. On the other
@@ -100,7 +100,7 @@ const std::vector<u32> &root_index_factors();
  * cannot utilize arbituary q-linear transformations but only those induced by
  * the Galois ones.
  * @param poly_ntt An RnsPolynomial in NTT value form.
- * @param step The cycle step resp. to the (poly_len / 2)-ordered subgroup.
+ * @param step The cycle step resp. to the (dimension / 2)-ordered subgroup.
  * @return RnsPolynomial
  */
 RnsPolynomial cycle(const RnsPolynomial &poly_ntt, const size_t step);

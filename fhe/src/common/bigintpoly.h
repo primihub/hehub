@@ -1,7 +1,7 @@
 #pragma once
 
 #include "bigint.h"
-#include "rnspolynomial.h"
+#include "rns.h"
 
 namespace hehub {
 
@@ -22,7 +22,7 @@ public:
      * @brief Get the length of this polynomial, which is its degree + 1.
      * @return const size_t 
      */
-    inline const size_t poly_len() const { return coeffs_.size(); }
+    inline const size_t dimension() const { return coeffs_.size(); }
 
     /**
      * @brief Get the i-th coefficient of this polynomial.

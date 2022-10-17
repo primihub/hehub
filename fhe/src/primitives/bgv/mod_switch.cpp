@@ -11,7 +11,7 @@ void mod_drop_one_prime_inplace(RlweCt &ct, u64 plain_modulus) {
         throw std::invalid_argument(
             "Ill-formed ciphertext: modulus sets mismatch.");
     }
-    if (ct[0].poly_len() != ct[1].poly_len()) {
+    if (ct[0].dimension() != ct[1].dimension()) {
         throw std::invalid_argument(
             "Ill-formed ciphertext: polynomial lengths mismatch.");
     }
@@ -24,8 +24,8 @@ void mod_drop_one_prime_inplace(RlweCt &ct, u64 plain_modulus) {
     }
 
     const auto ct_moduli = ct[0].modulus_vec();
-    const auto poly_len = ct[0].poly_len();
-    const auto log_poly_len = ct[0].log_poly_len();
+    const auto dimension = ct[0].dimension();
+    const auto log_dimension = ct[0].log_dimension();
     const auto ct_mod_count = ct[0].component_count();
     const auto q_last = ct_moduli[ct_mod_count - 1];
     const auto half_q_last = q_last / 2;
@@ -37,24 +37,24 @@ void mod_drop_one_prime_inplace(RlweCt &ct, u64 plain_modulus) {
     }
 
     for (auto &rns_poly : ct) {
-        RnsPolynomial last_comp{poly_len, 1, std::vector{q_last}};
+        RnsPolynomial last_comp{dimension, 1, std::vector{q_last}};
         last_comp[0] = rns_poly[ct_mod_count - 1];
         intt_negacyclic_inplace_lazy(last_comp);
         last_comp *= inv_t_mod_q_last;
-        batched_strict_reduce(q_last, poly_len, last_comp[0].data());
+        batched_strict_reduce(q_last, dimension, last_comp[0].data());
 
         auto &coeffs_last_with_inv_t = last_comp[0];
-        RnsPolynomial subtract_part(poly_len, ct_mod_count - 1, ct_moduli);
+        RnsPolynomial subtract_part(dimension, ct_mod_count - 1, ct_moduli);
         for (size_t k = 0; k < subtract_part.component_count(); k++) {
             subtract_part[k] = coeffs_last_with_inv_t;
 
             /* Heuristically the ciphertext moduli are close in size, hence the
              * reduction step after copying can be skipped. */
             // batched_barrett_lazy(
-            //     ct_moduli[k], poly_len, subtract_part[k].data());
+            //     ct_moduli[k], dimension, subtract_part[k].data());
 
             // The multiple of t needs to be of smallest possible abs value.
-            for (size_t i = 0; i < poly_len; i++) {
+            for (size_t i = 0; i < dimension; i++) {
                 if (coeffs_last_with_inv_t[i] >= half_q_last) {
                     subtract_part[k][i] += ct_moduli[k] - q_last_mod_qk[k];
                 }

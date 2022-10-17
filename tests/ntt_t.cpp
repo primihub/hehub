@@ -2,7 +2,7 @@
 #include "common/mod_arith.h"
 #include "common/ntt.h"
 #include "common/permutation.h"
-#include "common/rnspolynomial.h"
+#include "common/rns.h"
 #include <numeric>
 #include <random>
 

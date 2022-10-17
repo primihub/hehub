@@ -12,30 +12,30 @@ namespace hehub {
 
 /// @brief Inplace FFT with coefficients/point values input and output in
 /// natural order.
-void fft_negacyclic_natural_inout(cc_double *coeffs, size_t log_poly_len,
+void fft_negacyclic_natural_inout(cc_double *coeffs, size_t log_dimension,
                                   bool inverse = false) {
     /**************************** Preparations ******************************/
     struct FFTFactors {
-        FFTFactors(size_t log_poly_len, bool inverse = false) {
-            auto poly_len = 1ULL << log_poly_len;
-            cc_double zeta = polar(1.0, 2 * M_PI / poly_len);
+        FFTFactors(size_t log_dimension, bool inverse = false) {
+            auto dimension = 1ULL << log_dimension;
+            cc_double zeta = polar(1.0, 2 * M_PI / dimension);
             if (inverse) {
                 zeta = conj(zeta);
             }
-            for (size_t i = 0; i < poly_len; i++) {
+            for (size_t i = 0; i < dimension; i++) {
                 coeff_trans.push_back(
-                    inverse ? polar(1.0 / poly_len, i * M_PI / poly_len * -1.0)
-                            : polar(1.0, i * M_PI / poly_len));
+                    inverse ? polar(1.0 / dimension, i * M_PI / dimension * -1.0)
+                            : polar(1.0, i * M_PI / dimension));
             }
 
             size_t level, local_idx, gap;
-            for (level = 1, gap = poly_len / 2; level <= log_poly_len;
+            for (level = 1, gap = dimension / 2; level <= log_dimension;
                  level++, gap >>= 1) {
-                for (local_idx = 0; local_idx < poly_len / gap / 2;
+                for (local_idx = 0; local_idx < dimension / gap / 2;
                      local_idx++) {
                     auto zeta_pow =
                         pow(zeta, (__bit_rev_naive_16(local_idx, level - 1)
-                                   << (log_poly_len - level)));
+                                   << (log_dimension - level)));
                     butterfly.push_back(zeta_pow);
                 }
             }
@@ -48,37 +48,37 @@ void fft_negacyclic_natural_inout(cc_double *coeffs, size_t log_poly_len,
 
     static map<pair<size_t, bool>, FFTFactors> fft_factors_cache;
 
-    auto __find_or_create_fft_factors = [&](size_t log_poly_len, bool inverse) {
-        const auto args = make_pair(log_poly_len, inverse);
+    auto __find_or_create_fft_factors = [&](size_t log_dimension, bool inverse) {
+        const auto args = make_pair(log_dimension, inverse);
         auto it = fft_factors_cache.find(args);
         if (it == fft_factors_cache.end()) {
             fft_factors_cache.insert(
-                std::make_pair(args, FFTFactors(log_poly_len, inverse)));
+                std::make_pair(args, FFTFactors(log_dimension, inverse)));
             it = fft_factors_cache.find(args);
         }
         return it->second;
     };
 
     const FFTFactors &fft_factors =
-        __find_or_create_fft_factors(log_poly_len, inverse);
+        __find_or_create_fft_factors(log_dimension, inverse);
     /************************* End of preparations ***************************/
 
-    auto poly_len = 1ULL << log_poly_len;
-    vector<cc_double> coeffs_copy(poly_len);
+    auto dimension = 1ULL << log_dimension;
+    vector<cc_double> coeffs_copy(dimension);
     if (!inverse) {
-        for (size_t i = 0; i < poly_len; i++) {
+        for (size_t i = 0; i < dimension; i++) {
             coeffs_copy[i] = coeffs[i] * fft_factors.coeff_trans[i];
         }
     } else {
-        for (size_t i = 0; i < poly_len; i++) {
+        for (size_t i = 0; i < dimension; i++) {
             coeffs_copy[i] = coeffs[i];
         }
     }
 
     size_t level, start, gap, h, l, idx = 0;
-    for (level = 1, gap = poly_len / 2; level <= log_poly_len;
+    for (level = 1, gap = dimension / 2; level <= log_dimension;
          level++, gap >>= 1) {
-        for (start = 0; start < poly_len; start += 2 * gap, idx++) {
+        for (start = 0; start < dimension; start += 2 * gap, idx++) {
             for (l = start; l < start + gap; l++) {
                 h = l + gap;
                 auto temp = coeffs_copy[h] * fft_factors.butterfly[idx];
@@ -88,11 +88,11 @@ void fft_negacyclic_natural_inout(cc_double *coeffs, size_t log_poly_len,
         }
     }
 
-    for (size_t i = 0; i < poly_len; i++) {
-        coeffs[i] = coeffs_copy[__bit_rev_naive_16(i, log_poly_len)];
+    for (size_t i = 0; i < dimension; i++) {
+        coeffs[i] = coeffs_copy[__bit_rev_naive_16(i, log_dimension)];
     }
     if (inverse) {
-        for (size_t i = 0; i < poly_len; i++) {
+        for (size_t i = 0; i < dimension; i++) {
             coeffs[i] *= fft_factors.coeff_trans[i];
         }
     }
@@ -100,13 +100,13 @@ void fft_negacyclic_natural_inout(cc_double *coeffs, size_t log_poly_len,
 
 CkksPt ckks::simd_encode_cc(const vector<cc_double> &data,
                             const double scaling_factor,
-                            const PolyDimensions &pt_poly_dim) {
+                            const RlweParams &pt_params) {
     if (scaling_factor <= 0) {
         throw invalid_argument("Scaling factor should be positive.");
     }
-    auto poly_len = pt_poly_dim.poly_len;
-    size_t log_poly_len = round(log2(poly_len));
-    auto slot_count = poly_len / 2;
+    auto dimension = pt_params.dimension;
+    size_t log_dimension = round(log2(dimension));
+    auto slot_count = dimension / 2;
     auto data_size = data.size();
     if (data_size > slot_count) {
         throw invalid_argument("Cannot encode " + to_string(data_size) +
@@ -114,14 +114,14 @@ CkksPt ckks::simd_encode_cc(const vector<cc_double> &data,
                                " slots.");
     }
 
-    vector<cc_double> interpolated(poly_len, 0.0);
+    vector<cc_double> interpolated(dimension, 0.0);
     auto &root_indices = root_index_factors();
-    auto mask = (1 << (log_poly_len + 1)) - 1; // for fast modulo 2*len
+    auto mask = (1 << (log_dimension + 1)) - 1; // for fast modulo 2*len
     for (size_t i = 0; i < data.size(); i++) {
         auto root_index = root_indices[i] & mask;
         auto position = (root_index - 1) / 2;
         interpolated[position] = data[i];
-        interpolated[poly_len - 1 - position] = conj(data[i]);
+        interpolated[dimension - 1 - position] = conj(data[i]);
     }
 
     // Interpolate the data into element in C[X]/(X^n+1).
@@ -129,7 +129,7 @@ CkksPt ckks::simd_encode_cc(const vector<cc_double> &data,
                                  size_t(log2(interpolated.size())),
                                  /*inverse=*/true);
 
-    CkksPt pt(pt_poly_dim);
+    CkksPt pt(pt_params);
 
     // Decide if coefficients after scaling will be all smaller than 64-bit.
     bool small_coeff = true;
@@ -152,15 +152,15 @@ CkksPt ckks::simd_encode_cc(const vector<cc_double> &data,
         }
 
         // Migrate the (abs values of) coefficients into RNS.
-        for (size_t k = 0; k < pt_poly_dim.component_count; k++) {
+        for (size_t k = 0; k < pt_params.component_count; k++) {
             copy(coeffs_u64_abs.begin(), coeffs_u64_abs.end(), pt[k].data());
-            batched_barrett_lazy(pt.modulus_at(k), pt.poly_len(), pt[k].data());
+            batched_barrett_lazy(pt.modulus_at(k), pt.dimension(), pt[k].data());
         }
 
         // Recover the signs of coefficients.
-        for (size_t i = 0; i < pt.poly_len(); i++) {
+        for (size_t i = 0; i < pt.dimension(); i++) {
             if (coeffs_being_neg[i]) {
-                for (size_t k = 0; k < pt_poly_dim.component_count; k++) {
+                for (size_t k = 0; k < pt_params.component_count; k++) {
                     pt[k][i] =
                         (pt[k][i] == 0) ? 0 : (2 * pt.modulus_at(k) - pt[k][i]);
                 }
@@ -180,17 +180,17 @@ CkksPt ckks::simd_encode_cc(const vector<cc_double> &data,
 
         // Migrate the coefficients into RNS
         vector<UBInt> moduli_big;
-        for (auto &mod : pt_poly_dim.moduli) {
+        for (auto &mod : pt_params.moduli) {
             moduli_big.push_back(UBInt(mod));
         }
-        for (size_t i = 0; i < pt.poly_len(); i++) {
-            for (size_t k = 0; k < pt_poly_dim.component_count; k++) {
+        for (size_t i = 0; i < pt.dimension(); i++) {
+            for (size_t k = 0; k < pt_params.component_count; k++) {
                 pt[k][i] = to_u64(coeffs_bigint_abs[i] % moduli_big[k]);
             }
 
             // Recover the sign
             if (coeffs_being_neg[i]) {
-                for (size_t k = 0; k < pt_poly_dim.component_count; k++) {
+                for (size_t k = 0; k < pt_params.component_count; k++) {
                     pt[k][i] = pt.modulus_at(k) - pt[k][i];
                 }
             }
@@ -206,7 +206,7 @@ vector<cc_double> ckks::simd_decode_cc(const CkksPt &pt, size_t data_size) {
     if (scaling_factor <= 0) {
         throw invalid_argument("Scaling factor should be positive.");
     }
-    auto slot_count = pt.poly_len() / 2;
+    auto slot_count = pt.dimension() / 2;
     if (data_size == 0) {
         data_size = slot_count; // Actual default argument
     }
@@ -218,14 +218,14 @@ vector<cc_double> ckks::simd_decode_cc(const CkksPt &pt, size_t data_size) {
 
     auto pt_reduced(pt);
     strict_reduce(pt_reduced);
-    auto poly_len = pt.poly_len();
-    size_t log_poly_len = round(log2(poly_len));
+    auto dimension = pt.dimension();
+    size_t log_dimension = round(log2(dimension));
     auto components = pt.component_count();
 
     // Decide whether the coefficients when in composed form will be all smaller
     // than the first modulus.
     bool small_coeff = true;
-    RnsPolynomial first_component(poly_len, 1, pt.modulus_vec());
+    RnsPolynomial first_component(dimension, 1, pt.modulus_vec());
     first_component[0] = pt_reduced[0];
     vector rest_moduli(pt.modulus_vec().begin() + 1, pt.modulus_vec().end());
     auto first_compo_under_rest_mod =
@@ -237,11 +237,11 @@ vector<cc_double> ckks::simd_decode_cc(const CkksPt &pt, size_t data_size) {
         }
     }
 
-    vector<cc_double> interpolated(pt.poly_len());
+    vector<cc_double> interpolated(pt.dimension());
     if (small_coeff) {
         auto first_mod = pt_reduced.modulus_at(0);
         auto half_first_mod = first_mod / 2;
-        for (size_t i = 0; i < poly_len; i++) {
+        for (size_t i = 0; i < dimension; i++) {
             if (pt_reduced[0][i] < half_first_mod) {
                 interpolated[i] = (double)pt_reduced[0][i];
             } else {
@@ -254,7 +254,7 @@ vector<cc_double> ckks::simd_decode_cc(const CkksPt &pt, size_t data_size) {
             accumulate(pt.modulus_vec().begin(), pt.modulus_vec().end(),
                        UBInt(1), [](auto acc, auto x) { return acc * x; });
         auto half_whole_mod = whole_modulus / 2;
-        for (size_t i = 0; i < poly_len; i++) {
+        for (size_t i = 0; i < dimension; i++) {
             double abs_real;
             if (pt_poly_big_int[i] < half_whole_mod) {
                 abs_real = to_double(pt_poly_big_int[i]);
@@ -270,13 +270,13 @@ vector<cc_double> ckks::simd_decode_cc(const CkksPt &pt, size_t data_size) {
     for (auto &i : interpolated) {
         i /= scaling_factor;
     }
-    // interpolated.size() == poly_len
-    fft_negacyclic_natural_inout(interpolated.data(), log_poly_len);
+    // interpolated.size() == dimension
+    fft_negacyclic_natural_inout(interpolated.data(), log_dimension);
 
     // extract the original conjugation half
     vector<cc_double> data(slot_count);
     auto &root_indices = root_index_factors();
-    auto mask = (1 << (log_poly_len + 1)) - 1; // for fast modulo 2*len
+    auto mask = (1 << (log_dimension + 1)) - 1; // for fast modulo 2*len
     for (size_t i = 0; i < slot_count; i++) {
         auto root_index = root_indices[i] & mask;
         auto position = (root_index - 1) / 2;

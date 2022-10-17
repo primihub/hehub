@@ -27,7 +27,7 @@ RlwePt bgv::simd_encode(const std::vector<u64> &data, const u64 modulus,
     }
 
     // Pack the data into plaintext slots.
-    RlwePt pt(PolyDimensions{slot_count, 1, std::vector<u64>{modulus}});
+    RlwePt pt(RlweParams{slot_count, 1, std::vector<u64>{modulus}});
     pt.rep_form = PolyRepForm::value;
     auto mod_ptr = pt.modulus_vec().begin();
     auto &pt_poly = pt[0];
@@ -42,7 +42,7 @@ RlwePt bgv::simd_encode(const std::vector<u64> &data, const u64 modulus,
 
 std::vector<u64> bgv::simd_decode(const RlwePt &pt, size_t data_size) {
     if (data_size == 0) {
-        data_size = pt.poly_len();
+        data_size = pt.dimension();
     }
 
     if (pt.component_count() != 1) {

@@ -76,13 +76,13 @@ TEST_CASE("big int poly") {
     // Generate a pseudo-random RNS polynomial.
     auto modulus_vec =
         std::vector<u64>{0x3ffffffffffe5, 0x3ffffffffffdd, 0x3ffffffffffcd};
-    RnsPolynomial rns_poly(PolyDimensions{16, 3, modulus_vec});
+    RnsPolynomial rns_poly(RlweParams{16, 3, modulus_vec});
     auto seed = 42;
-    auto poly_len = rns_poly.poly_len();
+    auto dimension = rns_poly.dimension();
     auto components = rns_poly.component_count();
     for (size_t j = 0; j < components; j++) {
         auto curr_modulus = modulus_vec[j];
-        for (size_t i = 0; i < poly_len; i++) {
+        for (size_t i = 0; i < dimension; i++) {
             seed ^= seed * 498672493528838 + 93875838578748;
             rns_poly[j][i] = seed % curr_modulus;
         }
@@ -91,10 +91,10 @@ TEST_CASE("big int poly") {
     // Compose the RNS polynomial into a big-int polynomial, and check the
     // correctness.
     UBigIntPoly big_int_poly(rns_poly);
-    REQUIRE(big_int_poly.poly_len() == poly_len);
+    REQUIRE(big_int_poly.dimension() == dimension);
     for (int j = 0; j < components; j++) {
         auto curr_modulus_big = UBInt(modulus_vec[j]);
-        for (int i = 0; i < poly_len; i++) {
+        for (int i = 0; i < dimension; i++) {
             auto curr_remainder_coeff_big = UBInt(rns_poly[j][i]);
             REQUIRE(big_int_poly[i] % curr_modulus_big ==
                     curr_remainder_coeff_big);

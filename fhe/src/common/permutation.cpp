@@ -27,8 +27,8 @@ RnsPolynomial cycle(const RnsPolynomial &poly_ntt, const size_t step) {
             "poly_ntt is expected to be in NTT value form");
     }
 
-    const auto len = poly_ntt.poly_len();
-    const auto loglen = poly_ntt.log_poly_len();
+    const auto len = poly_ntt.dimension();
+    const auto loglen = poly_ntt.log_dimension();
     const auto components = poly_ntt.component_count();
     RnsPolynomial cycled(len, components, poly_ntt.modulus_vec());
     cycled.rep_form = PolyRepForm::value;
@@ -57,7 +57,7 @@ RnsPolynomial involute(const RnsPolynomial &poly_ntt) {
             "poly_ntt is expected to be in NTT value form");
     }
 
-    const auto len = poly_ntt.poly_len();
+    const auto len = poly_ntt.dimension();
     const auto components = poly_ntt.component_count();
     RnsPolynomial involuted(len, components, poly_ntt.modulus_vec());
     involuted.rep_form = PolyRepForm::value;

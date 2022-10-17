@@ -13,9 +13,9 @@ rns_base_transform_from_single(const RnsPolynomial &input_rns_poly,
                                const std::vector<u64> &new_moduli) {
     auto old_modulus = input_rns_poly.modulus_at(0);
     auto half_old_modulus = old_modulus / 2;
-    auto poly_len = input_rns_poly.poly_len();
+    auto dimension = input_rns_poly.dimension();
 
-    PolyDimensions output_dim{poly_len, new_moduli.size(), new_moduli};
+    RlweParams output_dim{dimension, new_moduli.size(), new_moduli};
     RnsPolynomial result(output_dim);
     auto &input_poly = input_rns_poly[0];
     for (auto [component, modulus] : zip(result, new_moduli)) {
@@ -29,7 +29,7 @@ rns_base_transform_from_single(const RnsPolynomial &input_rns_poly,
         }
 
         if (modulus < old_modulus) {
-            batched_barrett_lazy(modulus, poly_len, component.data());
+            batched_barrett_lazy(modulus, dimension, component.data());
         }
     }
 
@@ -38,10 +38,10 @@ rns_base_transform_from_single(const RnsPolynomial &input_rns_poly,
 
 RnsPolynomial rns_base_transform_to_single(const RnsPolynomial &input_rns_poly,
                                            const u64 new_modulus) {
-    auto poly_len = input_rns_poly.poly_len();
+    auto dimension = input_rns_poly.dimension();
     auto &old_moduli = input_rns_poly.modulus_vec();
-    PolyDimensions poly_dim{poly_len, 1, std::vector{new_modulus}};
-    RnsPolynomial result(poly_dim);
+    RlweParams params{dimension, 1, std::vector{new_modulus}};
+    RnsPolynomial result(params);
     auto &result_poly = result[0];
 
     // Check if the coefficients are smaller than each old modulus. If so then
@@ -49,7 +49,7 @@ RnsPolynomial rns_base_transform_to_single(const RnsPolynomial &input_rns_poly,
     bool small_coeff = true;
     auto first_old_mod = old_moduli[0];
     u64 half_first_old_mod = first_old_mod / 2;
-    for (size_t i = 0; i < poly_len; i++) {
+    for (size_t i = 0; i < dimension; i++) {
         for (size_t k = 1; k < input_rns_poly.component_count(); k++) {
             if (input_rns_poly[0][i] < half_first_old_mod &&
                 input_rns_poly[k][i] != input_rns_poly[0][i]) {
@@ -79,7 +79,7 @@ RnsPolynomial rns_base_transform_to_single(const RnsPolynomial &input_rns_poly,
                     new_modulus_multiple - first_old_mod + input_coeff;
             }
         }
-        batched_barrett(new_modulus, poly_len, result_poly.data());
+        batched_barrett(new_modulus, dimension, result_poly.data());
         return result;
     }
 
@@ -92,7 +92,7 @@ RnsPolynomial rns_base_transform_to_single(const RnsPolynomial &input_rns_poly,
         big_int_old_modulus *= UBInt(mod);
     }
     auto half_big_int_old_modulus = big_int_old_modulus / UBInt(2);
-    for (size_t i = 0; i < poly_len; i++) {
+    for (size_t i = 0; i < dimension; i++) {
         if (big_int_poly[i] < half_big_int_old_modulus) {
             result_poly[i] = to_u64(big_int_poly[i] % big_int_new_modulus);
         } else {
