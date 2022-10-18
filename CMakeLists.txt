@@ -25,9 +25,6 @@ add_subdirectory(tests)
 # compile the benchmarks
 add_subdirectory(bench)
 
-# compile the demonstration
-add_subdirectory(app)
-
 # optionally add doxygen target to generate documentation
 option(BUILD_DOCS "Enable building of documentation (requires Doxygen)" OFF)
 if(BUILD_DOCS)

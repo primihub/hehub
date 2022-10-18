@@ -152,13 +152,13 @@ TEST_CASE("automorphism") {
         ntt_negacyclic_inplace_lazy(poly);
 
         // check the involution
-        auto involuted = involute(poly);
-        REQUIRE(involute(involuted) == poly);
+        auto involution = involution(poly);
+        REQUIRE(involution(involution) == poly);
 
         // check the boundness property
         intt_negacyclic_inplace(poly);
-        intt_negacyclic_inplace(involuted);
-        REQUIRE(simple_inf_norm(poly) == simple_inf_norm(involuted));
+        intt_negacyclic_inplace(involution);
+        REQUIRE(simple_inf_norm(poly) == simple_inf_norm(involution));
     }
     SECTION("cycles") {
         u64 q = 65537;
@@ -202,10 +202,10 @@ TEST_CASE("automorphism") {
         auto pt =
             ckks::simd_encode(plain_data, pow(2.0, 50), {dimension, 1, {q}});
         ntt_negacyclic_inplace_lazy(pt);
-        CkksPt involuted_pt = involute(pt);
-        involuted_pt.scaling_factor = pt.scaling_factor;
-        intt_negacyclic_inplace(involuted_pt);
-        auto data_recovered = ckks::simd_decode<cc_double>(involuted_pt);
+        CkksPt involution_pt = involution(pt);
+        involution_pt.scaling_factor = pt.scaling_factor;
+        intt_negacyclic_inplace(involution_pt);
+        auto data_recovered = ckks::simd_decode<cc_double>(involution_pt);
 
         REQUIRE(all_close(data_recovered, data_conj, pow(2.0, -45)));
     }

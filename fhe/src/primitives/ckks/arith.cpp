@@ -72,12 +72,12 @@ CkksCt ckks::relinearize(const CkksQuadraticCt &ct, const RlweKsk &relin_key) {
 }
 
 CkksCt ckks::conjugate(const CkksCt &ct, const RlweKsk &conj_key) {
-    auto involuted = RlweCt{involute(ct[0]), involute(ct[1])};
-    CkksCt ct_conj = ext_prod_montgomery(involuted[1], conj_key);
+    auto involution = RlweCt{involution(ct[0]), involution(ct[1])};
+    CkksCt ct_conj = ext_prod_montgomery(involution[1], conj_key);
     ckks::rescale_inplace(ct_conj);
     ct_conj.scaling_factor = ct.scaling_factor; // the scaling factor
                                                 // should remain
-    ct_conj[0] += involuted[0];
+    ct_conj[0] += involution[0];
     return ct_conj;
 }
 

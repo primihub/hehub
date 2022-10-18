@@ -51,7 +51,7 @@ RnsPolynomial cycle(const RnsPolynomial &poly_ntt, const size_t step) {
     return cycled;
 }
 
-RnsPolynomial involute(const RnsPolynomial &poly_ntt) {
+RnsPolynomial involution(const RnsPolynomial &poly_ntt) {
     if (poly_ntt.rep_form != PolyRepForm::value) {
         throw std::invalid_argument(
             "poly_ntt is expected to be in NTT value form");
@@ -59,15 +59,15 @@ RnsPolynomial involute(const RnsPolynomial &poly_ntt) {
 
     const auto len = poly_ntt.dimension();
     const auto components = poly_ntt.component_count();
-    RnsPolynomial involuted(len, components, poly_ntt.modulus_vec());
-    involuted.rep_form = PolyRepForm::value;
+    RnsPolynomial involution(len, components, poly_ntt.modulus_vec());
+    involution.rep_form = PolyRepForm::value;
     for (size_t k = 0; k < components; k++) {
         for (size_t i = 0; i < len; i++) {
-            involuted[k][i] = poly_ntt[k][len - 1 - i];
+            involution[k][i] = poly_ntt[k][len - 1 - i];
         }
     }
 
-    return involuted;
+    return involution;
 }
 
 } // namespace hehub

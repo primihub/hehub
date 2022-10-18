@@ -45,14 +45,14 @@ inline RlweKsk get_relin_key(const RlweSk &sk, const u64 additional_mod) {
 
 /**
  * @brief Generate and return a conjugation key which is an RGSW encryption for
- * involuted sk, where sk is the secret key.
+ * involution sk, where sk is the secret key.
  * @param sk The secret key.
  * @param additional_mod The additional modulus for extending the RNS of the
  * conjugation key and the ciphertext to conjugate.
  * @return RlweKsk
  */
 inline RlweKsk get_conj_key(const RlweSk &sk, const u64 additional_mod) {
-    return RlweKsk(involute(sk), sk, additional_mod);
+    return RlweKsk(involution(sk), sk, additional_mod);
 }
 
 /**
