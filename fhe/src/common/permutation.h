@@ -123,6 +123,6 @@ RnsPolynomial cycle(const RnsPolynomial &poly_ntt, const size_t step);
  * @param poly_ntt An RnsPolynomial in NTT value form.
  * @return RnsPolynomial
  */
-RnsPolynomial involute(const RnsPolynomial &poly_ntt);
+RnsPolynomial involution(const RnsPolynomial &poly_ntt);
 
 } // namespace hehub
