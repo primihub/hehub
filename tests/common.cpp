@@ -152,13 +152,13 @@ TEST_CASE("automorphism") {
         ntt_negacyclic_inplace_lazy(poly);
 
         // check the involution
-        auto involution = involution(poly);
-        REQUIRE(involution(involution) == poly);
+        auto poly_involved = involution(poly);
+        REQUIRE(involution(poly_involved) == poly);
 
         // check the boundness property
         intt_negacyclic_inplace(poly);
-        intt_negacyclic_inplace(involution);
-        REQUIRE(simple_inf_norm(poly) == simple_inf_norm(involution));
+        intt_negacyclic_inplace(poly_involved);
+        REQUIRE(simple_inf_norm(poly) == simple_inf_norm(poly_involved));
     }
     SECTION("cycles") {
         u64 q = 65537;
@@ -202,10 +202,10 @@ TEST_CASE("automorphism") {
         auto pt =
             ckks::simd_encode(plain_data, pow(2.0, 50), {dimension, 1, {q}});
         ntt_negacyclic_inplace_lazy(pt);
-        CkksPt involution_pt = involution(pt);
-        involution_pt.scaling_factor = pt.scaling_factor;
-        intt_negacyclic_inplace(involution_pt);
-        auto data_recovered = ckks::simd_decode<cc_double>(involution_pt);
+        CkksPt pt_involved = involution(pt);
+        pt_involved.scaling_factor = pt.scaling_factor;
+        intt_negacyclic_inplace(pt_involved);
+        auto data_recovered = ckks::simd_decode<cc_double>(pt_involved);
 
         REQUIRE(all_close(data_recovered, data_conj, pow(2.0, -45)));
     }
@@ -228,10 +228,10 @@ TEST_CASE("automorphism") {
         auto pt =
             ckks::simd_encode(plain_data, pow(2.0, 50), {dimension, 1, {q}});
         ntt_negacyclic_inplace_lazy(pt);
-        CkksPt cycled_pt = cycle(pt, step);
-        cycled_pt.scaling_factor = pt.scaling_factor;
-        intt_negacyclic_inplace(cycled_pt);
-        auto data_recovered = ckks::simd_decode<cc_double>(cycled_pt);
+        CkksPt pt_cycled = cycle(pt, step);
+        pt_cycled.scaling_factor = pt.scaling_factor;
+        intt_negacyclic_inplace(pt_cycled);
+        auto data_recovered = ckks::simd_decode<cc_double>(pt_cycled);
 
         REQUIRE(all_close(data_recovered, data_rot, pow(2.0, -45)));
     }
