@@ -2,16 +2,18 @@
  * @file ntt.h
  * @brief Number Theoretic Transforms that transform a polynomial modulo both of
  * a prime q and (X^n + 1) for n being a power of 2 (a.k.a being an element of
- * the so-called nega-cyclic ring Z_q[X]/(X^n + 1)) between coefficient and
- * value form of presentation, cf.
+ * the negacyclic ring Z_q[X]/(X^n + 1)) between coefficient and value form of
+ * presentation.
+ * @note cf.
  * https://en.wikipedia.org/wiki/Discrete_Fourier_transform_over_a_ring.
  */
 
 #pragma once
 
+#include "mod_arith.h"
+#include "range/v3/view/zip.hpp"
 #include "rns.h"
 #include "type_defs.h"
-#include "mod_arith.h"
 #include <cmath>
 #include <stdexcept>
 #include <vector>
@@ -36,7 +38,17 @@ void ntt_negacyclic_inplace_lazy(const size_t log_dimension, const u64 modulus,
  *
  * @param[inout] rns_poly
  */
-void ntt_negacyclic_inplace_lazy(RnsPolynomial &rns_poly);
+inline void ntt_negacyclic_inplace_lazy(RnsPolynomial &rns_poly) {
+    const auto component_count = rns_poly.component_count();
+    const auto log_dimension = rns_poly.log_dimension();
+    const auto &moduli = rns_poly.modulus_vec();
+
+    for (auto [component, modulus] : ranges::views::zip(rns_poly, moduli)) {
+        ntt_negacyclic_inplace_lazy(log_dimension, modulus, component.data());
+    }
+
+    rns_poly.rep_form = PolyRepForm::value;
+}
 
 /**
  * @brief The function carries out inverse NTT operation inplace, the input and
@@ -57,7 +69,17 @@ void intt_negacyclic_inplace_lazy(const size_t log_dimension, const u64 modulus,
  *
  * @param[inout] rns_poly
  */
-void intt_negacyclic_inplace_lazy(RnsPolynomial &rns_poly);
+inline void intt_negacyclic_inplace_lazy(RnsPolynomial &rns_poly) {
+    const auto component_count = rns_poly.component_count();
+    const auto log_dimension = rns_poly.log_dimension();
+    const auto &moduli = rns_poly.modulus_vec();
+
+    for (auto [component, modulus] : ranges::views::zip(rns_poly, moduli)) {
+        intt_negacyclic_inplace_lazy(log_dimension, modulus, component.data());
+    }
+
+    rns_poly.rep_form = PolyRepForm::coeff;
+}
 
 /**
  * @brief TODO

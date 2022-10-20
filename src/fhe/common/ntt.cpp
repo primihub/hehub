@@ -222,32 +222,6 @@ void intt_negacyclic_inplace_lazy(const size_t log_dimension, const u64 modulus,
     }
 }
 
-void ntt_negacyclic_inplace_lazy(RnsPolynomial &rns_poly) {
-    const auto component_count = rns_poly.component_count();
-    auto mod_ptr = rns_poly.modulus_vec().begin();
-    const auto log_dimension = rns_poly.log_dimension();
-
-    for (auto &component_poly : rns_poly) {
-        ntt_negacyclic_inplace_lazy(log_dimension, *(mod_ptr++),
-                                    component_poly.data());
-    }
-
-    rns_poly.rep_form = PolyRepForm::value;
-}
-
-void intt_negacyclic_inplace_lazy(RnsPolynomial &rns_poly) {
-    const auto component_count = rns_poly.component_count();
-    auto mod_ptr = rns_poly.modulus_vec().begin();
-    const auto log_dimension = rns_poly.log_dimension();
-
-    for (auto &component_poly : rns_poly) {
-        intt_negacyclic_inplace_lazy(log_dimension, *(mod_ptr++),
-                                     component_poly.data());
-    }
-
-    rns_poly.rep_form = PolyRepForm::coeff;
-}
-
 void cache_ntt_factors_strict(const u64 log_dimension,
                               const std::vector<u64> &moduli) {
     for (auto modulus : moduli) {
