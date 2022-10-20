@@ -132,7 +132,7 @@ struct ckks {
      * @return CkksCt
      */
     inline static CkksCt encrypt(const CkksPt &pt, const RlweSk &sk) {
-        CkksCt ct = ::hehub::encrypt_core(pt, sk);
+        CkksCt ct = encrypt_core(pt, sk);
         ct.scaling_factor = pt.scaling_factor;
         return ct;
     }
@@ -145,7 +145,7 @@ struct ckks {
      * @return CkksCt
      */
     inline static CkksPt decrypt(const CkksCt &ct, const RlweSk &sk) {
-        CkksPt pt = ::hehub::decrypt_core(ct, sk);
+        CkksPt pt = decrypt_core(ct, sk);
         pt.scaling_factor = ct.scaling_factor;
         return pt;
     }
