@@ -2,6 +2,7 @@
 #include "common/ntt.h"
 
 namespace hehub {
+namespace ckks {
 
 const double EPS = std::pow(2.0, -50);
 
@@ -11,14 +12,14 @@ auto check_scaling_factor = [](const auto &in1, const auto &in2) {
     }
 };
 
-CkksCt ckks::add(const CkksCt &ct1, const CkksCt &ct2) {
+CkksCt add(const CkksCt &ct1, const CkksCt &ct2) {
     check_scaling_factor(ct1, ct2);
     CkksCt sum_ct = ::hehub::add(ct1, ct2); // call addition on RLWE
     sum_ct.scaling_factor = ct1.scaling_factor;
     return sum_ct;
 }
 
-CkksCt ckks::add_plain(const CkksCt &ct, const CkksPt &pt) {
+CkksCt add_plain(const CkksCt &ct, const CkksPt &pt) {
     check_scaling_factor(ct, pt);
     auto pt_ntt(pt);
     ntt_negacyclic_inplace_lazy(pt_ntt);
@@ -27,14 +28,14 @@ CkksCt ckks::add_plain(const CkksCt &ct, const CkksPt &pt) {
     return sum_ct;
 }
 
-CkksCt ckks::sub(const CkksCt &ct1, const CkksCt &ct2) {
+CkksCt sub(const CkksCt &ct1, const CkksCt &ct2) {
     check_scaling_factor(ct1, ct2);
     CkksCt diff_ct = ::hehub::sub(ct1, ct2); // call subtraction on RLWE
     diff_ct.scaling_factor = ct1.scaling_factor;
     return diff_ct;
 }
 
-CkksCt ckks::sub_plain(const CkksCt &ct, const CkksPt &pt) {
+CkksCt sub_plain(const CkksCt &ct, const CkksPt &pt) {
     check_scaling_factor(ct, pt);
     auto pt_ntt(pt);
     ntt_negacyclic_inplace_lazy(pt_ntt);
@@ -43,7 +44,7 @@ CkksCt ckks::sub_plain(const CkksCt &ct, const CkksPt &pt) {
     return diff_ct;
 }
 
-CkksCt ckks::mult_plain(const CkksCt &ct, const CkksPt &pt) {
+CkksCt mult_plain(const CkksCt &ct, const CkksPt &pt) {
     auto pt_ntt(pt);
     ntt_negacyclic_inplace_lazy(pt_ntt);
     CkksCt prod_ct = mult_plain_core(ct, pt_ntt);
@@ -51,7 +52,7 @@ CkksCt ckks::mult_plain(const CkksCt &ct, const CkksPt &pt) {
     return prod_ct;
 }
 
-CkksQuadraticCt ckks::mult_low_level(const CkksCt &ct1, const CkksCt &ct2) {
+CkksQuadraticCt mult_low_level(const CkksCt &ct1, const CkksCt &ct2) {
     CkksQuadraticCt ct_prod;
     ct_prod[0] = ct1[0] * ct2[0];
     ct_prod[1] = ct1[0] * ct2[1] + ct1[1] * ct2[0];
@@ -60,7 +61,7 @@ CkksQuadraticCt ckks::mult_low_level(const CkksCt &ct1, const CkksCt &ct2) {
     return ct_prod;
 }
 
-CkksCt ckks::relinearize(const CkksQuadraticCt &ct, const RlweKsk &relin_key) {
+CkksCt relinearize(const CkksQuadraticCt &ct, const RlweKsk &relin_key) {
     CkksCt ct_new = ext_prod_montgomery(ct[2], relin_key);
     rescale_inplace(ct_new); // this rescaling step shouldn't
                              // modify scaling factor
@@ -71,24 +72,25 @@ CkksCt ckks::relinearize(const CkksQuadraticCt &ct, const RlweKsk &relin_key) {
     return ct_new;
 }
 
-CkksCt ckks::conjugate(const CkksCt &ct, const RlweKsk &conj_key) {
+CkksCt conjugate(const CkksCt &ct, const RlweKsk &conj_key) {
     auto ct_involved = RlweCt{involution(ct[0]), involution(ct[1])};
     CkksCt ct_conj = ext_prod_montgomery(ct_involved[1], conj_key);
-    ckks::rescale_inplace(ct_conj);
+    rescale_inplace(ct_conj);
     ct_conj.scaling_factor = ct.scaling_factor; // the scaling factor
                                                 // should remain
     ct_conj[0] += ct_involved[0];
     return ct_conj;
 }
 
-CkksCt ckks::rotate(const CkksCt &ct, const RlweKsk &rot_key, const size_t step) {
+CkksCt rotate(const CkksCt &ct, const RlweKsk &rot_key, const size_t step) {
     auto rotated = RlweCt{cycle(ct[0], step), cycle(ct[1], step)};
     CkksCt ct_rot = ext_prod_montgomery(rotated[1], rot_key);
-    ckks::rescale_inplace(ct_rot);
+    rescale_inplace(ct_rot);
     ct_rot.scaling_factor = ct.scaling_factor; // the scaling factor
                                                // should remain
     ct_rot[0] += rotated[0];
     return ct_rot;
 }
 
+} // namespace ckks
 } // namespace hehub

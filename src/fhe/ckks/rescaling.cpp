@@ -2,10 +2,11 @@
 #include "common/mod_arith.h"
 #include "common/ntt.h"
 #include <algorithm>
-#include <numeric>
 #include <iostream>
+#include <numeric>
 
 namespace hehub {
+namespace ckks {
 
 void rescale_by_one_prime_inplace(CkksCt &ct) {
     if (ct[0].modulus_vec() != ct[1].modulus_vec()) {
@@ -48,8 +49,8 @@ void rescale_by_one_prime_inplace(CkksCt &ct) {
             remainder_q_last[k] = last_comp_coeffs;
 
             /* This reduction step needs further optimization. */
-            batched_barrett(
-                ct_moduli[k], dimension, remainder_q_last[k].data());
+            batched_barrett(ct_moduli[k], dimension,
+                            remainder_q_last[k].data());
 
             // The remainder needs to be of smallest possible abs value, i.e. in
             // [-q_last/2, q_last/2).
@@ -69,7 +70,7 @@ void rescale_by_one_prime_inplace(CkksCt &ct) {
     ct.scaling_factor /= q_last;
 }
 
-void ckks::rescale_inplace(CkksCt &ct, size_t dropping_primes) {
+void rescale_inplace(CkksCt &ct, size_t dropping_primes) {
     if (dropping_primes == 1) {
         rescale_by_one_prime_inplace(ct);
     } else if (dropping_primes >= 2) {
@@ -79,4 +80,5 @@ void ckks::rescale_inplace(CkksCt &ct, size_t dropping_primes) {
     }
 }
 
+} // namespace ckks
 } // namespace hehub

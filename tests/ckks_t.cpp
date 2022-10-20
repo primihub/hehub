@@ -1,16 +1,18 @@
 #include "catch2/catch.hpp"
+#include "ckks/ckks.h"
 #include "common/bigintpoly.h"
 #include "common/mod_arith.h"
 #include "common/permutation.h"
 #include "common/sampling.h"
-#include "ckks/ckks.h"
 #include <type_traits>
 
 using namespace hehub;
 
 namespace hehub {
+namespace ckks {
 void fft_negacyclic_natural_inout(cc_double *coeffs, size_t log_dimension,
                                   bool inverse = false);
+} // namespace ckks
 } // namespace hehub
 
 #define REQUIRE_ALL_CLOSE(vec1, vec2, eps)                                     \
@@ -47,7 +49,7 @@ TEST_CASE("fft", "[.]") {
             return sum;
         };
 
-        fft_negacyclic_natural_inout(coeffs.data(), logn);
+        ckks::fft_negacyclic_natural_inout(coeffs.data(), logn);
 
         for (size_t i = 0; i < n; i = i * 3 + 1) {
             REQUIRE(abs(coeffs[i] - substitute(std::polar(
@@ -57,8 +59,8 @@ TEST_CASE("fft", "[.]") {
     SECTION("FFT round trip") {
         auto coeffs_copy(coeffs);
 
-        fft_negacyclic_natural_inout(coeffs.data(), logn);
-        fft_negacyclic_natural_inout(coeffs.data(), logn, true);
+        ckks::fft_negacyclic_natural_inout(coeffs.data(), logn);
+        ckks::fft_negacyclic_natural_inout(coeffs.data(), logn, true);
 
         bool all_close = true;
         for (size_t i = 0; i < n; i = i * 3 + 1) {

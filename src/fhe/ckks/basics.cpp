@@ -9,6 +9,7 @@
 using namespace std;
 
 namespace hehub {
+namespace ckks {
 
 /// @brief Inplace FFT with coefficients/point values input and output in
 /// natural order.
@@ -24,8 +25,9 @@ void fft_negacyclic_natural_inout(cc_double *coeffs, size_t log_dimension,
             }
             for (size_t i = 0; i < dimension; i++) {
                 coeff_trans.push_back(
-                    inverse ? polar(1.0 / dimension, i * M_PI / dimension * -1.0)
-                            : polar(1.0, i * M_PI / dimension));
+                    inverse
+                        ? polar(1.0 / dimension, i * M_PI / dimension * -1.0)
+                        : polar(1.0, i * M_PI / dimension));
             }
 
             size_t level, local_idx, gap;
@@ -48,7 +50,8 @@ void fft_negacyclic_natural_inout(cc_double *coeffs, size_t log_dimension,
 
     static map<pair<size_t, bool>, FFTFactors> fft_factors_cache;
 
-    auto __find_or_create_fft_factors = [&](size_t log_dimension, bool inverse) {
+    auto __find_or_create_fft_factors = [&](size_t log_dimension,
+                                            bool inverse) {
         const auto args = make_pair(log_dimension, inverse);
         auto it = fft_factors_cache.find(args);
         if (it == fft_factors_cache.end()) {
@@ -98,9 +101,9 @@ void fft_negacyclic_natural_inout(cc_double *coeffs, size_t log_dimension,
     }
 }
 
-CkksPt ckks::simd_encode_cc(const vector<cc_double> &data,
-                            const double scaling_factor,
-                            const RlweParams &pt_params) {
+CkksPt simd_encode_cc(const vector<cc_double> &data,
+                      const double scaling_factor,
+                      const RlweParams &pt_params) {
     if (scaling_factor <= 0) {
         throw invalid_argument("Scaling factor should be positive.");
     }
@@ -154,7 +157,8 @@ CkksPt ckks::simd_encode_cc(const vector<cc_double> &data,
         // Migrate the (abs values of) coefficients into RNS.
         for (size_t k = 0; k < pt_params.component_count; k++) {
             copy(coeffs_u64_abs.begin(), coeffs_u64_abs.end(), pt[k].data());
-            batched_barrett_lazy(pt.modulus_at(k), pt.dimension(), pt[k].data());
+            batched_barrett_lazy(pt.modulus_at(k), pt.dimension(),
+                                 pt[k].data());
         }
 
         // Recover the signs of coefficients.
@@ -201,7 +205,7 @@ CkksPt ckks::simd_encode_cc(const vector<cc_double> &data,
     return pt;
 }
 
-vector<cc_double> ckks::simd_decode_cc(const CkksPt &pt, size_t data_size) {
+vector<cc_double> simd_decode_cc(const CkksPt &pt, size_t data_size) {
     auto scaling_factor = pt.scaling_factor;
     if (scaling_factor <= 0) {
         throw invalid_argument("Scaling factor should be positive.");
@@ -285,13 +289,11 @@ vector<cc_double> ckks::simd_decode_cc(const CkksPt &pt, size_t data_size) {
     return data;
 }
 
-template <>
-vector<cc_double> ckks::simd_decode(const CkksPt &pt, size_t data_size) {
+template <> vector<cc_double> simd_decode(const CkksPt &pt, size_t data_size) {
     return simd_decode_cc(pt, data_size);
 }
 
-template <>
-vector<double> ckks::simd_decode(const CkksPt &pt, size_t data_size) {
+template <> vector<double> simd_decode(const CkksPt &pt, size_t data_size) {
     auto data_cc = simd_decode_cc(pt, data_size);
     vector<double> data;
     for (const auto d : data_cc) {
@@ -300,4 +302,5 @@ vector<double> ckks::simd_decode(const CkksPt &pt, size_t data_size) {
     return data;
 }
 
+} // namespace ckks
 } // namespace hehub
