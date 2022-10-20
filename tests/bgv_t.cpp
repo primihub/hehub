@@ -1,7 +1,7 @@
 #include "catch2/catch.hpp"
 #include "common/mod_arith.h"
 #include "common/sampling.h"
-#include "primitives/bgv/bgv.h"
+#include "bgv/bgv.h"
 #include <iostream>
 
 using namespace hehub;

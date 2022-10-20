@@ -3,7 +3,7 @@
 #include "common/mod_arith.h"
 #include "common/permutation.h"
 #include "common/sampling.h"
-#include "primitives/ckks/ckks.h"
+#include "ckks/ckks.h"
 #include <type_traits>
 
 using namespace hehub;

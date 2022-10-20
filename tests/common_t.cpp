@@ -4,7 +4,7 @@
 #include "common/permutation.h"
 #include "common/rns.h"
 #include "common/sampling.h"
-#include "primitives/ckks/ckks.h"
+#include "ckks/ckks.h"
 
 using namespace hehub;
 

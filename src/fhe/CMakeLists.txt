@@ -24,6 +24,7 @@ if(HEHUB_DEBUG_RLWE_ZERO_E)
     target_compile_definitions(${PROJECT_NAME} PUBLIC HEHUB_DEBUG_RLWE_ZERO_E)
 endif()
 
-add_subdirectory(adder)
 add_subdirectory(common)
 add_subdirectory(primitives)
+add_subdirectory(bgv)
+add_subdirectory(ckks)
