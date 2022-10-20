@@ -1,6 +1,6 @@
 # HEhub
 
-HEhub is a library for homomorphic encryption, and part of the PrimiHub project.
+HEhub is a library for homomorphic encryption and its applications, and is part of the PrimiHub project.
 
 ## Introduction
 
@@ -10,9 +10,9 @@ Homomorphic encryption (HE) is a cryptographic primitive which allows computatio
 There are four generations of FHE schemes so far. The schemes of BFV, BGV, and CKKS are currently often applied in leveled mode, in which no bootstrapping procedure will be run and the circuits to evaluate need to be of limited depth. These schemes support SIMD evalutation natively. On the other hand, the scheme of FHEW/TFHE has practical solution of bootstrapping, which enables FHE mode natively. 
 
 #### Why yet another HE library?
-The technology of homomorphic encryption is evolving continuously, and we aim to provide an easy-to-use, scalable and efficient library, so as to help developers catch up with the latest development of this field, and to faciliate further research on it. We hope that HEhub can help the cummunity to utilize and explore the future of homomorphic encryption. 
+There are several open-sourced HE libraries so far. However, the technology of homomorphic encryption is evolving continuously, and we aim to provide an easy-to-use, scalable and efficient library, so as to help developers catch up with the latest development of this field, and to faciliate further research on it. We hope that HEhub can help the cummunity to utilize and explore the future of homomorphic encryption. 
 
-HEhub currently includes the homomorphic encryption schemes BGV, CKKS, and TFHE, etc., and will further feature various schemes, algorithms and application interface about homomorphic encryption. As part of the PrimiHub project, HEhub is an essential tool helping us explore the field of privacy enhancing technologies.
+HEhub currently includes the homomorphic encryption schemes BGV, CKKS, and TFHE, etc., and will further feature various schemes, frequent circuits and application interface on homomorphic encryption. As part of the PrimiHub project, HEhub is an essential tool helping us explore the field of privacy enhancing technologies.
 
 ## Building and Installation 
 Currently the library only requires header-only third-party dependencies, which need no manual pre-installation. The library is built with CMake (>= 3.14), and tested on Linux with toolchain GCC (>= 7.0) and on MacOS with toolchain Clang (>= 13.0).
