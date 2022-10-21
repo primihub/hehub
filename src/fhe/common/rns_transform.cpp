@@ -113,7 +113,7 @@ RnsPolynomial rns_base_transform(RnsPolynomial input_rns_poly,
 
     // Reduce the coefficients strictly to avoid errors caused by redundant
     // multiples of original modulus
-    strict_reduce(input_rns_poly);
+    reduce_strict(input_rns_poly);
 
     if (input_rns_poly.component_count() == 1) {
         return rns_base_transform_from_single(input_rns_poly, new_moduli);

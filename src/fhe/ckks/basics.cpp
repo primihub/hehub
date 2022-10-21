@@ -217,7 +217,7 @@ vector<cc_double> ckks::simd_decode_cc(const CkksPt &pt, size_t data_size) {
     }
 
     auto pt_reduced(pt);
-    strict_reduce(pt_reduced);
+    reduce_strict(pt_reduced);
     auto dimension = pt.dimension();
     size_t log_dimension = round(log2(dimension));
     auto components = pt.component_count();

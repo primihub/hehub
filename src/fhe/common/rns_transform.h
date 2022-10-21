@@ -6,7 +6,8 @@ namespace hehub {
 
 /**
  * @brief TODO
- *
+ * @note Currently this function accepts input of type RnsPolynomial, which can
+ * be generalized to RnsIntVec if useful.
  * @param input_poly
  * @param new_moduli
  * @return RnsPolynomial

@@ -68,8 +68,8 @@ RlweCt ext_prod_montgomery(const RlwePt &pt, const RgswCt &rgsw) {
     }
     extended_moduli.resize(extended_components);
     *extended_moduli.rbegin() = *rgsw[0][0].modulus_vec().crbegin();
-    for (size_t i = 0; i < original_components; i++) {
-        if (extended_moduli[i] != moduli[i]) {
+    for (auto [modulus_rgsw, modulus_pt] : zip(extended_moduli, moduli)) {
+        if (modulus_rgsw != modulus_pt) {
             throw invalid_argument("Moduli mismatch.");
         }
     }
@@ -90,8 +90,7 @@ RlweCt ext_prod_montgomery(const RlwePt &pt, const RgswCt &rgsw) {
 
     // The decomposed pt, which forms the component matrix
     vector<RnsPolynomial> decomposed(original_components);
-    RlweParams extended_params{dimension, extended_components,
-                                     extended_moduli};
+    RlweParams extended_params{dimension, extended_components, extended_moduli};
     for (auto &rns_poly : decomposed) {
         rns_poly = RnsPolynomial(extended_params);
     }
@@ -103,20 +102,19 @@ RlweCt ext_prod_montgomery(const RlwePt &pt, const RgswCt &rgsw) {
 
     auto pt_intt(pt);
     intt_negacyclic_inplace_lazy(pt_intt);
-    strict_reduce(pt_intt);
+    reduce_strict(pt_intt);
 
     // Copy the components not on the diagonal
-    for (size_t rns_pl_idx = 0; rns_pl_idx < original_components;
-         rns_pl_idx++) {
+    for (size_t poly_idx = 0; poly_idx < original_components; poly_idx++) {
         for (int compo_idx = 0; compo_idx < extended_components; compo_idx++) {
-            if (compo_idx == rns_pl_idx) {
+            if (compo_idx == poly_idx) {
                 continue;
             }
-            // Copy the "rns_pl_idx"-th component of pt_intt
-            decomposed[rns_pl_idx][compo_idx] = pt_intt[rns_pl_idx];
-            ntt_negacyclic_inplace_lazy(
-                log_dimension, extended_moduli[compo_idx],
-                decomposed[rns_pl_idx][compo_idx].data());
+            // Copy the "poly_idx"-th component of pt_intt
+            decomposed[poly_idx][compo_idx] = pt_intt[poly_idx];
+            ntt_negacyclic_inplace_lazy(log_dimension,
+                                        extended_moduli[compo_idx],
+                                        decomposed[poly_idx][compo_idx].data());
         }
     }
 
@@ -129,11 +127,10 @@ RlweCt ext_prod_montgomery(const RlwePt &pt, const RgswCt &rgsw) {
         // modulo original moduli part
         for (int k = 0; k < original_components; k++) {
             fill(temp_sum, temp_sum + dimension, (u128)0);
-            for (int rns_pl_idx = 0; rns_pl_idx < original_components;
-                 rns_pl_idx++) {
+            for (int poly_idx = 0; poly_idx < original_components; poly_idx++) {
                 for (int i = 0; i < dimension; i++) {
-                    temp_sum[i] += (u128)decomposed[rns_pl_idx][k][i] *
-                                   rgsw[rns_pl_idx][half][k][i];
+                    temp_sum[i] += (u128)decomposed[poly_idx][k][i] *
+                                   rgsw[poly_idx][half][k][i];
                 }
             }
             batched_montgomery_128_lazy(moduli[k], dimension, temp_sum,
@@ -142,11 +139,10 @@ RlweCt ext_prod_montgomery(const RlwePt &pt, const RgswCt &rgsw) {
 
         // modulo new modulus part
         fill(temp_sum, temp_sum + dimension, (u128)0);
-        for (int rns_pl_idx = 0; rns_pl_idx < original_components;
-             rns_pl_idx++) {
+        for (int poly_idx = 0; poly_idx < original_components; poly_idx++) {
             for (int i = 0; i < dimension; i++) {
-                temp_sum[i] += (u128)(*decomposed[rns_pl_idx].last())[i] *
-                               (*rgsw[rns_pl_idx][half].last())[i];
+                temp_sum[i] += (u128)(*decomposed[poly_idx].last())[i] *
+                               (*rgsw[poly_idx][half].last())[i];
             }
         }
         batched_montgomery_128_lazy(*extended_moduli.crbegin(), dimension,

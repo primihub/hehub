@@ -29,7 +29,6 @@ RlwePt bgv::simd_encode(const std::vector<u64> &data, const u64 modulus,
     // Pack the data into plaintext slots.
     RlwePt pt(RlweParams{slot_count, 1, std::vector<u64>{modulus}});
     pt.rep_form = PolyRepForm::value;
-    auto mod_ptr = pt.modulus_vec().begin();
     auto &pt_poly = pt[0];
     std::copy(data.begin(), data.end(), pt_poly.data());
     std::fill(pt_poly.begin() + data_size, pt_poly.end(), 0);
@@ -52,7 +51,7 @@ std::vector<u64> bgv::simd_decode(const RlwePt &pt, size_t data_size) {
 
     auto pt_copy(pt);
     ntt_negacyclic_inplace_lazy(pt_copy);
-    strict_reduce(pt_copy);
+    reduce_strict(pt_copy);
     std::vector<u64> data(pt_copy[0].begin(), pt_copy[0].end());
     data.resize(data_size);
 
@@ -65,21 +64,13 @@ RlweCt bgv::get_rlwe_sample_lift_noise(const RlweSk &sk,
     if (components == 0) {
         components = sk.component_count(); // actual argument
     }
+
+    // Assume lifting_factor is already ensured to be coprime with RLWE modulus,
+    // then a random ring element multiplied by it is still uniformly random.
+
     auto rlwe_sample = get_rlwe_sample(sk, components);
     for (auto &rns_poly : rlwe_sample) {
-        auto mod_ptr = rns_poly.modulus_vec().begin();
-        for (auto &component : rns_poly) {
-            auto component_mod = *(mod_ptr++);
-            u64 lifting_factor_reduced =
-                lifting_factor % component_mod; // can be optimized?
-            u64 lifting_factor_harvey =
-                ((u128)lifting_factor_reduced << 64) / component_mod;
-            for (auto &value : component) {
-                value = mul_mod_harvey_lazy(component_mod, value,
-                                            lifting_factor_reduced,
-                                            lifting_factor_harvey);
-            }
-        }
+        rns_poly *= lifting_factor;
     }
 
     return rlwe_sample;
