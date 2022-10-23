@@ -174,7 +174,7 @@ TEST_CASE("ntt round trip") {
 
         ntt_negacyclic_inplace_lazy(rns_poly);
         intt_negacyclic_inplace_lazy(rns_poly);
-        strict_reduce(rns_poly);
+        reduce_strict(rns_poly);
 
         REQUIRE(rns_poly == rns_poly_copy);
     }

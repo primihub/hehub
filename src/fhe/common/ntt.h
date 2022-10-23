@@ -88,7 +88,7 @@ inline void intt_negacyclic_inplace_lazy(RnsPolynomial &rns_poly) {
  */
 inline void intt_negacyclic_inplace(RnsPolynomial &rns_poly) {
     intt_negacyclic_inplace_lazy(rns_poly);
-    strict_reduce(rns_poly);
+    reduce_strict(rns_poly);
 }
 
 /**

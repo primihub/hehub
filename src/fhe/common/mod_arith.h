@@ -5,6 +5,7 @@
  */
 #pragma once
 
+#include "range/v3/view/zip.hpp"
 #include "rns.h"
 #include "type_defs.h"
 #include <map>
@@ -153,7 +154,7 @@ void batched_montgomery_128_lazy(const u64 modulus, const size_t len,
  * @param vec_len
  * @param vec
  */
-inline void batched_strict_reduce(const u64 modulus, const size_t vec_len,
+inline void batched_reduce_strict(const u64 modulus, const size_t vec_len,
                                   u64 vec[]) {
     for (size_t i = 0; i < vec_len; i++) {
         vec[i] -= (vec[i] >= modulus) ? modulus : 0;
@@ -165,13 +166,12 @@ inline void batched_strict_reduce(const u64 modulus, const size_t vec_len,
  *
  * @param rns_poly
  */
-inline void strict_reduce(RnsPolynomial &rns_poly) {
-    auto mod_ptr = rns_poly.modulus_vec().begin();
-    auto dimension = rns_poly.dimension();
+inline void reduce_strict(RnsPolynomial &rns_poly) {
+    const auto &moduli = rns_poly.modulus_vec();
+    const auto dimension = rns_poly.dimension();
 
-    for (auto &component_poly : rns_poly) {
-        auto curr_mod = *(mod_ptr++);
-        batched_strict_reduce(curr_mod, dimension, component_poly.data());
+    for (auto [component, modulus] : ranges::views::zip(rns_poly, moduli)) {
+        batched_reduce_strict(modulus, dimension, component.data());
     }
 }
 

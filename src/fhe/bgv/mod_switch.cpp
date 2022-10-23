@@ -1,8 +1,11 @@
 #include "bgv.h"
 #include "common/mod_arith.h"
 #include "common/ntt.h"
+#include "range/v3/view/zip.hpp"
 #include <algorithm>
 #include <numeric>
+
+using namespace ranges::views;
 
 namespace hehub {
 
@@ -27,36 +30,39 @@ void mod_drop_one_prime_inplace(RlweCt &ct, u64 plain_modulus) {
     const auto dimension = ct[0].dimension();
     const auto log_dimension = ct[0].log_dimension();
     const auto ct_mod_count = ct[0].component_count();
-    const auto q_last = ct_moduli[ct_mod_count - 1];
+    const auto q_last = ct_moduli[ct_mod_count - 1]; // old last modulus
     const auto half_q_last = q_last / 2;
     const auto inv_t_mod_q_last = inverse_mod_prime(plain_modulus, q_last);
-    std::vector<u64> q_last_mod_qk, inv_q_last_mod_qk;
-    for (size_t k = 0; k < ct_mod_count - 1; k++) {
-        q_last_mod_qk.push_back(q_last % ct_moduli[k]); // need opt?
-        inv_q_last_mod_qk.push_back(inverse_mod_prime(q_last, ct_moduli[k]));
+    std::vector<u64> q_last_mod_qi(ct_mod_count - 1);
+    std::vector<u64> inv_q_last_mod_qi(ct_mod_count - 1);
+    for (auto [q_i, q_last_reduced, inv_q_last] :
+         zip(ct_moduli, q_last_mod_qi, inv_q_last_mod_qi)) {
+        q_last_reduced = q_last % q_i; // need opt?
+        inv_q_last = inverse_mod_prime(q_last, q_i);
     }
 
     for (auto &rns_poly : ct) {
-        RnsPolynomial last_comp{dimension, 1, std::vector{q_last}};
-        last_comp[0] = rns_poly[ct_mod_count - 1];
-        intt_negacyclic_inplace_lazy(last_comp);
-        last_comp *= inv_t_mod_q_last;
-        batched_strict_reduce(q_last, dimension, last_comp[0].data());
+        RnsPolynomial last_comp_copied{dimension, 1, std::vector{q_last}};
+        last_comp_copied[0] = rns_poly[ct_mod_count - 1];
+        intt_negacyclic_inplace_lazy(last_comp_copied);
+        last_comp_copied *= inv_t_mod_q_last;
+        batched_reduce_strict(q_last, dimension, last_comp_copied[0].data());
+        // alias for clearness
+        auto &last_comp_with_inv_t = last_comp_copied[0];
 
-        auto &coeffs_last_with_inv_t = last_comp[0];
         RnsPolynomial subtract_part(dimension, ct_mod_count - 1, ct_moduli);
-        for (size_t k = 0; k < subtract_part.component_count(); k++) {
-            subtract_part[k] = coeffs_last_with_inv_t;
-
-            /* Heuristically the ciphertext moduli are close in size, hence the
-             * reduction step after copying can be skipped. */
-            // batched_barrett_lazy(
-            //     ct_moduli[k], dimension, subtract_part[k].data());
+        for (auto [sub_part_comp, modulus, q_last_reduced] :
+             zip(subtract_part, ct_moduli, q_last_mod_qi)) {
+            // copy the last component and do reduction
+            sub_part_comp = last_comp_with_inv_t;
+            /* This reduction step needs further optimization. */
+            batched_barrett(modulus, dimension, sub_part_comp.data());
 
             // The multiple of t needs to be of smallest possible abs value.
-            for (size_t i = 0; i < dimension; i++) {
-                if (coeffs_last_with_inv_t[i] >= half_q_last) {
-                    subtract_part[k][i] += ct_moduli[k] - q_last_mod_qk[k];
+            for (auto [last_coeff_with_inv_t, sub_part_coeff] :
+                 zip(last_comp_with_inv_t, sub_part_comp)) {
+                if (last_coeff_with_inv_t >= half_q_last) {
+                    sub_part_coeff += modulus - q_last_reduced;
                 }
             }
         }
@@ -65,7 +71,7 @@ void mod_drop_one_prime_inplace(RlweCt &ct, u64 plain_modulus) {
 
         rns_poly.remove_components();
         rns_poly -= subtract_part;
-        rns_poly *= inv_q_last_mod_qk;
+        rns_poly *= inv_q_last_mod_qi;
         rns_poly *= (q_last % plain_modulus);
     }
 }

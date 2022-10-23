@@ -53,7 +53,7 @@ RlwePt decrypt_core(const RlweCt &ct, const RlweSk &sk) {
 
     // the obtained plaintext is now in NTT value representation
     intt_negacyclic_inplace_lazy(pt);
-    strict_reduce(pt);
+    reduce_strict(pt);
     return pt;
 }
 

@@ -157,7 +157,7 @@ TEST_CASE("ckks rescaling") {
     ckks::rescale_inplace(ct);
     for (auto &c : ct) {
         intt_negacyclic_inplace_lazy(c);
-        strict_reduce(c);
+        reduce_strict(c);
     }
 
     // Checks

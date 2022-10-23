@@ -86,7 +86,7 @@ TEST_CASE("bgv arith") {
         BgvPt pt2 = get_rand_uniform_poly(pt_params);
         BgvPt pt3 = get_rand_uniform_poly(pt_params);
         BgvPt pt_sum = pt1 + pt2 + pt3;
-        strict_reduce(pt_sum);
+        reduce_strict(pt_sum);
 
         // encrypt
         auto ct1 = bgv::encrypt(pt1, sk);
@@ -111,7 +111,7 @@ TEST_CASE("bgv arith") {
         BgvPt pt2 = get_rand_uniform_poly(pt_params);
         BgvPt pt3 = get_rand_uniform_poly(pt_params);
         BgvPt pt_diff = pt1 - pt2 - pt3;
-        strict_reduce(pt_diff);
+        reduce_strict(pt_diff);
 
         // encrypt
         auto ct1 = bgv::encrypt(pt1, sk);
@@ -142,7 +142,7 @@ TEST_CASE("bgv arith") {
         ntt_negacyclic_inplace_lazy(pt2);
         BgvPt pt_prod = pt1 * pt2;
         intt_negacyclic_inplace_lazy(pt_prod);
-        strict_reduce(pt_prod);
+        reduce_strict(pt_prod);
 
         // decrypt
         auto prod_recovered = bgv::decrypt(ct_prod, sk);

@@ -1,6 +1,9 @@
 #include "rns.h"
 #include "mod_arith.h"
+#include "range/v3/view/zip.hpp"
 #include <cmath>
+
+using namespace ranges::views;
 
 namespace hehub {
 
@@ -47,7 +50,7 @@ RnsIntVec::ComponentData::operator=(ComponentData &&moving) noexcept {
 }
 
 RnsIntVec::RnsIntVec(const size_t dimension, const size_t components,
-                             const std::vector<u64> &moduli)
+                     const std::vector<u64> &moduli)
     : dimension_(dimension), components_(components),
       log_dimension_(std::log2(dimension) + 0.5) {
 
@@ -67,11 +70,10 @@ RnsIntVec::RnsIntVec(const size_t dimension, const size_t components,
 }
 
 RnsIntVec::RnsIntVec(const RnsIntVec::Params &params)
-    : RnsIntVec(params.dimension, params.component_count,
-                    params.moduli) {}
+    : RnsIntVec(params.dimension, params.component_count, params.moduli) {}
 
 void RnsIntVec::add_components(const std::vector<u64> &new_moduli,
-                                   size_t adding) {
+                               size_t adding) {
     if (new_moduli.size() < adding) {
         throw std::invalid_argument(
             "No matching number of moduli provided to add components.");
@@ -192,7 +194,8 @@ const RnsIntVec &operator*=(RnsIntVec &self, const u64 small_scalar) {
     return self;
 }
 
-const RnsIntVec &operator*=(RnsIntVec &self, const std::vector<u64> &rns_scalar) {
+const RnsIntVec &operator*=(RnsIntVec &self,
+                            const std::vector<u64> &rns_scalar) {
     if (rns_scalar.size() != self.component_count()) {
         throw std::invalid_argument("Numbers of RNS component mismatch.");
     }
@@ -213,11 +216,11 @@ const RnsIntVec &operator*=(RnsIntVec &self, const std::vector<u64> &rns_scalar)
 std::ostream &operator<<(std::ostream &out, const RnsIntVec &rns_poly) {
     auto component_count = rns_poly.component_count();
     auto dimension = rns_poly.dimension();
-    auto mod_ptr = rns_poly.modulus_vec().begin();
+    auto &moduli = rns_poly.modulus_vec();
 
-    for (const auto &component_poly : rns_poly) {
-        out << "mod " << *(mod_ptr++) << ":\t[ ";
-        for (const auto &coeff : component_poly) {
+    for (auto [component, modulus] : zip(rns_poly, moduli)) {
+        out << "mod " << modulus << ":\t[ ";
+        for (const auto &coeff : component) {
             // here "coeff" can also mean NTT value
             out << coeff << ", ";
         }
