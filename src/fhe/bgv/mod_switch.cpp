@@ -8,6 +8,7 @@
 using namespace ranges::views;
 
 namespace hehub {
+namespace bgv {
 
 void mod_drop_one_prime_inplace(RlweCt &ct, u64 plain_modulus) {
     if (ct[0].modulus_vec() != ct[1].modulus_vec()) {
@@ -76,7 +77,7 @@ void mod_drop_one_prime_inplace(RlweCt &ct, u64 plain_modulus) {
     }
 }
 
-void bgv::mod_switch_inplace(BgvCt &ct, size_t dropping_primes) {
+void mod_switch_inplace(BgvCt &ct, size_t dropping_primes) {
     if (dropping_primes == 1) {
         mod_drop_one_prime_inplace(ct, ct.plain_modulus);
     } else if (dropping_primes >= 2) {
@@ -88,4 +89,5 @@ void bgv::mod_switch_inplace(BgvCt &ct, size_t dropping_primes) {
     }
 }
 
+} // namespace bgv
 } // namespace hehub

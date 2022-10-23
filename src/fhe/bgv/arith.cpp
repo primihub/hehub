@@ -3,8 +3,9 @@
 #include "common/rns_transform.h"
 
 namespace hehub {
+namespace bgv {
 
-BgvCt bgv::add(const BgvCt &ct1, const BgvCt &ct2) {
+BgvCt add(const BgvCt &ct1, const BgvCt &ct2) {
     if (ct1.plain_modulus != ct2.plain_modulus) {
         throw std::invalid_argument("Plain moduli mismatch.");
     }
@@ -13,7 +14,7 @@ BgvCt bgv::add(const BgvCt &ct1, const BgvCt &ct2) {
     return sum_ct;
 }
 
-BgvCt bgv::add_plain(const BgvCt &ct, const BgvPt &pt) {
+BgvCt add_plain(const BgvCt &ct, const BgvPt &pt) {
     if (pt.component_count() != 1 || pt.modulus_at(0) != ct.plain_modulus) {
         throw std::invalid_argument("plain moduli mismatch.");
     }
@@ -24,7 +25,7 @@ BgvCt bgv::add_plain(const BgvCt &ct, const BgvPt &pt) {
     return sum_ct;
 }
 
-BgvCt bgv::sub(const BgvCt &ct1, const BgvCt &ct2) {
+BgvCt sub(const BgvCt &ct1, const BgvCt &ct2) {
     if (ct1.plain_modulus != ct2.plain_modulus) {
         throw std::invalid_argument("Plain moduli mismatch.");
     }
@@ -33,7 +34,7 @@ BgvCt bgv::sub(const BgvCt &ct1, const BgvCt &ct2) {
     return diff_ct;
 }
 
-BgvCt bgv::sub_plain(const BgvCt &ct, const BgvPt &pt) {
+BgvCt sub_plain(const BgvCt &ct, const BgvPt &pt) {
     if (pt.component_count() != 1 || pt.modulus_at(0) != ct.plain_modulus) {
         throw std::invalid_argument("plain moduli mismatch.");
     }
@@ -44,7 +45,7 @@ BgvCt bgv::sub_plain(const BgvCt &ct, const BgvPt &pt) {
     return diff_ct;
 }
 
-BgvCt bgv::mult_plain(const BgvCt &ct, const BgvPt &pt) {
+BgvCt mult_plain(const BgvCt &ct, const BgvPt &pt) {
     if (pt.component_count() != 1 || pt.modulus_at(0) != ct.plain_modulus) {
         throw std::invalid_argument("plain moduli mismatch.");
     }
@@ -55,7 +56,7 @@ BgvCt bgv::mult_plain(const BgvCt &ct, const BgvPt &pt) {
     return prod_ct;
 }
 
-BgvQuadraticCt bgv::mult_low_level(const BgvCt &ct1, const BgvCt &ct2) {
+BgvQuadraticCt mult_low_level(const BgvCt &ct1, const BgvCt &ct2) {
     if (ct1.plain_modulus != ct2.plain_modulus) {
         throw std::invalid_argument("Plain moduli mismatch.");
     }
@@ -67,7 +68,7 @@ BgvQuadraticCt bgv::mult_low_level(const BgvCt &ct1, const BgvCt &ct2) {
     return prod_ct;
 }
 
-BgvCt bgv::relinearize(const BgvQuadraticCt &ct, const RlweKsk &relin_key) {
+BgvCt relinearize(const BgvQuadraticCt &ct, const RlweKsk &relin_key) {
     BgvCt ct_new = ext_prod_montgomery(ct[2], relin_key);
     mod_switch_inplace(ct_new);
 
@@ -77,4 +78,5 @@ BgvCt bgv::relinearize(const BgvQuadraticCt &ct, const RlweKsk &relin_key) {
     return ct_new;
 }
 
+} // namespace bgv
 } // namespace hehub

@@ -5,9 +5,10 @@
 #include <cmath>
 
 namespace hehub {
+namespace bgv {
 
-RlwePt bgv::simd_encode(const std::vector<u64> &data, const u64 modulus,
-                        size_t slot_count) {
+RlwePt simd_encode(const std::vector<u64> &data, const u64 modulus,
+                   size_t slot_count) {
     for (auto datum : data) {
         if (datum >= modulus) {
             throw std::invalid_argument(
@@ -39,7 +40,7 @@ RlwePt bgv::simd_encode(const std::vector<u64> &data, const u64 modulus,
     return pt;
 }
 
-std::vector<u64> bgv::simd_decode(const RlwePt &pt, size_t data_size) {
+std::vector<u64> simd_decode(const RlwePt &pt, size_t data_size) {
     if (data_size == 0) {
         data_size = pt.dimension();
     }
@@ -58,9 +59,8 @@ std::vector<u64> bgv::simd_decode(const RlwePt &pt, size_t data_size) {
     return data;
 }
 
-RlweCt bgv::get_rlwe_sample_lift_noise(const RlweSk &sk,
-                                       const u64 lifting_factor,
-                                       size_t components) {
+RlweCt get_rlwe_sample_lift_noise(const RlweSk &sk, const u64 lifting_factor,
+                                  size_t components) {
     if (components == 0) {
         components = sk.component_count(); // actual argument
     }
@@ -76,8 +76,8 @@ RlweCt bgv::get_rlwe_sample_lift_noise(const RlweSk &sk,
     return rlwe_sample;
 }
 
-BgvCt bgv::encrypt(const RlwePt &pt, const RlweSk &rlwe_sk,
-                   std::vector<u64> ct_moduli) {
+BgvCt encrypt(const RlwePt &pt, const RlweSk &rlwe_sk,
+              std::vector<u64> ct_moduli) {
     auto pt_modulus = pt.modulus_at(0);
 
     if (ct_moduli.empty()) {
@@ -104,7 +104,7 @@ BgvCt bgv::encrypt(const RlwePt &pt, const RlweSk &rlwe_sk,
     return ct;
 }
 
-BgvPt bgv::decrypt(const BgvCt &ct, const RlweSk &rlwe_sk) {
+BgvPt decrypt(const BgvCt &ct, const RlweSk &rlwe_sk) {
     // Apply RLWE decryption, obtaining the plaintext under ciphertext moduli
     // (and in coefficient form).
     auto pt_under_ct_mod = hehub::decrypt_core(ct, rlwe_sk);
@@ -115,4 +115,5 @@ BgvPt bgv::decrypt(const BgvCt &ct, const RlweSk &rlwe_sk) {
     return pt;
 }
 
+} // namespace bgv
 } // namespace hehub
