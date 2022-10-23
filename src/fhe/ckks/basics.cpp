@@ -103,7 +103,7 @@ void fft_negacyclic_natural_inout(cc_double *coeffs, size_t log_dimension,
 
 CkksPt simd_encode_cc(const vector<cc_double> &data,
                       const double scaling_factor,
-                      const RlweParams &pt_params) {
+                      const RnsPolyParams &pt_params) {
     if (scaling_factor <= 0) {
         throw invalid_argument("Scaling factor should be positive.");
     }

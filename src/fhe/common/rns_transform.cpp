@@ -15,7 +15,7 @@ rns_base_transform_from_single(const RnsPolynomial &input_rns_poly,
     auto half_old_modulus = old_modulus / 2;
     auto dimension = input_rns_poly.dimension();
 
-    RlweParams output_dim{dimension, new_moduli.size(), new_moduli};
+    RnsPolyParams output_dim{dimension, new_moduli.size(), new_moduli};
     RnsPolynomial result(output_dim);
     auto &input_poly = input_rns_poly[0];
     for (auto [component, modulus] : zip(result, new_moduli)) {
@@ -40,7 +40,7 @@ RnsPolynomial rns_base_transform_to_single(const RnsPolynomial &input_rns_poly,
                                            const u64 new_modulus) {
     auto dimension = input_rns_poly.dimension();
     auto &old_moduli = input_rns_poly.modulus_vec();
-    RlweParams params{dimension, 1, std::vector{new_modulus}};
+    RnsPolyParams params{dimension, 1, std::vector{new_modulus}};
     RnsPolynomial result(params);
     auto &result_poly = result[0];
 

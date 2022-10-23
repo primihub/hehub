@@ -28,7 +28,7 @@ RlwePt simd_encode(const std::vector<u64> &data, const u64 modulus,
     }
 
     // Pack the data into plaintext slots.
-    RlwePt pt(RlweParams{slot_count, 1, std::vector<u64>{modulus}});
+    RlwePt pt(RnsPolyParams{slot_count, 1, std::vector<u64>{modulus}});
     pt.rep_form = PolyRepForm::value;
     auto &pt_poly = pt[0];
     std::copy(data.begin(), data.end(), pt_poly.data());

@@ -14,7 +14,7 @@ namespace hehub {
  * @param params Polynomial dimensions for initializing the RnsPolynomial.
  * @return RnsPolynomial
  */
-RnsPolynomial get_rand_ternary_poly(const RlweParams &params);
+RnsPolynomial get_rand_ternary_poly(const RnsPolyParams &params);
 
 /**
  * @brief Get a random uniform RnsPolynomial object with specified dimensions,
@@ -24,7 +24,7 @@ RnsPolynomial get_rand_ternary_poly(const RlweParams &params);
  * @param form Required representation form of the resulting polynomial.
  * @return RnsPolynomial
  */
-RnsPolynomial get_rand_uniform_poly(const RlweParams &params,
+RnsPolynomial get_rand_uniform_poly(const RnsPolyParams &params,
                                     PolyRepForm form = PolyRepForm::coeff);
 
 /**
@@ -35,7 +35,7 @@ RnsPolynomial get_rand_uniform_poly(const RlweParams &params,
  * @param std_dev Standard deviation of the gaussian distribution.
  * @return RnsPolynomial
  */
-RnsPolynomial get_rand_gaussian_poly(const RlweParams &params,
+RnsPolynomial get_rand_gaussian_poly(const RnsPolyParams &params,
                                      double std_dev = 3.2);
 
 /**
@@ -45,7 +45,7 @@ RnsPolynomial get_rand_gaussian_poly(const RlweParams &params,
  * @param form
  * @return RnsPolynomial
  */
-RnsPolynomial get_zero_poly(const RlweParams &params,
+RnsPolynomial get_zero_poly(const RnsPolyParams &params,
                             PolyRepForm form = PolyRepForm::value);
 
 } // namespace hehub

@@ -26,13 +26,13 @@ TEST_CASE("bgv encoding") {
 TEST_CASE("bgv encryption") {
     std::vector<u64> ct_moduli{131530753, 130809857};
     size_t dimension = 128;
-    RlweParams ct_params{dimension, ct_moduli.size(), ct_moduli};
+    RnsPolyParams ct_params{dimension, ct_moduli.size(), ct_moduli};
 
     RlweSk sk(ct_params);
 
     SECTION("simple decrypt") {
         u64 pt_modulus = 65537;
-        RlweParams pt_params{dimension, 1, std::vector{pt_modulus}};
+        RnsPolyParams pt_params{dimension, 1, std::vector{pt_modulus}};
 
         // random plaintext data
         BgvPt pt = get_rand_uniform_poly(pt_params);
@@ -46,7 +46,7 @@ TEST_CASE("bgv encryption") {
     }
     SECTION("CRT decrypt") {
         u64 pt_modulus = 35184358850561ULL;
-        RlweParams pt_params{dimension, 1, std::vector{pt_modulus}};
+        RnsPolyParams pt_params{dimension, 1, std::vector{pt_modulus}};
 
         // random plaintext data
         BgvPt pt = get_rand_uniform_poly(pt_params);
@@ -62,7 +62,7 @@ TEST_CASE("bgv encryption") {
         // now plaintext modulus is not coprime with ciphertext modulus,
         // which is not allowed
         u64 pt_modulus = 131530753;
-        RlweParams pt_params{dimension, 1, std::vector{pt_modulus}};
+        RnsPolyParams pt_params{dimension, 1, std::vector{pt_modulus}};
 
         BgvPt pt(pt_params);
 
@@ -73,13 +73,13 @@ TEST_CASE("bgv encryption") {
 TEST_CASE("bgv arith") {
     std::vector<u64> ct_moduli{131530753, 130809857};
     size_t dimension = 8;
-    RlweParams ct_params{dimension, ct_moduli.size(), ct_moduli};
+    RnsPolyParams ct_params{dimension, ct_moduli.size(), ct_moduli};
 
     RlweSk sk(ct_params);
 
     SECTION("addition") {
         u64 pt_modulus = 65537;
-        RlweParams pt_params{dimension, 1, std::vector{pt_modulus}};
+        RnsPolyParams pt_params{dimension, 1, std::vector{pt_modulus}};
 
         // random plaintext data
         BgvPt pt1 = get_rand_uniform_poly(pt_params);
@@ -104,7 +104,7 @@ TEST_CASE("bgv arith") {
     }
     SECTION("subtraction") {
         u64 pt_modulus = 65537;
-        RlweParams pt_params{dimension, 1, std::vector{pt_modulus}};
+        RnsPolyParams pt_params{dimension, 1, std::vector{pt_modulus}};
 
         // random plaintext data
         BgvPt pt1 = get_rand_uniform_poly(pt_params);
@@ -129,7 +129,7 @@ TEST_CASE("bgv arith") {
     }
     SECTION("multiplication with plaintext") {
         u64 pt_modulus = 65537;
-        RlweParams pt_params{dimension, 1, std::vector{pt_modulus}};
+        RnsPolyParams pt_params{dimension, 1, std::vector{pt_modulus}};
 
         // random plaintext data
         BgvPt pt1 = get_rand_uniform_poly(pt_params);
@@ -229,8 +229,8 @@ TEST_CASE("bgv mod switch") {
     std::vector<u64> ct_moduli{140737486520321, 140737485864961};
     u64 pt_modulus = 65537;
     size_t dimension = 8;
-    RlweParams ct_params{dimension, ct_moduli.size(), ct_moduli};
-    RlweParams pt_params{dimension, 1, std::vector{pt_modulus}};
+    RnsPolyParams ct_params{dimension, ct_moduli.size(), ct_moduli};
+    RnsPolyParams pt_params{dimension, 1, std::vector{pt_modulus}};
 
     RlweSk sk(ct_params);
     RnsPolynomial fake_pt(ct_params);

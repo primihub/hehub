@@ -1,17 +1,17 @@
 #include "catch2/catch.hpp"
+#include "ckks/ckks.h"
 #include "common/mod_arith.h"
 #include "common/ntt.h"
 #include "common/permutation.h"
 #include "common/rns.h"
 #include "common/sampling.h"
-#include "ckks/ckks.h"
 
 using namespace hehub;
 
 TEST_CASE("RNS polynomial") {
     RnsPolynomial r1(4096, 3, std::vector<u64>{3, 5, 7});
 
-    RlweParams params{4096, 3, std::vector<u64>{3, 5, 7}};
+    RnsPolyParams params{4096, 3, std::vector<u64>{3, 5, 7}};
     RnsPolynomial r2(params);
     RnsPolynomial r3(params);
 
@@ -27,9 +27,9 @@ TEST_CASE("RNS polynomial") {
     REQUIRE(r4.component_count() == 2);
     REQUIRE(r5.component_count() == 3);
 
-    REQUIRE_THROWS(RnsPolynomial(RlweParams{4096, 4, std::vector<u64>(3)}));
-    REQUIRE_THROWS(RnsPolynomial(RlweParams{4095, 3, std::vector<u64>(3)}));
-    REQUIRE_THROWS(RnsPolynomial(RlweParams{4097, 3, std::vector<u64>(3)}));
+    REQUIRE_THROWS(RnsPolynomial(RnsPolyParams{4096, 4, std::vector<u64>(3)}));
+    REQUIRE_THROWS(RnsPolynomial(RnsPolyParams{4095, 3, std::vector<u64>(3)}));
+    REQUIRE_THROWS(RnsPolynomial(RnsPolyParams{4097, 3, std::vector<u64>(3)}));
 }
 
 TEST_CASE("bit rev", "[.]") {
@@ -52,7 +52,7 @@ TEST_CASE("bit rev", "[.]") {
 
 TEST_CASE("sampling", "[.]") {
     u64 mod = 65537;
-    RlweParams params{4096, 1, std::vector<u64>{mod}};
+    RnsPolyParams params{4096, 1, std::vector<u64>{mod}};
 
     SECTION("ternary") {
         auto tern_poly = get_rand_ternary_poly(params);
@@ -187,8 +187,8 @@ TEST_CASE("automorphism") {
         REQUIRE(simple_inf_norm(poly) == simple_inf_norm(two_step));
     }
     SECTION("involution on plain") {
-        u64 q = 36028797017456641;
         size_t dimension = 8;
+        auto params = create_params(dimension, {55});
         auto data_count = dimension / 2;
         std::vector<cc_double> plain_data(data_count);
         std::vector<cc_double> data_conj;
@@ -199,8 +199,7 @@ TEST_CASE("automorphism") {
             data_conj.push_back(std::conj(d));
         }
 
-        auto pt =
-            ckks::simd_encode(plain_data, pow(2.0, 50), {dimension, 1, {q}});
+        auto pt = ckks::simd_encode(plain_data, pow(2.0, 50), params);
         ntt_negacyclic_inplace_lazy(pt);
         CkksPt pt_involved = involution(pt);
         pt_involved.scaling_factor = pt.scaling_factor;
@@ -210,8 +209,8 @@ TEST_CASE("automorphism") {
         REQUIRE(all_close(data_recovered, data_conj, pow(2.0, -45)));
     }
     SECTION("cycle on plain") {
-        u64 q = 36028797017456641;
         size_t dimension = 8;
+        auto params = create_params(dimension, {55});
         auto data_count = dimension / 2;
         std::vector<cc_double> plain_data(data_count);
         std::vector<cc_double> data_rot(data_count);
@@ -225,8 +224,7 @@ TEST_CASE("automorphism") {
             data_rot[(i + step) % data_count] = plain_data[i];
         }
 
-        auto pt =
-            ckks::simd_encode(plain_data, pow(2.0, 50), {dimension, 1, {q}});
+        auto pt = ckks::simd_encode(plain_data, pow(2.0, 50), params);
         ntt_negacyclic_inplace_lazy(pt);
         CkksPt pt_cycled = cycle(pt, step);
         pt_cycled.scaling_factor = pt.scaling_factor;

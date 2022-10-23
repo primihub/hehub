@@ -427,7 +427,7 @@ public:
     RepForm rep_form = RepForm::coeff;
 };
 
-using RlweParams = RnsPolynomial::Params;
+using RnsPolyParams = RnsPolynomial::Params;
 
 using PolyRepForm = RnsPolynomial::RepForm;
 

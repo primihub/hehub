@@ -10,6 +10,18 @@
 
 namespace hehub {
 
+using RlweParams = RnsPolynomial::Params;
+
+/**
+ * @brief Create an RlweParams object, which determines the dimension and moduli
+ * from input arguments.
+ * @param dimension The RLWE dimension.
+ * @param modulus_bits A list of integers specifying bit length of each modulus
+ * of the RNS.
+ * @return RlweParams
+ */
+RlweParams create_params(size_t dimension, std::vector<int> modulus_bits);
+
 using RlwePt = RnsPolynomial;
 
 using RlweCt = std::array<RnsPolynomial, 2>;
@@ -37,10 +49,10 @@ struct RlweSk : public RnsPolynomial {
 
 /**
  * @brief TODO
- * 
- * @param sk 
- * @param components 
- * @return RlweCt 
+ *
+ * @param sk
+ * @param components
+ * @return RlweCt
  */
 RlweCt get_rlwe_sample(const RlweSk &sk, size_t components = 0);
 

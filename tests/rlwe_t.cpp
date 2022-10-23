@@ -5,9 +5,7 @@
 using namespace hehub;
 
 TEST_CASE("rlwe") {
-    std::vector<u64> moduli{131530753, 130809857};
-    size_t dimension = 4096;
-    RlweParams params{dimension, moduli.size(), moduli};
+    RnsPolyParams params = create_params(4096, {30, 30});
     RlwePt pt(params);
     RlweSk sk(params);
 

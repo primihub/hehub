@@ -2,8 +2,27 @@
 #include "common/mod_arith.h"
 #include "common/ntt.h"
 #include "common/sampling.h"
+#include "common/primelists.h"
 
 namespace hehub {
+
+RlweParams create_params(size_t dimension, std::vector<int> moduli_bits) {
+    RlweParams params;
+    params.dimension = dimension;
+
+    params.moduli.clear();
+    std::vector<size_t> next_prime_idx(64, 0);
+    auto get_next_prime = [&](size_t modulus_bits) {
+        return prime_lists[modulus_bits][next_prime_idx[modulus_bits]++];
+    };
+    for (auto modulus_bits : moduli_bits) {
+        params.moduli.push_back(get_next_prime(modulus_bits));
+    }
+
+    params.component_count = params.moduli.size();
+
+    return params;
+}
 
 RlweSk::RlweSk(const RlweParams &params)
     : RnsPolynomial(get_rand_ternary_poly(params)) {}

@@ -72,7 +72,7 @@ TEST_CASE("fft", "[.]") {
 
 TEST_CASE("ckks encoding") {
     size_t dimension = 32;
-    RlweParams pt_dim{
+    RnsPolyParams pt_dim{
         dimension,
         2,
         {144115188075593729, 144115188068319233}}; // ~114 bits in total
@@ -139,7 +139,7 @@ TEST_CASE("ckks rescaling") {
     size_t dimension = 8;
     std::vector<u64> moduli{17179672577, 17179410433,
                             17176854529}; // ~34 bits each
-    RlweParams ct_dim{dimension, 3, moduli};
+    RnsPolyParams ct_dim{dimension, 3, moduli};
 
     CkksCt ct;
     ct.scaling_factor = std::pow(2.0, 80);
@@ -181,7 +181,7 @@ TEST_CASE("ckks rescaling") {
 TEST_CASE("ckks encryption") {
     std::vector<u64> ct_moduli{1099510054913}; // 40-bit
     size_t dimension = 8;
-    RlweParams ct_params{dimension, ct_moduli.size(), ct_moduli};
+    RnsPolyParams ct_params{dimension, ct_moduli.size(), ct_moduli};
     RlweSk sk(ct_params);
 
     // random ckks plain data
@@ -213,7 +213,7 @@ TEST_CASE("ckks encryption") {
 TEST_CASE("ckks arith") {
     std::vector<u64> ct_moduli{1099510054913, 1073479681, 1072496641};
     size_t dimension = 8;
-    RlweParams ct_params{dimension, ct_moduli.size(), ct_moduli};
+    RnsPolyParams ct_params{dimension, ct_moduli.size(), ct_moduli};
     RlweSk sk(ct_params);
 
     // random ckks plain data
@@ -368,7 +368,7 @@ TEST_CASE("ckks key switch") {
     SECTION("general key switching") {
         std::vector<u64> ct_moduli{1099510054913, 1073479681, 1072496641};
         size_t dimension = 8;
-        RlweParams ct_params{dimension, ct_moduli.size(), ct_moduli};
+        RnsPolyParams ct_params{dimension, ct_moduli.size(), ct_moduli};
         u64 additional_mod = 1099507695617;
 
         auto data_count = dimension / 2;
@@ -398,7 +398,7 @@ TEST_CASE("ckks key switch") {
     SECTION("conjugation") {
         std::vector<u64> ct_moduli{1099510054913, 1073479681, 1072496641};
         size_t dimension = 8;
-        RlweParams ct_params{dimension, ct_moduli.size(), ct_moduli};
+        RnsPolyParams ct_params{dimension, ct_moduli.size(), ct_moduli};
         u64 additional_mod = 1099507695617;
 
         auto data_count = dimension / 2;
@@ -426,7 +426,7 @@ TEST_CASE("ckks key switch") {
     SECTION("rotation") {
         std::vector<u64> ct_moduli{1099510054913, 1073479681, 1072496641};
         size_t dimension = 8;
-        RlweParams ct_params{dimension, ct_moduli.size(), ct_moduli};
+        RnsPolyParams ct_params{dimension, ct_moduli.size(), ct_moduli};
         u64 additional_mod = 1099507695617;
 
         auto data_count = dimension / 2;

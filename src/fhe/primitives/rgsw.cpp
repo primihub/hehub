@@ -90,7 +90,7 @@ RlweCt ext_prod_montgomery(const RlwePt &pt, const RgswCt &rgsw) {
 
     // The decomposed pt, which forms the component matrix
     vector<RnsPolynomial> decomposed(original_components);
-    RlweParams extended_params{dimension, extended_components, extended_moduli};
+    RnsPolyParams extended_params{dimension, extended_components, extended_moduli};
     for (auto &rns_poly : decomposed) {
         rns_poly = RnsPolynomial(extended_params);
     }

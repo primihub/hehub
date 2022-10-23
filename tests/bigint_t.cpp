@@ -76,7 +76,7 @@ TEST_CASE("big int poly") {
     // Generate a pseudo-random RNS polynomial.
     auto modulus_vec =
         std::vector<u64>{0x3ffffffffffe5, 0x3ffffffffffdd, 0x3ffffffffffcd};
-    RnsPolynomial rns_poly(RlweParams{16, 3, modulus_vec});
+    RnsPolynomial rns_poly(RnsPolyParams{16, 3, modulus_vec});
     auto seed = 42;
     auto dimension = rns_poly.dimension();
     auto components = rns_poly.component_count();

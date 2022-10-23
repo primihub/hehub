@@ -13,7 +13,7 @@ std::random_device rand_dvc;
 std::default_random_engine rand_engine;
 std::uniform_int_distribution rand_ternary((i8)-1, (i8)1);
 
-RnsPolynomial get_rand_ternary_poly(const RlweParams &params) {
+RnsPolynomial get_rand_ternary_poly(const RnsPolyParams &params) {
     RnsPolynomial tern_poly(params);
     auto dimension = params.dimension;
 
@@ -36,7 +36,7 @@ RnsPolynomial get_rand_ternary_poly(const RlweParams &params) {
     return tern_poly;
 }
 
-RnsPolynomial get_rand_uniform_poly(const RlweParams &params,
+RnsPolynomial get_rand_uniform_poly(const RnsPolyParams &params,
                                     PolyRepForm form) {
     auto dimension = params.dimension;
     RnsPolynomial rand_rns_poly(params);
@@ -57,7 +57,7 @@ RnsPolynomial get_rand_uniform_poly(const RlweParams &params,
     return rand_rns_poly;
 }
 
-RnsPolynomial get_rand_gaussian_poly(const RlweParams &params,
+RnsPolynomial get_rand_gaussian_poly(const RnsPolyParams &params,
                                      double std_dev) {
     auto dimension = params.dimension;
     RnsPolynomial gaussian_poly(params);
@@ -87,7 +87,7 @@ RnsPolynomial get_rand_gaussian_poly(const RlweParams &params,
     return gaussian_poly;
 }
 
-RnsPolynomial get_zero_poly(const RlweParams &params, PolyRepForm form) {
+RnsPolynomial get_zero_poly(const RnsPolyParams &params, PolyRepForm form) {
     RnsPolynomial rns_poly(params);
     rns_poly.rep_form = form;
     for (auto &component : rns_poly) {

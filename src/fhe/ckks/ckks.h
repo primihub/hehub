@@ -65,7 +65,7 @@ struct CkksQuadraticCt : public std::array<RnsPolynomial, 3> {
  * @return CkksPt
  */
 CkksPt simd_encode_cc(const std::vector<cc_double> &data,
-                      const double scaling_factor, const RlweParams &pt_params);
+                      const double scaling_factor, const RnsPolyParams &pt_params);
 
 /**
  * @brief TODO
@@ -76,7 +76,7 @@ CkksPt simd_encode_cc(const std::vector<cc_double> &data,
  * @return CkksPt
  */
 inline CkksPt simd_encode(const std::vector<cc_double> &data,
-                   const double scaling_factor, const RlweParams &pt_params) {
+                   const double scaling_factor, const RnsPolyParams &pt_params) {
     return simd_encode_cc(data, scaling_factor, pt_params);
 }
 
@@ -89,7 +89,7 @@ inline CkksPt simd_encode(const std::vector<cc_double> &data,
  * @return CkksPt
  */
 inline CkksPt simd_encode(const std::vector<double> &data, const double scaling_factor,
-                   const RlweParams &pt_params) {
+                   const RnsPolyParams &pt_params) {
     std::vector<cc_double> data_cc;
     for (auto d : data) {
         data_cc.push_back(cc_double(d));
