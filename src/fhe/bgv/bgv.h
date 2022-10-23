@@ -34,7 +34,7 @@ struct BgvCt : public RlweCt {
 
 /**
  * @brief TODO
- *
+ * (TODO: merge this into BgvCt)
  */
 struct BgvQuadraticCt : public std::array<RnsPolynomial, 3> {
     using std::array<RnsPolynomial, 3>::array;

@@ -47,7 +47,7 @@ struct CkksCt : public RlweCt {
 
 /**
  * @brief TODO
- *
+ * (TODO: merge this into CkksCt)
  */
 struct CkksQuadraticCt : public std::array<RnsPolynomial, 3> {
     using std::array<RnsPolynomial, 3>::array;
