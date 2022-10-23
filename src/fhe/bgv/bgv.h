@@ -9,6 +9,7 @@
 #include "primitives/rlwe.h"
 
 namespace hehub {
+namespace bgv {
 
 /**
  * @brief TODO
@@ -42,7 +43,6 @@ struct BgvQuadraticCt : public std::array<RnsPolynomial, 3> {
     u64 plain_modulus = 1;
 };
 
-namespace bgv {
 
 /**
  * @brief TODO
@@ -167,4 +167,11 @@ BgvCt relinearize(const BgvQuadraticCt &ct, const RlweKsk &relin_key);
 void mod_switch_inplace(BgvCt &ct, size_t dropping_primes = 1);
 
 } // namespace bgv
+} // namespace hehub
+
+// export types
+namespace hehub
+{
+    using BgvPt = bgv::BgvPt;
+    using BgvCt = bgv::BgvCt;
 } // namespace hehub

@@ -13,6 +13,7 @@
 #include <complex>
 
 namespace hehub {
+namespace ckks {
 
 /**
  * @brief TODO
@@ -54,8 +55,6 @@ struct CkksQuadraticCt : public std::array<RnsPolynomial, 3> {
     /// @brief TODO
     double scaling_factor = 1.0;
 };
-
-namespace ckks {
 
 /**
  * @brief TODO
@@ -238,4 +237,11 @@ CkksCt rotate(const CkksCt &ct, const RlweKsk &rot_key, const size_t step);
 void rescale_inplace(CkksCt &ct, size_t dropping_primes = 1);
 
 } // namespace ckks
+} // namespace hehub
+
+// export types
+namespace hehub
+{
+    using CkksPt = ckks::CkksPt;
+    using CkksCt = ckks::CkksCt;
 } // namespace hehub
