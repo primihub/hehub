@@ -15,6 +15,37 @@
 namespace hehub {
 namespace ckks {
 
+struct CkksParams : public RlweParams {
+
+    u64 additional_mod = 1;
+
+    double initial_scaling_factor = 1.0;
+};
+
+/**
+ * @brief Create a CkkaParams object, which determines the dimension, moduli and
+ * initial scaling factor from input arguments.
+ * @param dimension The RLWE dimension.
+ * @param moduli_bits A list of integers specifying bit length of each modulus
+ * of the RNS.
+ * @param additional_mod_bits An integer specifying bit length of the additional
+ * modulus.
+ * @param initial_scaling_factor The initial scaling factor.
+ * @return CkksParams
+ */
+CkksParams create_params(size_t dimension, std::vector<int> moduli_bits,
+                         int additional_mod_bits,
+                         double initial_scaling_factor);
+
+/**
+ * @brief Create a params object, which automatically determines the dimension,
+ * moduli and initial scaling factor.
+ * @param dimension The RLWE dimension.
+ * @param initial_scaling_factor The initial scaling factor.
+ * @return CkksParams
+ */
+CkksParams create_params(size_t dimension, double initial_scaling_factor);
+
 /**
  * @brief TODO
  *
