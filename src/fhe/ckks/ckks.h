@@ -64,8 +64,8 @@ struct CkksQuadraticCt : public std::array<RnsPolynomial, 3> {
  * @param pt_params
  * @return CkksPt
  */
-CkksPt simd_encode_cc(const std::vector<cc_double> &data,
-                      const double scaling_factor, const RnsPolyParams &pt_params);
+CkksPt simd_encode(const std::vector<cc_double> &data,
+                   const double scaling_factor, const RnsPolyParams &pt_params);
 
 /**
  * @brief TODO
@@ -75,36 +75,36 @@ CkksPt simd_encode_cc(const std::vector<cc_double> &data,
  * @param pt_params
  * @return CkksPt
  */
-inline CkksPt simd_encode(const std::vector<cc_double> &data,
-                   const double scaling_factor, const RnsPolyParams &pt_params) {
-    return simd_encode_cc(data, scaling_factor, pt_params);
+CkksPt simd_encode(const std::vector<double> &data, const double scaling_factor,
+                   const RnsPolyParams &pt_params);
+
+/**
+ * @brief TODO
+ * 
+ * @param datum 
+ * @param scaling_factor 
+ * @param pt_params 
+ * @return CkksPt 
+ */
+inline CkksPt encode(const cc_double datum, const double scaling_factor,
+                     const RnsPolyParams &pt_params) {
+    std::vector datum_rep(pt_params.dimension / 2, datum);
+    return simd_encode(datum_rep, scaling_factor, pt_params);
 }
 
 /**
  * @brief TODO
- *
- * @param data
- * @param scaling_factor
- * @param pt_params
- * @return CkksPt
+ * 
+ * @param datum 
+ * @param scaling_factor 
+ * @param pt_params 
+ * @return CkksPt 
  */
-inline CkksPt simd_encode(const std::vector<double> &data, const double scaling_factor,
-                   const RnsPolyParams &pt_params) {
-    std::vector<cc_double> data_cc;
-    for (auto d : data) {
-        data_cc.push_back(cc_double(d));
-    }
-    return simd_encode_cc(data_cc, scaling_factor, pt_params);
+inline CkksPt encode(const double datum, const double scaling_factor,
+                     const RnsPolyParams &pt_params) {
+    std::vector datum_rep(pt_params.dimension / 2, datum);
+    return simd_encode(datum_rep, scaling_factor, pt_params);
 }
-
-/**
- * @brief TODO
- *
- * @param pt
- * @param data_size
- * @return std::vector<cc_double>
- */
-std::vector<cc_double> simd_decode_cc(const CkksPt &pt, size_t data_size = 0);
 
 /**
  * @brief TODO
@@ -212,6 +212,20 @@ CkksCt relinearize(const CkksQuadraticCt &ct, const RlweKsk &relin_key);
 /**
  * @brief TODO
  *
+ * @param ct1
+ * @param ct2
+ * @param relin_key
+ * @return CkksCt
+ */
+inline CkksCt mult(const CkksCt &ct1, const CkksCt &ct2,
+                   const RlweKsk &relin_key) {
+    auto ct_prod = mult_low_level(ct1, ct2);
+    return relinearize(ct_prod, relin_key);
+}
+
+/**
+ * @brief TODO
+ *
  * @param ct
  * @param conj_key
  * @return CkksCt
@@ -240,8 +254,7 @@ void rescale_inplace(CkksCt &ct, size_t dropping_primes = 1);
 } // namespace hehub
 
 // export types
-namespace hehub
-{
-    using CkksPt = ckks::CkksPt;
-    using CkksCt = ckks::CkksCt;
+namespace hehub {
+using CkksPt = ckks::CkksPt;
+using CkksCt = ckks::CkksCt;
 } // namespace hehub

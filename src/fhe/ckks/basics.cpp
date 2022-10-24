@@ -204,6 +204,21 @@ CkksPt simd_encode_cc(const vector<cc_double> &data,
     return pt;
 }
 
+CkksPt simd_encode(const std::vector<cc_double> &data,
+                   const double scaling_factor,
+                   const RnsPolyParams &pt_params) {
+    return simd_encode_cc(data, scaling_factor, pt_params);
+}
+
+CkksPt simd_encode(const std::vector<double> &data, const double scaling_factor,
+                   const RnsPolyParams &pt_params) {
+    std::vector<cc_double> data_cc;
+    for (auto d : data) {
+        data_cc.push_back(cc_double(d));
+    }
+    return simd_encode_cc(data_cc, scaling_factor, pt_params);
+}
+
 vector<cc_double> simd_decode_cc(const CkksPt &pt, size_t data_size) {
     auto scaling_factor = pt.scaling_factor;
     if (scaling_factor <= 0) {
