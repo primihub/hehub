@@ -1,6 +1,5 @@
 #include "catch2/catch.hpp"
 #include "common/bigint.h"
-#include "common/bigintpoly.h"
 #include <sstream>
 
 using namespace hehub;
@@ -90,7 +89,7 @@ TEST_CASE("big int poly") {
 
     // Compose the RNS polynomial into a big-int polynomial, and check the
     // correctness.
-    UBigIntPoly big_int_poly(rns_poly);
+    UBIntVec big_int_poly(rns_poly);
     REQUIRE(big_int_poly.dimension() == dimension);
     for (int j = 0; j < components; j++) {
         auto curr_modulus_big = UBInt(modulus_vec[j]);

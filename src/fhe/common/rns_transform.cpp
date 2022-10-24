@@ -1,5 +1,5 @@
 #include "rns_transform.h"
-#include "bigintpoly.h"
+#include "bigint.h"
 #include "mod_arith.h"
 #include "range/v3/view/zip.hpp"
 #include <numeric>
@@ -85,7 +85,7 @@ RnsPolynomial rns_base_transform_to_single(const RnsPolynomial &input_rns_poly,
 
     // If the coefficients are not all smaller than each modulus, then we need
     // to perform a CRT composition.
-    UBigIntPoly big_int_poly(input_rns_poly);
+    UBIntVec big_int_poly(input_rns_poly);
     auto big_int_new_modulus = UBInt(new_modulus);
     auto big_int_old_modulus = UBInt(1);
     for (const auto &mod : input_rns_poly.modulus_vec()) {

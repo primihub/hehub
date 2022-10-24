@@ -1,6 +1,5 @@
 #include "ckks.h"
 #include "common/bigint.h"
-#include "common/bigintpoly.h"
 #include "common/mod_arith.h"
 #include "common/permutation.h"
 #include "common/rns_transform.h"
@@ -253,7 +252,7 @@ vector<cc_double> simd_decode_cc(const CkksPt &pt, size_t data_size) {
             }
         }
     } else {
-        UBigIntPoly pt_poly_big_int(pt_reduced);
+        UBIntVec pt_poly_big_int(pt_reduced);
         auto whole_modulus =
             accumulate(pt.modulus_vec().begin(), pt.modulus_vec().end(),
                        UBInt(1), [](auto acc, auto x) { return acc * x; });

@@ -1,6 +1,6 @@
 #include "catch2/catch.hpp"
 #include "ckks/ckks.h"
-#include "common/bigintpoly.h"
+#include "common/bigint.h"
 #include "common/mod_arith.h"
 #include "common/permutation.h"
 #include "common/sampling.h"
@@ -148,7 +148,7 @@ TEST_CASE("ckks rescaling") {
     }
 
     // Compose the coefficients
-    std::array composed{UBigIntPoly(ct[0]), UBigIntPoly(ct[1])};
+    std::array composed{UBIntVec(ct[0]), UBIntVec(ct[1])};
 
     // Rescale
     for (auto &c : ct) {
@@ -168,7 +168,7 @@ TEST_CASE("ckks rescaling") {
     double eps = std::pow(2.0, -60);
     REQUIRE(abs(ct.scaling_factor - std::pow(2.0, 80) / dropped_mod) < eps);
 
-    std::array composed_new{UBigIntPoly(ct[0]), UBigIntPoly(ct[1])};
+    std::array composed_new{UBIntVec(ct[0]), UBIntVec(ct[1])};
 
     for (auto half : {0, 1}) {
         for (size_t i = 0; i < dimension; i++) {

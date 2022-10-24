@@ -10,13 +10,6 @@
 
 namespace hehub {
 
-/**
- * @brief TODO
- *
- * @param x
- * @param bit_len
- * @return u64
- */
 inline u64 __bit_rev_naive(u64 x, int bit_len) {
 #ifdef HEHUB_DEBUG
     if (bit_len < 0 || bit_len > 64) {
@@ -45,13 +38,6 @@ inline u64 __bit_rev_naive(u64 x, int bit_len) {
     return x;
 }
 
-/**
- * @brief TODO
- *
- * @param x
- * @param bit_len
- * @return u64
- */
 inline u64 __bit_rev_naive_16(u64 x, int bit_len) {
 #ifdef HEHUB_DEBUG
     if (bit_len < 0 || bit_len > 16) {

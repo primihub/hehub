@@ -1,4 +1,5 @@
 #include "bigint.h"
+#include "rns.h"
 #include <sstream>
 
 namespace hehub {
@@ -388,6 +389,28 @@ UBInt CRTComposer::inv_mod_prime(const UBInt &x, const u64 modulus) {
         mask >>= 1;
     }
     return x_power;
+}
+
+UBIntVec::UBIntVec(const RnsPolynomial &rns_poly) {
+    const auto dimension(rns_poly.dimension());
+    const auto component_count(rns_poly.component_count());
+    CRTComposer crt_composer(rns_poly.modulus_vec());
+    for (size_t i = 0; i < dimension; i++) {
+        std::vector<u64> remainder_coeffs;
+        for (size_t j = 0; j < component_count; j++) {
+            remainder_coeffs.push_back(rns_poly[j][i]);
+        }
+        coeffs_.push_back(crt_composer.compose(remainder_coeffs));
+    }
+}
+
+std::ostream &operator<<(std::ostream &out, const UBIntVec &big_int_poly) {
+    for (size_t i = big_int_poly.coeffs_.size() - 1; i >= 0; i--) {
+        out << big_int_poly.coeffs_[i];
+        if (i == 0) { break; }
+        out << "*X^" << i << " + ";
+    }
+    return out;
 }
 
 } // namespace hehub
