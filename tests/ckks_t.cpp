@@ -2,6 +2,7 @@
 #include "ckks/ckks.h"
 #include "common/bigint.h"
 #include "common/mod_arith.h"
+#include "common/ntt.h"
 #include "common/permutation.h"
 #include "common/sampling.h"
 #include <type_traits>

@@ -1,5 +1,6 @@
 #include "bgv.h"
 #include "common/mod_arith.h"
+#include "common/ntt.h"
 #include "common/rns_transform.h"
 #include <algorithm>
 #include <cmath>
