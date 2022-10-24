@@ -50,7 +50,7 @@ int main() {
     for (int i = 2; i <= 100000; i++) {
         auto pt = ckks::encode(1.0 / i, params);
         auto ct = ckks::encrypt(pt, sk);
-        auto ct_squared = ckks::mul(ct, ct, relin_key);
+        auto ct_squared = ckks::mult(ct, ct, relin_key);
         ct_sum = ckks::add(ct_sum, ct_squared);
     }
 

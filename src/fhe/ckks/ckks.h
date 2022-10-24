@@ -80,11 +80,11 @@ CkksPt simd_encode(const std::vector<double> &data, const double scaling_factor,
 
 /**
  * @brief TODO
- * 
- * @param datum 
- * @param scaling_factor 
- * @param pt_params 
- * @return CkksPt 
+ *
+ * @param datum
+ * @param scaling_factor
+ * @param pt_params
+ * @return CkksPt
  */
 inline CkksPt encode(const cc_double datum, const double scaling_factor,
                      const RnsPolyParams &pt_params) {
@@ -94,11 +94,11 @@ inline CkksPt encode(const cc_double datum, const double scaling_factor,
 
 /**
  * @brief TODO
- * 
- * @param datum 
- * @param scaling_factor 
- * @param pt_params 
- * @return CkksPt 
+ *
+ * @param datum
+ * @param scaling_factor
+ * @param pt_params
+ * @return CkksPt
  */
 inline CkksPt encode(const double datum, const double scaling_factor,
                      const RnsPolyParams &pt_params) {
@@ -255,6 +255,11 @@ void rescale_inplace(CkksCt &ct, size_t dropping_primes = 1);
 
 // export types
 namespace hehub {
+
+using CkksSk = RlweSk;
+
 using CkksPt = ckks::CkksPt;
+
 using CkksCt = ckks::CkksCt;
+
 } // namespace hehub
