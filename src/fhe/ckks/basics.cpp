@@ -2,6 +2,7 @@
 #include "common/bigint.h"
 #include "common/mod_arith.h"
 #include "common/permutation.h"
+#include "common/primelists.h"
 #include "common/rns_transform.h"
 #include <numeric>
 
@@ -9,6 +10,57 @@ using namespace std;
 
 namespace hehub {
 namespace ckks {
+
+CkksParams create_params(size_t dimension, std::vector<size_t> moduli_bits,
+                         size_t additional_mod_bits,
+                         double initial_scaling_factor) {
+    CkksParams params;
+    params.dimension = dimension;
+
+    std::vector<size_t> next_prime_idx(64, 0);
+    auto get_next_prime = [&](size_t modulus_bits) {
+        try {
+            return prime_lists[modulus_bits][next_prime_idx[modulus_bits]++];
+        } catch (...) {
+            throw "No suitable primes in the library.";
+        }
+    };
+
+    params.additional_mod = get_next_prime(additional_mod_bits);
+    params.moduli.clear();
+    for (auto modulus_bits : moduli_bits) {
+        params.moduli.push_back(get_next_prime(modulus_bits));
+    }
+    params.component_count = params.moduli.size();
+    params.initial_scaling_factor = initial_scaling_factor;
+
+    return params;
+}
+
+CkksParams create_params(size_t dimension, size_t initial_scaling_bits) {
+    static map<size_t, size_t> std_log_q_size{{1024, 27},   {2048, 54},
+                                              {4096, 109},  {8192, 218},
+                                              {16384, 438}, {32768, 881}};
+
+    auto log_q_size_it = std_log_q_size.find(dimension);
+    if (log_q_size_it == std_log_q_size.end()) {
+        throw "No suitable primes for this dimension.";
+    }
+    auto log_q_size = log_q_size_it->second;
+    if (log_q_size < 2 * initial_scaling_bits) {
+        throw "Initial scaling bits too big.";
+    }
+
+    vector<size_t> mod_bits((log_q_size + 1) / initial_scaling_bits - 1,
+                            initial_scaling_bits);
+    auto rest_bits = log_q_size - (log_q_size + 1) / initial_scaling_bits *
+                                      initial_scaling_bits;
+    mod_bits[0] += rest_bits / 2;
+    auto additional_mod_bits = initial_scaling_bits + rest_bits / 2;
+
+    return create_params(dimension, mod_bits, additional_mod_bits,
+                         initial_scaling_bits);
+}
 
 /// @brief Inplace FFT with coefficients/point values input and output in
 /// natural order.
@@ -204,19 +256,16 @@ CkksPt simd_encode_cc(const vector<cc_double> &data,
     return pt;
 }
 
-CkksPt simd_encode(const std::vector<cc_double> &data,
-                   const double scaling_factor,
-                   const CkksParams &pt_params) {
-    return simd_encode_cc(data, scaling_factor, pt_params);
+CkksPt simd_encode(const std::vector<cc_double> &data, const CkksParams &pt_params) {
+    return simd_encode_cc(data, pt_params.initial_scaling_factor, pt_params);
 }
 
-CkksPt simd_encode(const std::vector<double> &data, const double scaling_factor,
-                   const CkksParams &pt_params) {
+CkksPt simd_encode(const std::vector<double> &data, const CkksParams &pt_params) {
     std::vector<cc_double> data_cc;
     for (auto d : data) {
         data_cc.push_back(cc_double(d));
     }
-    return simd_encode_cc(data_cc, scaling_factor, pt_params);
+    return simd_encode_cc(data_cc, pt_params.initial_scaling_factor, pt_params);
 }
 
 vector<cc_double> simd_decode_cc(const CkksPt &pt, size_t data_size) {

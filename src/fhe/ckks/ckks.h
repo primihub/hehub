@@ -11,11 +11,14 @@
 #include "primitives/rgsw.h"
 #include "primitives/rlwe.h"
 #include <complex>
+#include <numeric>
 
 namespace hehub {
 namespace ckks {
 
 struct CkksParams : public RlweParams {
+    using RlweParams::RlweParams;
+
     CkksParams(RlweParams &&other) : RlweParams(std::move(other)) {}
 
     u64 additional_mod = 1;
@@ -34,18 +37,18 @@ struct CkksParams : public RlweParams {
  * @param initial_scaling_factor The initial scaling factor.
  * @return CkksParams
  */
-CkksParams create_params(size_t dimension, std::vector<int> moduli_bits,
-                         int additional_mod_bits,
+CkksParams create_params(size_t dimension, std::vector<size_t> moduli_bits,
+                         size_t additional_mod_bits,
                          double initial_scaling_factor);
 
 /**
  * @brief Create a params object, which automatically determines the dimension,
  * moduli and initial scaling factor.
  * @param dimension The RLWE dimension.
- * @param initial_scaling_factor The initial scaling factor.
+ * @param initial_scaling_bits log2 value of the initial scaling factor.
  * @return CkksParams
  */
-CkksParams create_params(size_t dimension, double initial_scaling_factor);
+CkksParams create_params(size_t dimension, size_t initial_scaling_bits);
 
 /**
  * @brief TODO
@@ -97,31 +100,28 @@ struct CkksQuadraticCt : public std::array<RnsPolynomial, 3> {
  * @return CkksPt
  */
 CkksPt simd_encode(const std::vector<cc_double> &data,
-                   const double scaling_factor, const CkksParams &pt_params);
+                   const CkksParams &pt_params);
 
 /**
  * @brief TODO
  *
  * @param data
- * @param scaling_factor
  * @param pt_params
  * @return CkksPt
  */
-CkksPt simd_encode(const std::vector<double> &data, const double scaling_factor,
+CkksPt simd_encode(const std::vector<double> &data,
                    const CkksParams &pt_params);
 
 /**
  * @brief TODO
  *
  * @param datum
- * @param scaling_factor
  * @param pt_params
  * @return CkksPt
  */
-inline CkksPt encode(const cc_double datum, const double scaling_factor,
-                     const CkksParams &pt_params) {
+inline CkksPt encode(const cc_double datum, const CkksParams &pt_params) {
     std::vector datum_rep(pt_params.dimension / 2, datum);
-    return simd_encode(datum_rep, scaling_factor, pt_params);
+    return simd_encode(datum_rep, pt_params);
 }
 
 /**
@@ -132,10 +132,9 @@ inline CkksPt encode(const cc_double datum, const double scaling_factor,
  * @param pt_params
  * @return CkksPt
  */
-inline CkksPt encode(const double datum, const double scaling_factor,
-                     const CkksParams &pt_params) {
+inline CkksPt encode(const double datum, const CkksParams &pt_params) {
     std::vector datum_rep(pt_params.dimension / 2, datum);
-    return simd_encode(datum_rep, scaling_factor, pt_params);
+    return simd_encode(datum_rep, pt_params);
 }
 
 /**
@@ -151,6 +150,24 @@ template <typename T = double,
                                   std::is_same<T, cc_double>::value>::type * =
               nullptr>
 std::vector<T> simd_decode(const CkksPt &pt, size_t data_size = 0);
+
+/**
+ * @brief TODO
+ *
+ * @tparam T
+ * @param pt
+ * @param data_size
+ * @return std::vector<T>
+ */
+template <typename T = double,
+          typename std::enable_if<std::is_same<T, double>::value ||
+                                  std::is_same<T, cc_double>::value>::type * =
+              nullptr>
+inline T decode(const CkksPt &pt) {
+    std::vector<T> decoded_vec = simd_decode(pt);
+    T sum = std::accumulate(decoded_vec.begin(), decoded_vec.end(), 0);
+    return sum / decoded_vec.size();
+}
 
 /**
  * @brief TODO

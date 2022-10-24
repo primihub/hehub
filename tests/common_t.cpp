@@ -189,6 +189,7 @@ TEST_CASE("automorphism") {
     SECTION("involution on plain") {
         size_t dimension = 8;
         CkksParams params = create_params(dimension, {55});
+        params.initial_scaling_factor = pow(2.0, 50);
         auto data_count = dimension / 2;
         std::vector<cc_double> plain_data(data_count);
         std::vector<cc_double> data_conj;
@@ -199,7 +200,7 @@ TEST_CASE("automorphism") {
             data_conj.push_back(std::conj(d));
         }
 
-        auto pt = ckks::simd_encode(plain_data, pow(2.0, 50), params);
+        auto pt = ckks::simd_encode(plain_data, params);
         ntt_negacyclic_inplace_lazy(pt);
         CkksPt pt_involved = involution(pt);
         pt_involved.scaling_factor = pt.scaling_factor;
@@ -211,6 +212,7 @@ TEST_CASE("automorphism") {
     SECTION("cycle on plain") {
         size_t dimension = 8;
         CkksParams params = create_params(dimension, {55});
+        params.initial_scaling_factor = pow(2.0, 50);
         auto data_count = dimension / 2;
         std::vector<cc_double> plain_data(data_count);
         std::vector<cc_double> data_rot(data_count);
@@ -224,7 +226,7 @@ TEST_CASE("automorphism") {
             data_rot[(i + step) % data_count] = plain_data[i];
         }
 
-        auto pt = ckks::simd_encode(plain_data, pow(2.0, 50), params);
+        auto pt = ckks::simd_encode(plain_data, params);
         ntt_negacyclic_inplace_lazy(pt);
         CkksPt pt_cycled = cycle(pt, step);
         pt_cycled.scaling_factor = pt.scaling_factor;

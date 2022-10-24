@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.14)
 
 # Set a name and a version number for your project:
-project(hehub VERSION 0.0.1 LANGUAGES CXX)
+project(hehub VERSION 0.1 LANGUAGES CXX)
 
 # this needs to be in the top level CMakeLists.txt to enable tests
 include(CTest)
@@ -24,6 +24,9 @@ add_subdirectory(tests)
 
 # compile the benchmarks
 add_subdirectory(bench)
+
+# compile the examples
+add_subdirectory(examples)
 
 # optionally add doxygen target to generate documentation
 option(BUILD_DOCS "Enable building of documentation (requires Doxygen)" OFF)
