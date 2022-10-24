@@ -72,10 +72,7 @@ TEST_CASE("fft", "[.]") {
 
 TEST_CASE("ckks encoding") {
     size_t dimension = 32;
-    RnsPolyParams pt_dim{
-        dimension,
-        2,
-        {144115188075593729, 144115188068319233}}; // ~114 bits in total
+    CkksParams params = create_params(dimension, {57, 57});
 
     auto data_size = dimension / 2;
     std::default_random_engine generator;
@@ -88,7 +85,7 @@ TEST_CASE("ckks encoding") {
             d = distribution(generator);
         }
 
-        CkksPt pt = ckks::simd_encode(data, scaling_factor, pt_dim);
+        CkksPt pt = ckks::simd_encode(data, scaling_factor, params);
         auto data_recovered = ckks::simd_decode(pt);
 
         REQUIRE(data_recovered.size() == data.size());
@@ -101,7 +98,7 @@ TEST_CASE("ckks encoding") {
             d = distribution(generator);
         }
 
-        CkksPt pt = ckks::simd_encode(data, scaling_factor, pt_dim);
+        CkksPt pt = ckks::simd_encode(data, scaling_factor, params);
         auto data_recovered = ckks::simd_decode(pt);
 
         REQUIRE(data_recovered.size() == data.size());
@@ -114,7 +111,7 @@ TEST_CASE("ckks encoding") {
             d = {distribution(generator), distribution(generator)};
         }
 
-        CkksPt pt = ckks::simd_encode(data, scaling_factor, pt_dim);
+        CkksPt pt = ckks::simd_encode(data, scaling_factor, params);
         auto data_recovered = ckks::simd_decode<cc_double>(pt);
 
         REQUIRE(data_recovered.size() == data.size());
@@ -127,7 +124,7 @@ TEST_CASE("ckks encoding") {
             d = {distribution(generator), distribution(generator)};
         }
 
-        CkksPt pt = ckks::simd_encode(data, scaling_factor, pt_dim);
+        CkksPt pt = ckks::simd_encode(data, scaling_factor, params);
         auto data_recovered = ckks::simd_decode<cc_double>(pt);
 
         REQUIRE(data_recovered.size() == data.size());
@@ -179,9 +176,8 @@ TEST_CASE("ckks rescaling") {
 }
 
 TEST_CASE("ckks encryption") {
-    std::vector<u64> ct_moduli{1099510054913}; // 40-bit
     size_t dimension = 8;
-    RnsPolyParams ct_params{dimension, ct_moduli.size(), ct_moduli};
+    CkksParams ct_params = create_params(dimension, {40});
     RlweSk sk(ct_params);
 
     // random ckks plain data
@@ -211,9 +207,9 @@ TEST_CASE("ckks encryption") {
 }
 
 TEST_CASE("ckks arith") {
-    std::vector<u64> ct_moduli{1099510054913, 1073479681, 1072496641};
+    // std::vector<u64> ct_moduli{1099510054913, 1073479681, 1072496641};
     size_t dimension = 8;
-    RnsPolyParams ct_params{dimension, ct_moduli.size(), ct_moduli};
+    CkksParams ct_params = create_params(dimension, {40, 30, 30});
     RlweSk sk(ct_params);
 
     // random ckks plain data
@@ -366,9 +362,8 @@ TEST_CASE("ckks arith") {
 
 TEST_CASE("ckks key switch") {
     SECTION("general key switching") {
-        std::vector<u64> ct_moduli{1099510054913, 1073479681, 1072496641};
         size_t dimension = 8;
-        RnsPolyParams ct_params{dimension, ct_moduli.size(), ct_moduli};
+        CkksParams ct_params = create_params(dimension, {40, 30, 30});
         u64 additional_mod = 1099507695617;
 
         auto data_count = dimension / 2;
@@ -396,9 +391,8 @@ TEST_CASE("ckks key switch") {
         REQUIRE_ALL_CLOSE(plain_data, data_recovered, eps);
     }
     SECTION("conjugation") {
-        std::vector<u64> ct_moduli{1099510054913, 1073479681, 1072496641};
         size_t dimension = 8;
-        RnsPolyParams ct_params{dimension, ct_moduli.size(), ct_moduli};
+        CkksParams ct_params = create_params(dimension, {40, 30, 30});
         u64 additional_mod = 1099507695617;
 
         auto data_count = dimension / 2;
@@ -424,9 +418,8 @@ TEST_CASE("ckks key switch") {
         REQUIRE_ALL_CLOSE(data_conj, data_recovered, eps);
     }
     SECTION("rotation") {
-        std::vector<u64> ct_moduli{1099510054913, 1073479681, 1072496641};
         size_t dimension = 8;
-        RnsPolyParams ct_params{dimension, ct_moduli.size(), ct_moduli};
+        CkksParams ct_params = create_params(dimension, {40, 30, 30});
         u64 additional_mod = 1099507695617;
 
         auto data_count = dimension / 2;

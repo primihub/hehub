@@ -102,7 +102,7 @@ void fft_negacyclic_natural_inout(cc_double *coeffs, size_t log_dimension,
 
 CkksPt simd_encode_cc(const vector<cc_double> &data,
                       const double scaling_factor,
-                      const RnsPolyParams &pt_params) {
+                      const CkksParams &pt_params) {
     if (scaling_factor <= 0) {
         throw invalid_argument("Scaling factor should be positive.");
     }
@@ -206,12 +206,12 @@ CkksPt simd_encode_cc(const vector<cc_double> &data,
 
 CkksPt simd_encode(const std::vector<cc_double> &data,
                    const double scaling_factor,
-                   const RnsPolyParams &pt_params) {
+                   const CkksParams &pt_params) {
     return simd_encode_cc(data, scaling_factor, pt_params);
 }
 
 CkksPt simd_encode(const std::vector<double> &data, const double scaling_factor,
-                   const RnsPolyParams &pt_params) {
+                   const CkksParams &pt_params) {
     std::vector<cc_double> data_cc;
     for (auto d : data) {
         data_cc.push_back(cc_double(d));

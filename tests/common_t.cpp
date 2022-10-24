@@ -188,7 +188,7 @@ TEST_CASE("automorphism") {
     }
     SECTION("involution on plain") {
         size_t dimension = 8;
-        auto params = create_params(dimension, {55});
+        CkksParams params = create_params(dimension, {55});
         auto data_count = dimension / 2;
         std::vector<cc_double> plain_data(data_count);
         std::vector<cc_double> data_conj;
@@ -210,7 +210,7 @@ TEST_CASE("automorphism") {
     }
     SECTION("cycle on plain") {
         size_t dimension = 8;
-        auto params = create_params(dimension, {55});
+        CkksParams params = create_params(dimension, {55});
         auto data_count = dimension / 2;
         std::vector<cc_double> plain_data(data_count);
         std::vector<cc_double> data_rot(data_count);

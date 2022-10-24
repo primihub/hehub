@@ -16,6 +16,7 @@ namespace hehub {
 namespace ckks {
 
 struct CkksParams : public RlweParams {
+    CkksParams(RlweParams &&other) : RlweParams(std::move(other)) {}
 
     u64 additional_mod = 1;
 
@@ -96,7 +97,7 @@ struct CkksQuadraticCt : public std::array<RnsPolynomial, 3> {
  * @return CkksPt
  */
 CkksPt simd_encode(const std::vector<cc_double> &data,
-                   const double scaling_factor, const RnsPolyParams &pt_params);
+                   const double scaling_factor, const CkksParams &pt_params);
 
 /**
  * @brief TODO
@@ -107,7 +108,7 @@ CkksPt simd_encode(const std::vector<cc_double> &data,
  * @return CkksPt
  */
 CkksPt simd_encode(const std::vector<double> &data, const double scaling_factor,
-                   const RnsPolyParams &pt_params);
+                   const CkksParams &pt_params);
 
 /**
  * @brief TODO
@@ -118,7 +119,7 @@ CkksPt simd_encode(const std::vector<double> &data, const double scaling_factor,
  * @return CkksPt
  */
 inline CkksPt encode(const cc_double datum, const double scaling_factor,
-                     const RnsPolyParams &pt_params) {
+                     const CkksParams &pt_params) {
     std::vector datum_rep(pt_params.dimension / 2, datum);
     return simd_encode(datum_rep, scaling_factor, pt_params);
 }
@@ -132,7 +133,7 @@ inline CkksPt encode(const cc_double datum, const double scaling_factor,
  * @return CkksPt
  */
 inline CkksPt encode(const double datum, const double scaling_factor,
-                     const RnsPolyParams &pt_params) {
+                     const CkksParams &pt_params) {
     std::vector datum_rep(pt_params.dimension / 2, datum);
     return simd_encode(datum_rep, scaling_factor, pt_params);
 }
@@ -286,6 +287,8 @@ void rescale_inplace(CkksCt &ct, size_t dropping_primes = 1);
 
 // export types
 namespace hehub {
+
+using CkksParams = ckks::CkksParams;
 
 using CkksSk = RlweSk;
 
