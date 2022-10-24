@@ -1,6 +1,6 @@
 # HEhub
 
-HEhub is a library for homomorphic encryption and its applications, and is part of the PrimiHub project.
+HEhub is a library for homomorphic encryption and its applications, and is part of the [PrimiHub](https://github.com/primihub/primihub) project.
 
 ## Introduction
 
@@ -61,5 +61,15 @@ int main() {
 
 ```
 
-## Contributing
-We strongly welcome developers to contribute code for HEhub. On how to participate, see [PrimiHub Open Source Community Governance](http://docs.primihub.com/docs/primihub-community).
+## How to contribute
+If you want to contribute to this project, feel free to create an issue at our [Issue](https://github.com/primihub/primihub/issues) page (e.g., documentation, new idea and proposal).
+
+Also, you can learn about our community [PrimiHub Open Source Community Governance](http://docs.primihub.com/docs/primihub-community)
+
+This is an active open source project for everyone, and we are always open to everyone who want to use this system or contribute to it.
+
+## Community
+* Slack: [primihub.slack.com](https://join.slack.com/t/primihub/shared_invite/zt-1iftyi7x0-n_HqllTgPfoEcgqw5UzoYw)
+* Wechat Official Account:
+
+![wechat_helper](./doc/wechat.jpeg)
