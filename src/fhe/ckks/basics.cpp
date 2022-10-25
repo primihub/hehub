@@ -58,8 +58,9 @@ CkksParams create_params(size_t dimension, size_t initial_scaling_bits) {
     mod_bits[0] += rest_bits / 2;
     auto additional_mod_bits = initial_scaling_bits + rest_bits / 2;
 
-    return create_params(dimension, mod_bits, additional_mod_bits,
-                         initial_scaling_bits);
+    return create_params(
+        dimension, mod_bits, additional_mod_bits,
+        /*initial_scaling_factor=*/pow(2.0, initial_scaling_bits));
 }
 
 /// @brief Inplace FFT with coefficients/point values input and output in
@@ -256,11 +257,13 @@ CkksPt simd_encode_cc(const vector<cc_double> &data,
     return pt;
 }
 
-CkksPt simd_encode(const std::vector<cc_double> &data, const CkksParams &pt_params) {
+CkksPt simd_encode(const std::vector<cc_double> &data,
+                   const CkksParams &pt_params) {
     return simd_encode_cc(data, pt_params.initial_scaling_factor, pt_params);
 }
 
-CkksPt simd_encode(const std::vector<double> &data, const CkksParams &pt_params) {
+CkksPt simd_encode(const std::vector<double> &data,
+                   const CkksParams &pt_params) {
     std::vector<cc_double> data_cc;
     for (auto d : data) {
         data_cc.push_back(cc_double(d));
