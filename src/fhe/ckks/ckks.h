@@ -165,7 +165,7 @@ template <typename T = double,
               nullptr>
 inline T decode(const CkksPt &pt) {
     std::vector<T> decoded_vec = simd_decode(pt);
-    T sum = std::accumulate(decoded_vec.begin(), decoded_vec.end(), 0);
+    T sum = std::accumulate(decoded_vec.begin(), decoded_vec.end(), (T)0);
     return sum / decoded_vec.size();
 }
 
