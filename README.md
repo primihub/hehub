@@ -65,7 +65,7 @@ int main() {
 ```
 
 ## Benchmarks
-We tested the performance of HEhub compiled with Clang-12.0.5. _Note: The code for benchmark is still incomplete since our limited effort. We will list more benchmark results later._
+We tested the performance of HEhub compiled with Clang-12.0.5 and run on an Intel i7-9750H @ 2.60GHz. _Note: The code for benchmark is still incomplete since our effort is limited currently. We will list more benchmark results later._
 
 | parameter set |  NTT  |  INTT  |
 | ------------- |  ---  |  ----  |
