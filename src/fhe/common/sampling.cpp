@@ -66,8 +66,8 @@ RnsPolynomial get_rand_gaussian_poly(const RnsPolyParams &params,
     std::normal_distribution<double> rand_gaussian(0, std_dev);
 
     // Sampling.
-    std::vector<double> gassians(dimension);
-    for (auto &g : gassians) {
+    std::vector<double> gaussians(dimension);
+    for (auto &g : gaussians) {
         do {
             g = rand_gaussian(rand_engine);
         } while (std::abs(g) > bound);
@@ -76,8 +76,8 @@ RnsPolynomial get_rand_gaussian_poly(const RnsPolyParams &params,
     // Transform to RNS representation.
     for (auto [component, modulus] :
          zip(gaussian_poly, gaussian_poly.modulus_vec())) {
-        for (auto [coeff, gaussian] : zip(component, gassians)) {
-            coeff = modulus + gaussian;
+        for (auto [coeff, gaussian] : zip(component, gaussians)) {
+            coeff = modulus + std::round<i64>(gaussian);
             coeff -= (coeff >= modulus) ? modulus : 0;
         }
     }
