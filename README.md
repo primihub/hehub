@@ -15,7 +15,7 @@ There are several open-sourced HE libraries so far. However, the technology of h
 HEhub currently includes the homomorphic encryption schemes BGV, CKKS, and TFHE, etc., and will further feature various schemes, frequent circuits and application interface on homomorphic encryption. As part of the PrimiHub project, HEhub is an essential tool helping us explore the field of privacy enhancing technologies.
 
 ## Building and Installation 
-Currently the library only requires header-only third-party dependencies, which need no manual pre-installation. The library is built with CMake (>= 3.14), and tested on Linux with toolchain GCC (>= 7.0) and on MacOS with toolchain Clang (>= 13.0).
+Currently the library only requires header-only third-party dependencies, which need no manual pre-installation. The library is built with CMake (>= 3.14), and tested on Linux with toolchain GCC (>= 7.0) and on MacOS with toolchain Clang (>= 12.0).
 
 To build the library, use the following command to configure and build:
 ```bash
@@ -63,6 +63,18 @@ int main() {
 }
 
 ```
+
+## Benchmarks
+We tested the performance of HEhub compiled with Clang-12.0.5. _Note: The code for benchmark is still incomplete since our limited effort. We will list more benchmark results later._
+
+| parameter set |  NTT  |  INTT  |
+| ------------- |  ---  |  ----  |
+| N = 1024      |  7 us |   9 us |
+| N = 2048      | 15 us |  19 us |
+| N = 4096      | 31 us |  42 us |
+| N = 8192      | 69 us |  97 us |
+| N = 16384     | 144 us| 196 us |
+| N = 32768     | 313 us| 470 us |
 
 ## How to contribute
 If you want to contribute to this project, feel free to create an issue at our [Issue](https://github.com/primihub/primihub/issues) page (e.g., documentation, new idea and proposal).
