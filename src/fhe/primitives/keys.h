@@ -56,17 +56,30 @@ inline RlweKsk get_conj_key(const RlweSk &sk, const u64 additional_mod) {
 }
 
 /**
+ * @brief Rotation key, which is a key switching key with rotation step
+ * being specified.
+ *
+ */
+struct RotKey : public RlweKsk {
+    using RlweKsk::RlweKsk;
+
+    size_t step = 0;
+};
+
+/**
  * @brief Generate and return a rotation key for a specific rotating step, which
  * is an RGSW encryption for cycled sk, where sk is the secret key.
  * @param sk The secret key.
  * @param additional_mod The additional modulus for extending the RNS of the
  * conjugation key and the ciphertext to rotate.
  * @param step The rotating step supported by this key.
- * @return RlweKsk
+ * @return RotKey
  */
-inline RlweKsk get_rot_key(const RlweSk &sk, const u64 additional_mod,
+inline RotKey get_rot_key(const RlweSk &sk, const u64 additional_mod,
                            const size_t step) {
-    return RlweKsk(cycle(sk, step), sk, additional_mod);
+    RotKey rot_key = RlweKsk(cycle(sk, step), sk, additional_mod);
+    rot_key.step = step;
+    return rot_key;
 }
 
 } // namespace hehub

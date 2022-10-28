@@ -295,6 +295,18 @@ CkksCt rotate(const CkksCt &ct, const RlweKsk &rot_key, const size_t step);
  * @brief TODO
  *
  * @param ct
+ * @param rot_key
+ * @param step
+ * @return CkksCt
+ */
+inline CkksCt rotate(const CkksCt &ct, const RotKey &rot_key) {
+    return rotate(ct, rot_key, rot_key.step);
+}
+
+/**
+ * @brief TODO
+ *
+ * @param ct
  * @param dropping_primes
  */
 void rescale_inplace(CkksCt &ct, size_t dropping_primes = 1);
