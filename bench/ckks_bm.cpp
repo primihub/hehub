@@ -12,10 +12,11 @@ TEST_CASE("benchmark ckks") {
         auto params = ckks::create_params(N, scaling_bits);
         cache_ntt_factors_strict(LOGN, params.moduli);
 
+        CkksSk sk(params);
         std::vector<cc_double> data(N / 2);
-        BENCHMARK(string("CKKS encode / N=") + to_string(N) +
+        BENCHMARK(string("CKKS encode+encrypt / N=") + to_string(N) +
                   string(" / scaling=2^") + to_string(scaling_bits)) {
-            return ckks::simd_encode(data, params);
+            return ckks::encrypt(ckks::simd_encode(data, params), sk);
         };
     }
 }
