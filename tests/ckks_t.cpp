@@ -1,10 +1,10 @@
 #include "catch2/catch.hpp"
-#include "ckks/ckks.h"
-#include "common/bigint.h"
-#include "common/mod_arith.h"
-#include "common/ntt.h"
-#include "common/permutation.h"
-#include "common/sampling.h"
+#include "fhe/ckks/ckks.h"
+#include "fhe/common/bigint.h"
+#include "fhe/common/mod_arith.h"
+#include "fhe/common/ntt.h"
+#include "fhe/common/permutation.h"
+#include "fhe/common/sampling.h"
 #include <type_traits>
 
 using namespace hehub;

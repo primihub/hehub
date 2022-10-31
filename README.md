@@ -33,7 +33,7 @@ sudo cmake --install build
 The usage of homomorphic encryption with HEhub is very simple. Below is an example computing the Basel series with the CKKS scheme.
 
 ```cpp
-#include "ckks/ckks.h"
+#include "fhe/ckks/ckks.h"
 #include <cmath>
 #include <iostream>
 

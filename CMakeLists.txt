@@ -17,7 +17,7 @@ if(HEHUB_DEBUG)
 endif()
 
 # compile the FHE library
-add_subdirectory(src/fhe)
+add_subdirectory(src)
 
 # compile the tests
 add_subdirectory(tests)

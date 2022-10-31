@@ -1,5 +1,5 @@
 #include "catch2/catch.hpp"
-#include "common/mod_arith.h"
+#include "fhe/common/mod_arith.h"
 
 using namespace hehub;
 
