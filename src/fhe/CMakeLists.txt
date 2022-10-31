@@ -29,3 +29,12 @@ add_subdirectory(primitives)
 add_subdirectory(bgv)
 add_subdirectory(ckks)
 add_subdirectory(tfhe)
+
+INSTALL(TARGETS ${PROJECT_NAME}
+       RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+       LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+       ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} 
+        DESTINATION include 
+        FILES_MATCHING PATTERN "*.h")
