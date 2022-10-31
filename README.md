@@ -67,14 +67,14 @@ int main() {
 ## Benchmarks
 We tested the performance of HEhub compiled with Clang-12.0.5 and run on an Intel i7-9750H @ 2.60GHz. _Note: The code for benchmark is still incomplete since our effort is limited currently. We will list more benchmark results later._
 
-| parameter set |  NTT  |  INTT  | CKKS<br>encode +<br>encrypt |
-| ------------- |  ---  |  ----  | --------------------------- |
-| N = 1024      |  7 us |   9 us |                             |
-| N = 2048      | 14 us |  19 us |                             |
-| N = 4096      | 30 us |  37 us |                      423 us |
-| N = 8192      | 68 us |  85 us |                    1.691 ms |
-| N = 16384     | 142 us| 195 us |                    6.885 ms |
-| N = 32768     | 330 us| 406 us |                   26.508 ms |
+| parameter set |  NTT  |  INTT  | CKKS<br>encode +<br>encrypt | CKKS<br>decrypt +<br>decode |
+| ------------- |  ---  |  ----  | --------------------------- | --------------------------- |
+| N = 1024      |  7 us |   9 us |                             |                             |
+| N = 2048      | 14 us |  19 us |                             |                             |
+| N = 4096      | 30 us |  37 us |                      426 us |                      237 us |
+| N = 8192      | 68 us |  85 us |                    1.730 ms |                      842 us |
+| N = 16384     | 142 us| 195 us |                    6.776 ms |                    3.824 ms |
+| N = 32768     | 330 us| 406 us |                   27.414 ms |                   18.623 ms |
 
 ## How to contribute
 If you want to contribute to this project, feel free to create an issue at our [Issue](https://github.com/primihub/primihub/issues) page (e.g., documentation, new idea and proposal).
