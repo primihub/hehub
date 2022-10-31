@@ -1,6 +1,6 @@
 #include "bgv.h"
-#include "common/ntt.h"
-#include "common/rns_transform.h"
+#include "fhe/common/ntt.h"
+#include "fhe/common/rns_transform.h"
 
 namespace hehub {
 namespace bgv {

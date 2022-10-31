@@ -1,7 +1,7 @@
 #include "keys.h"
-#include "common/mod_arith.h"
-#include "common/ntt.h"
-#include "common/rns_transform.h"
+#include "fhe/common/mod_arith.h"
+#include "fhe/common/ntt.h"
+#include "fhe/common/rns_transform.h"
 
 namespace hehub {
 

@@ -5,7 +5,7 @@
 
 #pragma once
 
-#include "common/rns.h"
+#include "fhe/common/rns.h"
 #include <array>
 
 namespace hehub {

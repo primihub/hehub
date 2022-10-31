@@ -1,6 +1,6 @@
 #include "catch2/catch.hpp"
-#include "ckks/ckks.h"
-#include "common/ntt.h"
+#include "fhe/ckks/ckks.h"
+#include "fhe/common/ntt.h"
 
 using namespace hehub;
 using namespace std;

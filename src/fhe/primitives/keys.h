@@ -6,7 +6,7 @@
 
 #pragma once
 
-#include "common/permutation.h"
+#include "fhe/common/permutation.h"
 #include "rgsw.h"
 #include "rlwe.h"
 

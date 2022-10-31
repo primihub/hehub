@@ -1,5 +1,5 @@
 #include "ckks.h"
-#include "common/ntt.h"
+#include "fhe/common/ntt.h"
 
 namespace hehub {
 namespace ckks {

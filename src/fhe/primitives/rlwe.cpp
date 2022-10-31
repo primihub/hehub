@@ -1,8 +1,8 @@
 #include "rlwe.h"
-#include "common/mod_arith.h"
-#include "common/ntt.h"
-#include "common/primelists.h"
-#include "common/sampling.h"
+#include "fhe/common/mod_arith.h"
+#include "fhe/common/ntt.h"
+#include "fhe/common/primelists.h"
+#include "fhe/common/sampling.h"
 
 namespace hehub {
 

@@ -1,9 +1,9 @@
 #include "ckks.h"
-#include "common/bigint.h"
-#include "common/mod_arith.h"
-#include "common/permutation.h"
-#include "common/primelists.h"
-#include "common/rns_transform.h"
+#include "fhe/common/bigint.h"
+#include "fhe/common/mod_arith.h"
+#include "fhe/common/permutation.h"
+#include "fhe/common/primelists.h"
+#include "fhe/common/rns_transform.h"
 #include <numeric>
 
 using namespace std;
