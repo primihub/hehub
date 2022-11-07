@@ -5,7 +5,11 @@
  */
 #pragma once
 
+#include "cereal/archives/binary.hpp"
+#include "cereal/types/memory.hpp"
+#include "cereal/types/vector.hpp"
 #include "type_defs.h"
+#include <iomanip>
 #include <sstream>
 #include <vector>
 
@@ -43,16 +47,7 @@ public:
 
         ComponentData &operator=(ComponentData &&moving) noexcept;
 
-        inline bool operator==(const ComponentData &other) const {
-            if (dimension_ != other.dimension_)
-                return false;
-            for (int i = 0; i < dimension_; i++) {
-                if ((*this)[i] != other[i]) {
-                    return false;
-                }
-            }
-            return true;
-        }
+        bool operator==(const ComponentData &other) const;
 
         inline bool operator!=(const ComponentData &comparing) const {
             return !((*this) == comparing);
@@ -69,6 +64,28 @@ public:
         inline u64 *end() { return data_ + dimension_; }
 
         inline const u64 *end() const { return data_ + dimension_; }
+
+        template <class Archive> std::string save_minimal(Archive &) const {
+            std::stringstream ss;
+            ss << std::hex << std::setw(8) << dimension_;
+            std::string archived = ss.str();
+            archived.resize(dimension_ * 8 + 8, 0);
+            std::copy((char *)data_, (char *)data_ + dimension_ * 8, archived.begin() + 8);
+            return archived;
+        }
+
+        template <class Archive>
+        void load_minimal(const Archive &, const std::string &archived) {
+            if (data_ != nullptr) {
+                delete [] data_;
+            }
+            dimension_ = std::stoi(archived.substr(0, 8), nullptr, 16);
+            if (archived.size() != dimension_ * 8 + 8) {
+                throw std::invalid_argument("Archived data format invalid.");
+            }
+            data_ = new u64[dimension_];
+            std::copy(archived.begin() + 8, archived.end(), (char *)data_);
+        }
 
     private:
         u64 *data_ = nullptr;
@@ -154,6 +171,14 @@ public:
     friend const RnsIntVec &operator*=(RnsIntVec &self,
                                        const std::vector<u64> &rns_scalar);
 
+    template <class Archive> void save(Archive &ar) const {
+        ar(log_dimension_, dimension_, components_, moduli_);
+    }
+
+    template <class Archive> void load(Archive &ar) {
+        ar(log_dimension_, dimension_, components_, moduli_);
+    }
+
 private:
     size_t log_dimension_ = 0;
 
@@ -179,12 +204,14 @@ public:
     friend const RnsPolynomial &operator+=(RnsPolynomial &self,
                                            const RnsPolynomial &b);
 
-    friend RnsPolynomial operator+(const RnsPolynomial &a, const RnsPolynomial &b);
+    friend RnsPolynomial operator+(const RnsPolynomial &a,
+                                   const RnsPolynomial &b);
 
     friend const RnsPolynomial &operator-=(RnsPolynomial &self,
                                            const RnsPolynomial &b);
 
-    friend RnsPolynomial operator-(const RnsPolynomial &a, const RnsPolynomial &b);
+    friend RnsPolynomial operator-(const RnsPolynomial &a,
+                                   const RnsPolynomial &b);
 
     friend const RnsPolynomial &operator*=(RnsPolynomial &self,
                                            const RnsPolynomial &b);

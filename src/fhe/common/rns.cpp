@@ -49,6 +49,17 @@ RnsIntVec::ComponentData::operator=(ComponentData &&moving) noexcept {
     return *this;
 }
 
+bool RnsIntVec::ComponentData::operator==(const ComponentData &other) const {
+    if (dimension_ != other.dimension_)
+        return false;
+    for (int i = 0; i < dimension_; i++) {
+        if ((*this)[i] != other[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 RnsIntVec::RnsIntVec(const size_t dimension, const size_t components,
                      const std::vector<u64> &moduli)
     : dimension_(dimension), components_(components),

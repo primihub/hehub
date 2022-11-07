@@ -5,6 +5,7 @@
 #include "fhe/common/permutation.h"
 #include "fhe/common/rns.h"
 #include "fhe/common/sampling.h"
+#include <fstream>
 
 using namespace hehub;
 
@@ -48,6 +49,19 @@ TEST_CASE("bit rev", "[.]") {
     REQUIRE_THROWS(__bit_rev_naive_16(12345, 10000000));
     REQUIRE_THROWS(__bit_rev_naive_16(12345, 13));
 #endif
+}
+
+TEST_CASE("serialization") {
+    std::ofstream os("out.cereal", std::ios::binary);
+    cereal::BinaryOutputArchive archive(os);
+
+    RnsPolynomial::ComponentData simple_poly(1000);
+    auto archived = simple_poly.save_minimal(archive);
+    
+    RnsPolynomial::ComponentData simple_poly2;
+    simple_poly2.load_minimal(archive, archived);
+
+    REQUIRE(simple_poly2 == simple_poly);
 }
 
 TEST_CASE("sampling", "[.]") {
