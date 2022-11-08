@@ -1,4 +1,4 @@
-#include "ckks/ckks.h"
+#include "fhe/ckks/ckks.h"
 #include <cmath>
 #include <iostream>
 #include <numeric>

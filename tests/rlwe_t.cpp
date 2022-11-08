@@ -1,5 +1,5 @@
 #include "catch2/catch.hpp"
-#include "primitives/rlwe.h"
+#include "fhe/primitives/rlwe.h"
 #include <numeric>
 
 using namespace hehub;

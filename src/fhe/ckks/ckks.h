@@ -6,10 +6,10 @@
 
 #pragma once
 
-#include "common/type_defs.h"
-#include "primitives/keys.h"
-#include "primitives/rgsw.h"
-#include "primitives/rlwe.h"
+#include "fhe/common/type_defs.h"
+#include "fhe/primitives/keys.h"
+#include "fhe/primitives/rgsw.h"
+#include "fhe/primitives/rlwe.h"
 #include <complex>
 #include <numeric>
 

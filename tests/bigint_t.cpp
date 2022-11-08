@@ -1,5 +1,5 @@
 #include "catch2/catch.hpp"
-#include "common/bigint.h"
+#include "fhe/common/bigint.h"
 #include <sstream>
 
 using namespace hehub;

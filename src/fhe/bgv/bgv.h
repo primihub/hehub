@@ -5,8 +5,8 @@
  */
 
 #pragma once
-#include "primitives/keys.h"
-#include "primitives/rlwe.h"
+#include "fhe/primitives/keys.h"
+#include "fhe/primitives/rlwe.h"
 
 namespace hehub {
 namespace bgv {

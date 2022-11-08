@@ -15,7 +15,7 @@ There are several open-sourced HE libraries so far. However, the technology of h
 HEhub currently includes the homomorphic encryption schemes BGV, CKKS, and TFHE, etc., and will further feature various schemes, frequent circuits and application interface on homomorphic encryption. As part of the PrimiHub project, HEhub is an essential tool helping us explore the field of privacy enhancing technologies.
 
 ## Building and Installation 
-Currently the library only requires header-only third-party dependencies, which need no manual pre-installation. The library is built with CMake (>= 3.14), and tested on Linux with toolchain GCC (>= 7.0) and on MacOS with toolchain Clang (>= 12.0).
+Currently the library only requires header-only third-party dependencies, which need no manual pre-installation. The library is built with CMake (>= 3.14), and tested on Linux with toolchain GCC (>= 8.0) and on MacOS with toolchain Clang (>= 12.0).
 
 To build the library, use the following command to configure and build:
 ```bash
@@ -33,7 +33,7 @@ sudo cmake --install build
 The usage of homomorphic encryption with HEhub is very simple. Below is an example computing the Basel series with the CKKS scheme.
 
 ```cpp
-#include "ckks/ckks.h"
+#include "fhe/ckks/ckks.h"
 #include <cmath>
 #include <iostream>
 
@@ -65,16 +65,16 @@ int main() {
 ```
 
 ## Benchmarks
-We tested the performance of HEhub compiled with Clang-12.0.5. _Note: The code for benchmark is still incomplete since our limited effort. We will list more benchmark results later._
+We tested the performance of HEhub compiled with Clang-12.0.5 and run on an Intel i7-9750H @ 2.60GHz. _Note: The code for benchmark is still incomplete since our effort is limited currently. We will list more benchmark results later._
 
-| parameter set |  NTT  |  INTT  |
-| ------------- |  ---  |  ----  |
-| N = 1024      |  7 us |   9 us |
-| N = 2048      | 15 us |  19 us |
-| N = 4096      | 31 us |  42 us |
-| N = 8192      | 69 us |  97 us |
-| N = 16384     | 144 us| 196 us |
-| N = 32768     | 313 us| 470 us |
+| parameter set |  NTT  |  INTT  | CKKS<br>encode +<br>encrypt | CKKS<br>decrypt +<br>decode |
+| ------------- |  ---  |  ----  | --------------------------- | --------------------------- |
+| N = 1024      |  7 us |   9 us |                             |                             |
+| N = 2048      | 14 us |  19 us |                             |                             |
+| N = 4096      | 30 us |  37 us |                      426 us |                      237 us |
+| N = 8192      | 68 us |  85 us |                    1.730 ms |                      842 us |
+| N = 16384     | 142 us| 195 us |                    6.776 ms |                    3.824 ms |
+| N = 32768     | 330 us| 406 us |                   27.414 ms |                   18.623 ms |
 
 ## How to contribute
 If you want to contribute to this project, feel free to create an issue at our [Issue](https://github.com/primihub/primihub/issues) page (e.g., documentation, new idea and proposal).

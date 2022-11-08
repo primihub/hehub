@@ -4,6 +4,7 @@ target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
 
 set(THIRD_PARTY_DIR ${PROJECT_SOURCE_DIR}/third-party)
 
+target_include_directories(${PROJECT_NAME} PUBLIC ${PROJECT_SOURCE_DIR}/src)
 target_include_directories(${PROJECT_NAME} PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(${PROJECT_NAME} PUBLIC ${THIRD_PARTY_DIR}/range-v3)
 
