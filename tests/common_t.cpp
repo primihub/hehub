@@ -1,4 +1,5 @@
 #include "catch2/catch.hpp"
+#include "cereal/archives/binary.hpp"
 #include "fhe/ckks/ckks.h"
 #include "fhe/common/mod_arith.h"
 #include "fhe/common/ntt.h"
@@ -49,19 +50,6 @@ TEST_CASE("bit rev", "[.]") {
     REQUIRE_THROWS(__bit_rev_naive_16(12345, 10000000));
     REQUIRE_THROWS(__bit_rev_naive_16(12345, 13));
 #endif
-}
-
-TEST_CASE("serialization") {
-    std::ofstream os("out.cereal", std::ios::binary);
-    cereal::BinaryOutputArchive archive(os);
-
-    RnsPolynomial::ComponentData simple_poly(1000);
-    auto archived = simple_poly.save_minimal(archive);
-    
-    RnsPolynomial::ComponentData simple_poly2;
-    simple_poly2.load_minimal(archive, archived);
-
-    REQUIRE(simple_poly2 == simple_poly);
 }
 
 TEST_CASE("sampling", "[.]") {
@@ -248,5 +236,32 @@ TEST_CASE("automorphism") {
         auto data_recovered = ckks::simd_decode<cc_double>(pt_cycled);
 
         REQUIRE(all_close(data_recovered, data_rot, pow(2.0, -45)));
+    }
+}
+
+TEST_CASE("serialization") {
+    std::stringstream ss;
+    cereal::BinaryOutputArchive oarchive(ss);
+    cereal::BinaryInputArchive iarchive(ss);
+
+    SECTION("rns poly component") {
+        using SimplePoly = RnsPolynomial::ComponentData;
+
+        SimplePoly simple_poly(1000);
+        simple_poly.save(oarchive);
+
+        SimplePoly simple_poly2;
+        simple_poly2.load(iarchive);
+
+        REQUIRE(simple_poly2 == simple_poly);
+    }
+    SECTION("rns poly") {
+        RnsPolynomial rns_poly(4096, 3, {3, 5, 7});
+        rns_poly.save(oarchive);
+
+        RnsPolynomial rns_poly2;
+        rns_poly2.load(iarchive);
+
+        REQUIRE(rns_poly2 == rns_poly);
     }
 }

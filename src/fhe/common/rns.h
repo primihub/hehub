@@ -5,8 +5,6 @@
  */
 #pragma once
 
-#include "cereal/archives/binary.hpp"
-#include "cereal/types/memory.hpp"
 #include "cereal/types/vector.hpp"
 #include "type_defs.h"
 #include <iomanip>
@@ -65,26 +63,24 @@ public:
 
         inline const u64 *end() const { return data_ + dimension_; }
 
-        template <class Archive> std::string save_minimal(Archive &) const {
-            std::stringstream ss;
-            ss << std::hex << std::setw(8) << dimension_;
-            std::string archived = ss.str();
-            archived.resize(dimension_ * 8 + 8, 0);
-            std::copy((char *)data_, (char *)data_ + dimension_ * 8, archived.begin() + 8);
-            return archived;
+        template <class Archive> void save(Archive &ar) const {
+            ar(dimension_);
+
+            std::vector<u64> data_vec(dimension_);
+            std::copy(data_, data_ + dimension_, data_vec.begin());
+            ar(data_vec);
         }
 
         template <class Archive>
-        void load_minimal(const Archive &, const std::string &archived) {
+        void load(Archive &ar) {
             if (data_ != nullptr) {
                 delete [] data_;
             }
-            dimension_ = std::stoi(archived.substr(0, 8), nullptr, 16);
-            if (archived.size() != dimension_ * 8 + 8) {
-                throw std::invalid_argument("Archived data format invalid.");
-            }
+
+            std::vector<u64> data_vec;
+            ar(dimension_, data_vec);
             data_ = new u64[dimension_];
-            std::copy(archived.begin() + 8, archived.end(), (char *)data_);
+            std::copy(data_vec.begin(), data_vec.end(), data_);
         }
 
     private:
