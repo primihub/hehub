@@ -50,6 +50,16 @@ CkksParams create_params(size_t dimension, std::vector<size_t> moduli_bits,
  */
 CkksParams create_params(size_t dimension, size_t initial_scaling_bits);
 
+template <class Archive> void save(Archive &ar, const CkksParams &params) {
+    ar((const RlweParams &)params, params.additional_mod,
+       params.initial_scaling_factor);
+}
+
+template <class Archive> void load(Archive &ar, CkksParams &params) {
+    ar((RlweParams &)params, params.additional_mod,
+       params.initial_scaling_factor);
+}
+
 /**
  * @brief TODO
  *
@@ -65,6 +75,14 @@ struct CkksPt : public RlwePt {
     double scaling_factor = 1.0;
 };
 
+template <class Archive> void save(Archive &ar, const CkksPt &pt) {
+    ar((const RlwePt &)pt, pt.scaling_factor);
+}
+
+template <class Archive> void load(Archive &ar, CkksPt &pt) {
+    ar((RlwePt &)pt, pt.scaling_factor);
+}
+
 /**
  * @brief TODO
  *
@@ -79,6 +97,14 @@ struct CkksCt : public RlweCt {
     /// @brief TODO
     double scaling_factor = 1.0;
 };
+
+template <class Archive> void save(Archive &ar, const CkksCt &ct) {
+    ar((const RlweCt &)ct, ct.scaling_factor);
+}
+
+template <class Archive> void load(Archive &ar, CkksCt &ct) {
+    ar((RlweCt &)ct, ct.scaling_factor);
+}
 
 /**
  * @brief TODO

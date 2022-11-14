@@ -21,6 +21,11 @@ public:
         size_t component_count;
 
         std::vector<u64> moduli;
+
+        inline bool operator==(const Params &other) const {
+            return dimension == other.dimension && component_count ==
+                       other.component_count && moduli == other.moduli;
+        }
     };
 
     class ComponentData {
@@ -71,10 +76,9 @@ public:
             ar(data_vec);
         }
 
-        template <class Archive>
-        void load(Archive &ar) {
+        template <class Archive> void load(Archive &ar) {
             if (data_ != nullptr) {
-                delete [] data_;
+                delete[] data_;
             }
 
             std::vector<u64> data_vec;
@@ -167,13 +171,10 @@ public:
     friend const RnsIntVec &operator*=(RnsIntVec &self,
                                        const std::vector<u64> &rns_scalar);
 
-    template <class Archive> void save(Archive &ar) const {
-        ar(log_dimension_, dimension_, components_, moduli_);
-    }
+    template <class Archive>
+    friend void save(Archive &ar, const RnsIntVec &vec);
 
-    template <class Archive> void load(Archive &ar) {
-        ar(log_dimension_, dimension_, components_, moduli_);
-    }
+    template <class Archive> friend void load(Archive &ar, RnsIntVec &vec);
 
 private:
     size_t log_dimension_ = 0;
@@ -221,6 +222,11 @@ public:
     friend const RnsPolynomial &operator*=(RnsPolynomial &self,
                                            const std::vector<u64> &rns_scalar);
 
+    template <class Archive>
+    friend void save(Archive &ar, const RnsPolynomial &poly);
+
+    template <class Archive> friend void load(Archive &ar, RnsPolynomial &poly);
+
     /// Representation form of the polynomial, default being coefficients.
     /// This is set to be publicly visible in order to enable possible tweaks.
     RepForm rep_form = RepForm::coeff;
@@ -229,6 +235,14 @@ public:
 using RnsPolyParams = RnsPolynomial::Params;
 
 using PolyRepForm = RnsPolynomial::RepForm;
+
+template <class Archive> void save(Archive &ar, const RnsPolyParams &params) {
+    ar(params.dimension, params.component_count, params.moduli);
+}
+
+template <class Archive> void load(Archive &ar, RnsPolyParams &params) {
+    ar(params.dimension, params.component_count, params.moduli);
+}
 
 const RnsIntVec &operator+=(RnsIntVec &self, const RnsIntVec &b);
 
@@ -269,6 +283,14 @@ inline RnsIntVec operator*(const RnsIntVec &int_vec,
     auto int_vec_copy(int_vec);
     int_vec_copy *= rns_scalar;
     return int_vec_copy;
+}
+
+template <class Archive> void save(Archive &ar, const RnsIntVec &vec) {
+    ar(vec.log_dimension_, vec.dimension_, vec.components_, vec.moduli_);
+}
+
+template <class Archive> void load(Archive &ar, RnsIntVec &vec) {
+    ar(vec.log_dimension_, vec.dimension_, vec.components_, vec.moduli_);
 }
 
 #ifdef HEHUB_DEBUG_FHE
@@ -348,6 +370,14 @@ inline RnsPolynomial operator*(const RnsPolynomial &poly,
     auto poly_copy(poly);
     poly_copy *= rns_scalar;
     return poly_copy;
+}
+
+template <class Archive> void save(Archive &ar, const RnsPolynomial &poly) {
+    ar((const RnsIntVec &)poly, poly.rep_form);
+}
+
+template <class Archive> void load(Archive &ar, RnsPolynomial &poly) {
+    ar((RnsIntVec &)poly, poly.rep_form);
 }
 
 } // namespace hehub

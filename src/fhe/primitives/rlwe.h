@@ -5,6 +5,7 @@
 
 #pragma once
 
+#include "cereal/types/array.hpp"
 #include "fhe/common/rns.h"
 #include <array>
 
@@ -35,7 +36,7 @@ struct RlweSk : public RnsPolynomial {
     using RnsPolynomial::RnsPolynomial;
 
     /// Create an empty (uninitialized) RLWE secret key.
-    RlweSk();
+    RlweSk() {}
 
     /// @brief TODO
     /// @param rns_poly

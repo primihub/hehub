@@ -6,6 +6,7 @@
 #include "fhe/common/permutation.h"
 #include "fhe/common/rns.h"
 #include "fhe/common/sampling.h"
+#include "fhe/primitives/rlwe.h"
 #include <fstream>
 
 using namespace hehub;
@@ -247,7 +248,7 @@ TEST_CASE("serialization") {
     SECTION("rns poly component") {
         using SimplePoly = RnsPolynomial::ComponentData;
 
-        SimplePoly simple_poly(1000);
+        SimplePoly simple_poly(8);
         simple_poly.save(oarchive);
 
         SimplePoly simple_poly2;
@@ -256,12 +257,67 @@ TEST_CASE("serialization") {
         REQUIRE(simple_poly2 == simple_poly);
     }
     SECTION("rns poly") {
-        RnsPolynomial rns_poly(4096, 3, {3, 5, 7});
-        rns_poly.save(oarchive);
+        RlweParams params{4096, 3, {3, 5, 7}};
+        RnsPolynomial rns_poly(params);
+        rns_poly.rep_form = GENERATE(PolyRepForm::coeff, PolyRepForm::value);
+        save(oarchive, rns_poly);
 
         RnsPolynomial rns_poly2;
-        rns_poly2.load(iarchive);
+        load(iarchive, rns_poly2);
 
         REQUIRE(rns_poly2 == rns_poly);
+    }
+    SECTION("rlwe params") {
+        RlweParams params = create_params(8, {30, 30});
+        save(oarchive, params);
+
+        RlweParams params2;
+        load(iarchive, params2);
+
+        REQUIRE(params2 == params);
+    }
+#ifdef HEHUB_DEBUG_FHE
+    SECTION("rlwe sk") {
+        RlweParams params = create_params(8, {30, 30});
+        RlweSk sk(params);
+        save(oarchive, sk);
+
+        RlweSk sk2;
+        load(iarchive, sk2);
+
+        REQUIRE(sk2 == sk);
+    }
+#endif
+    SECTION("rlwe") {
+        RlweParams params = create_params(8, {30, 30});
+        RlweSk sk(params);
+        RlweCt ct = get_rlwe_sample(sk);
+        save(oarchive, ct);
+
+        RlweCt ct2;
+        load(iarchive, ct2);
+
+        REQUIRE(ct2 == ct);
+    }
+    SECTION("ckks params") {
+        CkksParams params = ckks::create_params(8, {30, 30}, 30, pow(2.0, 30));
+        save(oarchive, params);
+
+        CkksParams params2;
+        load(iarchive, params2);
+
+        REQUIRE(params2 == params);
+    }
+    SECTION("ckks ct") {
+        CkksParams params = ckks::create_params(8, {30, 30}, 30, pow(2.0, 30));
+        CkksSk sk(params);
+        CkksCt ct = get_rlwe_sample(sk);
+        ct.scaling_factor = params.initial_scaling_factor;
+        save(oarchive, ct);
+
+        CkksCt ct2;
+        load(iarchive, ct2);
+
+        REQUIRE(ct2 == ct);
     }
 }
