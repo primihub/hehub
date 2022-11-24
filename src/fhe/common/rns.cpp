@@ -7,48 +7,6 @@ using namespace ranges::views;
 
 namespace hehub {
 
-RnsIntVec::ComponentData::ComponentData(const size_t dimension)
-    : dimension_(dimension), data_(new u64[dimension]) {}
-
-RnsIntVec::ComponentData::ComponentData(const ComponentData &other)
-    : dimension_(other.dimension_), data_(new u64[other.dimension_]) {
-    std::copy(other.data_, other.data_ + dimension_, data_);
-}
-
-RnsIntVec::ComponentData::~ComponentData() {
-    if (data_ != nullptr) {
-        delete[] data_;
-    }
-}
-
-RnsIntVec::ComponentData &
-RnsIntVec::ComponentData::operator=(const ComponentData &copying) {
-    if (dimension_ != copying.dimension_) {
-        if (data_ != nullptr) {
-            delete[] data_;
-        }
-        dimension_ = copying.dimension_;
-        data_ = new u64[copying.dimension_];
-    }
-    std::copy(copying.data_, copying.data_ + dimension_, data_);
-    return *this;
-}
-
-RnsIntVec::ComponentData &
-RnsIntVec::ComponentData::operator=(ComponentData &&moving) noexcept {
-    if (this == &moving) {
-        return *this;
-    }
-
-    dimension_ = moving.dimension_;
-    if (data_ != nullptr) {
-        delete[] data_;
-    }
-    data_ = moving.data_;
-    moving.data_ = nullptr;
-    return *this;
-}
-
 RnsIntVec::RnsIntVec(const size_t dimension, const size_t components,
                      const std::vector<u64> &moduli)
     : dimension_(dimension), components_(components),

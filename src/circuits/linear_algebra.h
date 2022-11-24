@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "primitives/keys.h"
-#include "ckks/ckks.h"
+#include "fhe/primitives/keys.h"
+#include "fhe/ckks/ckks.h"
 
 namespace hehub {
 
