@@ -13,7 +13,7 @@ class Poolable {
 public:
     Poolable() {}
 
-    virtual void real_release() = 0;
+    virtual void release() = 0;
 };
 
 // template <typename T, typename std::enable_if_t<
@@ -34,7 +34,7 @@ struct SimpleObjPool {
         }
 
         for (auto obj_ptr : objects) {
-            obj_ptr->real_release();
+            obj_ptr->release();
         }
     }
 };
@@ -54,7 +54,7 @@ public:
 
     AutopoolArray(AutopoolArray &&other) noexcept { *this = std::move(other); }
 
-    ~AutopoolArray() { fake_release(); }
+    ~AutopoolArray() { cache(); }
 
     inline T &operator[](const int idx) { return data_[idx]; }
 
@@ -62,7 +62,7 @@ public:
 
     AutopoolArray &operator=(const AutopoolArray &copying) {
         if (dimension_ != copying.dimension_) {
-            fake_release();
+            cache();
             require(copying.dimension_);
         }
         std::copy(copying.data_, copying.data_ + dimension_, data_);
@@ -74,11 +74,12 @@ public:
             return *this;
         }
 
+        aff_pool_ = moving.aff_pool_;
         if (!aff_pool_) {
             init_aff_pool(moving.dimension_);
         }
         if (aff_pool_->objects.find(this) != aff_pool_->objects.end()) {
-            fake_release();
+            cache();
         } else {
             aff_pool_->objects.insert(this);
         }
@@ -147,7 +148,7 @@ public:
         }
     }
 
-    void fake_release() {
+    void cache() {
         dimension_ = 0;
         if (data_ == nullptr) {
             return;
@@ -156,7 +157,7 @@ public:
         aff_pool_->cached_list.push(this);
     }
 
-    void real_release() {
+    void release() {
         dimension_ = 0;
         if (data_ != nullptr) {
             delete[] data_;
