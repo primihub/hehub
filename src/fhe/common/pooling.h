@@ -1,6 +1,7 @@
 #pragma once
 
 #include "type_defs.h"
+#include <cassert>
 #include <map>
 #include <set>
 #include <stack>
@@ -44,11 +45,9 @@ template <typename T> class AutopoolArray : public Poolable {
 public:
     AutopoolArray() {}
 
-    AutopoolArray(const size_t dimension) {
-        require(dimension);
-    }
+    AutopoolArray(const size_t dimension) { require(dimension); }
 
-    AutopoolArray(const AutopoolArray &other){
+    AutopoolArray(const AutopoolArray &other) {
         require(other.dimension_);
         std::copy(other.data_, other.data_ + dimension_, data_);
     }
@@ -75,11 +74,22 @@ public:
             return *this;
         }
 
-        fake_release();
-        dimension_ = moving.dimension_;
-        data_ = moving.data_;
+        if (!aff_pool_) {
+            init_aff_pool(moving.dimension_);
+        }
+        if (aff_pool_->objects.find(this) != aff_pool_->objects.end()) {
+            fake_release();
+        } else {
+            aff_pool_->objects.insert(this);
+        }
 
-        moving.fake_release();
+        dimension_ = moving.dimension_;
+        moving.dimension_ = 0;
+        data_ = moving.data_;
+        moving.data_ = nullptr;
+        assert(aff_pool_->objects.find(&moving) != aff_pool_->objects.end());
+        aff_pool_->objects.erase(aff_pool_->objects.find(&moving));
+
         return *this;
     }
 
@@ -110,26 +120,30 @@ public:
 
     inline const T *end() const { return data_ + dimension_; }
 
+    void init_aff_pool(size_t dimension) {
+        auto pool_iter = general_pool_.find(dimension);
+        if (pool_iter == general_pool_.end()) {
+            general_pool_.insert(std::make_pair(
+                dimension, SimpleObjPool<AutopoolArray<T> *>{}));
+            pool_iter = general_pool_.find(dimension);
+        }
+        aff_pool_ = &pool_iter->second;
+    }
+
     void require(size_t dimension) {
         if (!aff_pool_) {
-            auto pool_iter = general_pool_.find(dimension);
-            if (pool_iter == general_pool_.end()) {
-                general_pool_.insert(std::make_pair(
-                    dimension, SimpleObjPool<AutopoolArray<T> *>{}));
-                pool_iter = general_pool_.find(dimension);
-            }
-            aff_pool_ = &pool_iter->second;
+            init_aff_pool(dimension);
         }
 
+        dimension_ = dimension;
         if (aff_pool_->cached_list.empty()) {
-            dimension_ = dimension;
             data_ = new T[dimension];
             aff_pool_->objects.insert(this);
         } else {
             auto latest_released = aff_pool_->cached_list.top();
             *this = std::move(*latest_released);
             aff_pool_->cached_list.pop();
-            aff_pool_->objects.insert(this);
+            // aff_pool_->objects.insert(this);
         }
     }
 
