@@ -14,23 +14,23 @@ TEST_CASE("pooling") {
 
     SimplePoly p1(N);
     auto &pool = p1.aff_pool();
-    REQUIRE(pool.objects.size() == 1);
+    REQUIRE(pool.arrays.size() == 1);
     REQUIRE(pool.cached_list.empty());
 
     SimplePoly p2 = p1;
-    REQUIRE(pool.objects.size() == 2);
+    REQUIRE(pool.arrays.size() == 2);
     REQUIRE(pool.cached_list.empty());
 
     SimplePoly p3(std::move(p1));
-    REQUIRE(pool.objects.size() == 2);
+    REQUIRE(pool.arrays.size() == 2);
     REQUIRE(pool.cached_list.empty());
 
-    SimplePoly *record;
+    u64 *record;
     {
         SimplePoly temp(N);
-        record = &temp;
+        record = temp.data();
     }
-    REQUIRE(pool.objects.size() == 3);
+    REQUIRE(pool.arrays.size() == 3);
     REQUIRE(!pool.cached_list.empty());
     REQUIRE(pool.cached_list.top() == record);
 }

@@ -9,38 +9,30 @@
 
 namespace hehub {
 
-class Poolable {
+// class Poolable {
+// public:
+//     Poolable() {}
+
+//     virtual void release() = 0;
+// };
+
+// template <typename T> class AutopoolArray : public Poolable {
+template <typename T> class AutopoolArray {
 public:
-    Poolable() {}
+    struct Allocator {
+        std::stack<T *> cached_list;
 
-    virtual void release() = 0;
-};
+        std::set<T *> arrays;
 
-// template <typename T, typename std::enable_if_t<
-//                           std::is_pointer_v<T> &&
-//                           std::is_base_of_v<Poolable,
-//                           std::remove_pointer_t<T>>>
-//                           * = nullptr>
-template <typename T,
-          typename std::enable_if_t<std::is_pointer_v<T>> * = nullptr>
-struct SimpleObjPool {
-    std::stack<T> cached_list;
+        ~Allocator() {
+            std::stack<T *>().swap(cached_list);
 
-    std::set<T> objects;
-
-    ~SimpleObjPool() {
-        std::stack<T>().swap(cached_list);
-
-        for (auto obj_ptr : objects) {
-            obj_ptr->release();
+            for (auto obj_ptr : arrays) {
+                delete[] obj_ptr;
+            }
+            std::set<T *>().swap(arrays);
         }
-    }
-};
-
-template <typename T> class AutopoolArray : public Poolable {
-    static std::map<size_t, SimpleObjPool<AutopoolArray<T> *>> general_pool_;
-
-public:
+    };
     AutopoolArray() {}
 
     AutopoolArray(const size_t dimension) { require(dimension); }
@@ -72,22 +64,20 @@ public:
             return *this;
         }
 
-        aff_pool_ = moving.aff_pool_;
-        if (!aff_pool_) {
+        allocator_ = moving.allocator_;
+        if (!allocator_) {
             init_aff_pool(moving.dimension_);
         }
-        if (aff_pool_->objects.find(this) != aff_pool_->objects.end()) {
+        if (allocator_->arrays.find(data_) != allocator_->arrays.end()) {
             cache();
-        } else {
-            aff_pool_->objects.insert(this);
         }
 
+        assert(allocator_->arrays.find(moving.data_) !=
+               allocator_->arrays.end());
         dimension_ = moving.dimension_;
         moving.dimension_ = 0;
         data_ = moving.data_;
         moving.data_ = nullptr;
-        assert(aff_pool_->objects.find(&moving) != aff_pool_->objects.end());
-        aff_pool_->objects.erase(aff_pool_->objects.find(&moving));
 
         return *this;
     }
@@ -119,61 +109,56 @@ public:
 
     inline const T *end() const { return data_ + dimension_; }
 
-    inline const auto &aff_pool() const { return *aff_pool_; }
+    inline const auto &aff_pool() const { return *allocator_; }
 
     void init_aff_pool(size_t dimension) {
         auto pool_iter = general_pool_.find(dimension);
         if (pool_iter == general_pool_.end()) {
-            general_pool_.insert(std::make_pair(
-                dimension, SimpleObjPool<AutopoolArray<T> *>{}));
+            general_pool_.insert(std::make_pair(dimension, Allocator{}));
             pool_iter = general_pool_.find(dimension);
         }
-        aff_pool_ = &pool_iter->second;
+        allocator_ = &pool_iter->second;
     }
 
     void require(size_t dimension) {
-        if (!aff_pool_) {
+        if (!allocator_) {
             init_aff_pool(dimension);
         }
 
         dimension_ = dimension;
-        if (aff_pool_->cached_list.empty()) {
+        if (allocator_->cached_list.empty()) {
             data_ = new T[dimension];
-            aff_pool_->objects.insert(this);
+            allocator_->arrays.insert(data_);
         } else {
-            auto latest_released = aff_pool_->cached_list.top();
-            *this = std::move(*latest_released);
-            aff_pool_->cached_list.pop();
-            // aff_pool_->objects.insert(this);
+            auto latest_released = allocator_->cached_list.top();
+            data_ = latest_released;
+            allocator_->cached_list.pop();
         }
     }
 
     void cache() {
         dimension_ = 0;
         if (data_ == nullptr) {
+            allocator_ = nullptr;
             return;
         }
 
-        aff_pool_->cached_list.push(this);
-    }
-
-    void release() {
-        dimension_ = 0;
-        if (data_ != nullptr) {
-            delete[] data_;
-        }
+        allocator_->cached_list.push(data_);
+        allocator_ = nullptr;
     }
 
 private:
+    static std::map<size_t, Allocator> general_pool_;
+
     T *data_ = nullptr;
 
     size_t dimension_ = 0;
 
-    SimpleObjPool<AutopoolArray<T> *> *aff_pool_ = nullptr;
+    Allocator *allocator_ = nullptr;
 };
 
 template <typename T>
-std::map<size_t, SimpleObjPool<AutopoolArray<T> *>>
+std::map<size_t, typename AutopoolArray<T>::Allocator>
     AutopoolArray<T>::general_pool_;
 
 } // namespace hehub
