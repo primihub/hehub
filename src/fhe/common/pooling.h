@@ -29,9 +29,7 @@ struct SimpleObjPool {
     std::set<T> objects;
 
     ~SimpleObjPool() {
-        while (!cached_list.empty()) {
-            cached_list.pop();
-        }
+        std::stack<T>().swap(cached_list);
 
         for (auto obj_ptr : objects) {
             obj_ptr->release();
@@ -120,6 +118,8 @@ public:
     inline T *end() { return data_ + dimension_; }
 
     inline const T *end() const { return data_ + dimension_; }
+
+    inline const auto &aff_pool() const { return *aff_pool_; }
 
     void init_aff_pool(size_t dimension) {
         auto pool_iter = general_pool_.find(dimension);

@@ -8,6 +8,33 @@
 
 using namespace hehub;
 
+TEST_CASE("pooling") {
+    using SimplePoly = RnsPolynomial::ComponentData;
+    const size_t N = 4096;
+
+    SimplePoly p1(N);
+    auto &pool = p1.aff_pool();
+    REQUIRE(pool.objects.size() == 1);
+    REQUIRE(pool.cached_list.empty());
+
+    SimplePoly p2 = p1;
+    REQUIRE(pool.objects.size() == 2);
+    REQUIRE(pool.cached_list.empty());
+
+    SimplePoly p3(std::move(p1));
+    REQUIRE(pool.objects.size() == 2);
+    REQUIRE(pool.cached_list.empty());
+
+    SimplePoly *record;
+    {
+        SimplePoly temp(N);
+        record = &temp;
+    }
+    REQUIRE(pool.objects.size() == 3);
+    REQUIRE(!pool.cached_list.empty());
+    REQUIRE(pool.cached_list.top() == record);
+}
+
 TEST_CASE("RNS polynomial") {
     RnsPolynomial r1(4096, 3, std::vector<u64>{3, 5, 7});
 
