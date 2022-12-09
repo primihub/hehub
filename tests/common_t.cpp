@@ -8,31 +8,32 @@
 
 using namespace hehub;
 
-TEST_CASE("pooling") {
-    using SimplePoly = RnsPolynomial::ComponentData;
+TEST_CASE("allocation") {
+    using SimplePoly = SmartArray<u64>;
     const size_t N = 4096;
 
     SimplePoly p1(N);
-    auto &pool = p1.aff_pool();
-    REQUIRE(pool.arrays.size() == 1);
-    REQUIRE(pool.cached_list.empty());
+    const auto &allocator = p1.aff_allocator();
+    REQUIRE(allocator.get_blocks_total() == 1);
+    REQUIRE(allocator.get_blocks_in_use() == 1);
+    REQUIRE(allocator.get_blocks_free() == 0);
 
     SimplePoly p2 = p1;
-    REQUIRE(pool.arrays.size() == 2);
-    REQUIRE(pool.cached_list.empty());
+    REQUIRE(allocator.get_blocks_total() == 2);
+    REQUIRE(allocator.get_blocks_in_use() == 2);
+    REQUIRE(allocator.get_blocks_free() == 0);
 
     SimplePoly p3(std::move(p1));
-    REQUIRE(pool.arrays.size() == 2);
-    REQUIRE(pool.cached_list.empty());
+    REQUIRE(allocator.get_blocks_total() == 2);
+    REQUIRE(allocator.get_blocks_in_use() == 2);
+    REQUIRE(allocator.get_blocks_free() == 0);
 
-    u64 *record;
     {
         SimplePoly temp(N);
-        record = temp.data();
     }
-    REQUIRE(pool.arrays.size() == 3);
-    REQUIRE(!pool.cached_list.empty());
-    REQUIRE(pool.cached_list.top() == record);
+    REQUIRE(allocator.get_blocks_total() == 3);
+    REQUIRE(allocator.get_blocks_in_use() == 2);
+    REQUIRE(allocator.get_blocks_free() == 1);
 }
 
 TEST_CASE("RNS polynomial") {

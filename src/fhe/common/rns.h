@@ -22,7 +22,7 @@ public:
         std::vector<u64> moduli;
     };
 
-    using ComponentData = AutopoolArray<u64>;
+    using ComponentData = SmartArray<u64>;
 
     enum class RepForm { coeff, value };
 
