@@ -5,6 +5,7 @@
  */
 #pragma once
 
+#include "allocator.h"
 #include "type_defs.h"
 #include <sstream>
 #include <vector>
@@ -21,60 +22,7 @@ public:
         std::vector<u64> moduli;
     };
 
-    class ComponentData {
-    public:
-        ComponentData() {}
-
-        ComponentData(const size_t dimension);
-
-        ComponentData(const ComponentData &other);
-
-        ComponentData(ComponentData &&other) noexcept {
-            *this = std::move(other);
-        }
-
-        ~ComponentData();
-
-        inline u64 &operator[](const int idx) { return data_[idx]; }
-
-        inline const u64 operator[](const int idx) const { return data_[idx]; }
-
-        ComponentData &operator=(const ComponentData &copying);
-
-        ComponentData &operator=(ComponentData &&moving) noexcept;
-
-        inline bool operator==(const ComponentData &other) const {
-            if (dimension_ != other.dimension_)
-                return false;
-            for (int i = 0; i < dimension_; i++) {
-                if ((*this)[i] != other[i]) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        inline bool operator!=(const ComponentData &comparing) const {
-            return !((*this) == comparing);
-        }
-
-        inline u64 *data() { return data_; }
-
-        inline const u64 *data() const { return data_; }
-
-        inline u64 *begin() { return data_; }
-
-        inline const u64 *begin() const { return data_; }
-
-        inline u64 *end() { return data_ + dimension_; }
-
-        inline const u64 *end() const { return data_ + dimension_; }
-
-    private:
-        u64 *data_ = nullptr;
-
-        size_t dimension_ = 0;
-    };
+    using ComponentData = SmartArray<u64>;
 
     enum class RepForm { coeff, value };
 
@@ -181,12 +129,14 @@ public:
     friend const RnsPolynomial &operator+=(RnsPolynomial &self,
                                            const RnsPolynomial &b);
 
-    friend RnsPolynomial operator+(const RnsPolynomial &a, const RnsPolynomial &b);
+    friend RnsPolynomial operator+(const RnsPolynomial &a,
+                                   const RnsPolynomial &b);
 
     friend const RnsPolynomial &operator-=(RnsPolynomial &self,
                                            const RnsPolynomial &b);
 
-    friend RnsPolynomial operator-(const RnsPolynomial &a, const RnsPolynomial &b);
+    friend RnsPolynomial operator-(const RnsPolynomial &a,
+                                   const RnsPolynomial &b);
 
     friend const RnsPolynomial &operator*=(RnsPolynomial &self,
                                            const RnsPolynomial &b);

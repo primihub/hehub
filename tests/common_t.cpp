@@ -8,6 +8,34 @@
 
 using namespace hehub;
 
+TEST_CASE("allocation") {
+    using SimplePoly = SmartArray<u64>;
+    const size_t N = 4096;
+
+    SimplePoly p1(N);
+    const auto &allocator = p1.aff_allocator();
+    REQUIRE(allocator.get_blocks_total() == 1);
+    REQUIRE(allocator.get_blocks_in_use() == 1);
+    REQUIRE(allocator.get_blocks_free() == 0);
+
+    SimplePoly p2 = p1;
+    REQUIRE(allocator.get_blocks_total() == 2);
+    REQUIRE(allocator.get_blocks_in_use() == 2);
+    REQUIRE(allocator.get_blocks_free() == 0);
+
+    SimplePoly p3(std::move(p1));
+    REQUIRE(allocator.get_blocks_total() == 2);
+    REQUIRE(allocator.get_blocks_in_use() == 2);
+    REQUIRE(allocator.get_blocks_free() == 0);
+
+    {
+        SimplePoly temp(N);
+    }
+    REQUIRE(allocator.get_blocks_total() == 3);
+    REQUIRE(allocator.get_blocks_in_use() == 2);
+    REQUIRE(allocator.get_blocks_free() == 1);
+}
+
 TEST_CASE("RNS polynomial") {
     RnsPolynomial r1(4096, 3, std::vector<u64>{3, 5, 7});
 

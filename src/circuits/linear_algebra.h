@@ -6,8 +6,8 @@
 
 #pragma once
 
-#include "ckks/ckks.h"
-#include "primitives/keys.h"
+#include "fhe/ckks/ckks.h"
+#include "fhe/primitives/keys.h"
 #include "range/v3/view/iota.hpp"
 #include <vector>
 
