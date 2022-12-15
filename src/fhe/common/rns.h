@@ -99,6 +99,8 @@ public:
                components_ == other.components_;
     }
 
+    inline Params params() const { return Params {dimension_, components_.size(), moduli_}; }
+
     inline const size_t component_count() const { return components_.size(); }
 
     inline const size_t log_dimension() const { return log_dimension_; }
