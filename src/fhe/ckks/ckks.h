@@ -45,7 +45,8 @@ CkksParams create_params(size_t dimension, std::vector<size_t> moduli_bits,
  * @brief Create a params object, which automatically determines the dimension,
  * moduli and initial scaling factor.
  * @param dimension The RLWE dimension.
- * @param initial_scaling_bits log2 value of the initial scaling factor.
+ * @param initial_scaling_bits log2 value of the initial scaling factor (≈ your
+ * data precision bits + 5).
  * @return CkksParams
  */
 CkksParams create_params(size_t dimension, size_t initial_scaling_bits);
