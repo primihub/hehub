@@ -3,6 +3,7 @@
 #include "type_defs.h"
 #include <cassert>
 #include <map>
+#include <mutex>
 #include <set>
 #include <stack>
 #include <type_traits>
@@ -25,6 +26,7 @@ public:
     /// @return Returns pointer to the block. Otherwise nullptr if
     /// unsuccessful.
     void *allocate() {
+        std::lock_guard<std::mutex> lock(mtx_);
         // If can't obtain existing block then get a new one
         void *block = _pop();
         if (!block) {
@@ -43,6 +45,7 @@ public:
     /// @param[in] to_cache - block of memory deallocate (i.e push onto
     /// free-list)
     void deallocate(void *to_cache) {
+        std::lock_guard<std::mutex> lock(mtx_);
         _push(to_cache);
         blocks_in_use_--;
         blocks_free_++;
@@ -90,6 +93,8 @@ private:
     struct Block {
         Block *next_;
     };
+
+    std::mutex mtx_;
 
     const size_t block_size_;
 
@@ -184,13 +189,9 @@ public:
     inline const auto &aff_allocator() const { return *aff_allocator_; }
 
     void init_allocator(size_t dimension) {
-        auto allocator_iter = allocator_hub_.find(dimension);
-        if (allocator_iter == allocator_hub_.end()) {
-            allocator_hub_.insert(
-                std::make_pair(dimension, FixedBlockAllocator<T>(dimension)));
-            allocator_iter = allocator_hub_.find(dimension);
-        }
-        aff_allocator_ = &allocator_iter->second;
+        auto [it, inserted] =
+            allocator_hub_.try_emplace(dimension, dimension);
+        aff_allocator_ = &it->second;
     }
 
     inline void require(size_t dimension) {
