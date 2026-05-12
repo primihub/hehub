@@ -75,6 +75,7 @@ const RnsIntVec &operator+=(RnsIntVec &self, const RnsIntVec &b) {
     for (auto &m : moduli_doubled) {
         m *= 2;
     }
+    #pragma omp parallel for
     for (size_t k = 0; k < components; k++) {
         for (size_t i = 0; i < dimension; i++) {
             self[k][i] += b[k][i];
@@ -106,6 +107,7 @@ const RnsIntVec &operator-=(RnsIntVec &self, const RnsIntVec &b) {
     for (auto &m : moduli_doubled) {
         m *= 2;
     }
+    #pragma omp parallel for
     for (size_t k = 0; k < components; k++) {
         for (size_t i = 0; i < dimension; i++) {
             self[k][i] += moduli_doubled[k] - b[k][i];
@@ -131,6 +133,7 @@ RnsIntVec operator*(const RnsIntVec &a, const RnsIntVec &b) {
     }
 
     RnsIntVec result(RnsIntVec::Params{dimension, components, moduli});
+    #pragma omp parallel for
     for (size_t k = 0; k < components; k++) {
         batched_mul_mod_hybrid_lazy(moduli[k], dimension, a[k].data(),
                                     b[k].data(), result[k].data());

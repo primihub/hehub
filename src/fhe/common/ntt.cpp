@@ -3,6 +3,7 @@
 #include "permutation.h"
 #include <cmath>
 #include <map>
+#include <vector>
 
 namespace hehub {
 
@@ -182,7 +183,9 @@ void intt_negacyclic_inplace_lazy(const size_t log_dimension, const u64 modulus,
     const auto &intt_factors =
         __find_or_create_ntt_factors(modulus, log_dimension, true);
 
-    u64 values_shuffled[dimension];
+    // Use heap-allocated buffer instead of VLA to avoid stack overflow
+    // on large dimensions (e.g. N=32768 would need 256KB on stack).
+    std::vector<u64> values_shuffled(dimension);
     const auto &shuffled_indices = intt_factors.shuffled_indices;
     for (size_t i = 0; i < dimension; i++) {
         values_shuffled[i] = values[shuffled_indices[i]];
@@ -207,17 +210,16 @@ void intt_negacyclic_inplace_lazy(const size_t log_dimension, const u64 modulus,
         }
     }
 
-    for (size_t i = 0; i < dimension; i++) {
-        values[i] = values_shuffled[shuffled_indices[i]];
-    }
-
+    // Combine bit-reversal gather with scaling in a single pass:
+    // read shuffled in bit-reversed order, scale, write to values sequentially.
     const u64 log_modulus = (u64)(log2(modulus) + 0.5);
     const u64 div_fix = (modulus >= (1ULL << log_modulus)) ? 1 : 0;
     idx++;
     for (size_t i = 0; i < dimension; i++, idx++) {
-        values[i] -= ((values[i] >> log_modulus) - div_fix) * modulus;
+        u64 val = values_shuffled[shuffled_indices[i]];
+        val -= ((val >> log_modulus) - div_fix) * modulus;
         values[i] =
-            mul_mod_harvey_lazy(modulus, values[i], intt_factors.seq[idx],
+            mul_mod_harvey_lazy(modulus, val, intt_factors.seq[idx],
                                 intt_factors.seq_harvey[idx]);
     }
 }

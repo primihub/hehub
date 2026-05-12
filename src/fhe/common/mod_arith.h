@@ -64,10 +64,12 @@ inline void batched_reduce_strict(const u64 modulus, const size_t vec_len,
 
 inline void reduce_strict(RnsPolynomial &rns_poly) {
     const auto &moduli = rns_poly.modulus_vec();
+    const auto component_count = rns_poly.component_count();
     const auto dimension = rns_poly.dimension();
 
-    for (auto [component, modulus] : ranges::views::zip(rns_poly, moduli)) {
-        batched_reduce_strict(modulus, dimension, component.data());
+    #pragma omp parallel for
+    for (size_t k = 0; k < component_count; k++) {
+        batched_reduce_strict(moduli[k], dimension, rns_poly[k].data());
     }
 }
 

@@ -43,8 +43,10 @@ inline void ntt_negacyclic_inplace_lazy(RnsPolynomial &rns_poly) {
     const auto log_dimension = rns_poly.log_dimension();
     const auto &moduli = rns_poly.modulus_vec();
 
-    for (auto [component, modulus] : ranges::views::zip(rns_poly, moduli)) {
-        ntt_negacyclic_inplace_lazy(log_dimension, modulus, component.data());
+    #pragma omp parallel for
+    for (size_t k = 0; k < component_count; k++) {
+        ntt_negacyclic_inplace_lazy(log_dimension, moduli[k],
+                                    rns_poly[k].data());
     }
 
     rns_poly.rep_form = PolyRepForm::value;
@@ -74,8 +76,10 @@ inline void intt_negacyclic_inplace_lazy(RnsPolynomial &rns_poly) {
     const auto log_dimension = rns_poly.log_dimension();
     const auto &moduli = rns_poly.modulus_vec();
 
-    for (auto [component, modulus] : ranges::views::zip(rns_poly, moduli)) {
-        intt_negacyclic_inplace_lazy(log_dimension, modulus, component.data());
+    #pragma omp parallel for
+    for (size_t k = 0; k < component_count; k++) {
+        intt_negacyclic_inplace_lazy(log_dimension, moduli[k],
+                                     rns_poly[k].data());
     }
 
     rns_poly.rep_form = PolyRepForm::coeff;

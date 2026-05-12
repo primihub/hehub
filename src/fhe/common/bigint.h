@@ -1,9 +1,3 @@
-/**
- * @file ubigint.h
- * @brief Class of big integers and utility of CRT composing.
- *
- */
-
 #pragma once
 
 #include "type_defs.h"
@@ -21,8 +15,6 @@ public:
     UBInt(u64 nr = 0);
 
     UBInt(const std::string &str);
-
-    UBInt(const char *str);
 
     static UBInt from_double(const double d);
 
@@ -93,7 +85,15 @@ public:
     int operator[](const int i) const;
 
 private:
-    std::string digits_;
+    void normalize();
+
+    void mul_u64(const u64 x);
+
+    u64 div_u64(const u64 divisor);
+
+    int compare(const UBInt &other) const;
+
+    std::vector<u64> limbs_;
 };
 
 class CRTComposer {
@@ -114,7 +114,6 @@ private:
 
 class UBIntVec {
 public:
-
     UBIntVec(const RnsPolynomial &rns_poly);
 
     inline const size_t dimension() const { return coeffs_.size(); }

@@ -26,6 +26,10 @@ if(HEHUB_DEBUG_RLWE_ZERO_E)
     target_compile_definitions(${PROJECT_NAME} PUBLIC HEHUB_DEBUG_RLWE_ZERO_E)
 endif()
 
+if(OpenMP_CXX_FOUND)
+    target_link_libraries(${PROJECT_NAME} PUBLIC OpenMP::OpenMP_CXX)
+endif()
+
 add_subdirectory(common)
 add_subdirectory(primitives)
 add_subdirectory(bgv)

@@ -3,6 +3,8 @@ cmake_minimum_required(VERSION 3.14)
 # Set a name and a version number for your project:
 project(hehub VERSION 0.1 LANGUAGES CXX)
 
+find_package(OpenMP)
+
 # this needs to be in the top level CMakeLists.txt to enable tests
 include(CTest)
 
