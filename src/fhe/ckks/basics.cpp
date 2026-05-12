@@ -64,91 +64,130 @@ CkksParams create_params(size_t dimension, size_t initial_scaling_bits) {
 }
 
 /// @brief Inplace FFT with coefficients/point values input and output in
-/// natural order.
+/// natural order. Uses manual real/imag arrays for better inlining
+/// and recurrence-generated factors (no pow/polar on hot path).
 void fft_negacyclic_natural_inout(cc_double *coeffs, size_t log_dimension,
                                   bool inverse = false) {
     /**************************** Preparations ******************************/
+    auto dimension = 1ULL << log_dimension;
+
+    // Cached bit-reversed indices.
+    static std::map<size_t, std::vector<size_t>> bitrev_cache;
+    auto br_it = bitrev_cache.find(log_dimension);
+    if (br_it == bitrev_cache.end()) {
+        std::vector<size_t> rev(dimension);
+        for (size_t i = 0; i < dimension; i++)
+            rev[i] = __bit_rev_naive_16(i, log_dimension);
+        br_it = bitrev_cache.emplace(log_dimension, std::move(rev)).first;
+    }
+    const auto &bitrev = br_it->second;
+
+    // Twiddle factors generated via trig recurrence (no std::pow / std::polar).
     struct FFTFactors {
-        FFTFactors(size_t log_dimension, bool inverse = false) {
-            auto dimension = 1ULL << log_dimension;
-            cc_double zeta = polar(1.0, 2 * M_PI / dimension);
-            if (inverse) {
-                zeta = conj(zeta);
-            }
-            for (size_t i = 0; i < dimension; i++) {
-                coeff_trans.push_back(
-                    inverse
-                        ? polar(1.0 / dimension, i * M_PI / dimension * -1.0)
-                        : polar(1.0, i * M_PI / dimension));
-            }
+        std::vector<double> re;
+        std::vector<double> im;
+    };
+    static std::map<std::pair<size_t, bool>, FFTFactors> fft_factors_cache;
 
-            size_t level, local_idx, gap;
-            for (level = 1, gap = dimension / 2; level <= log_dimension;
-                 level++, gap >>= 1) {
-                for (local_idx = 0; local_idx < dimension / gap / 2;
-                     local_idx++) {
-                    auto zeta_pow =
-                        pow(zeta, (__bit_rev_naive_16(local_idx, level - 1)
-                                   << (log_dimension - level)));
-                    butterfly.push_back(zeta_pow);
+    auto key = std::make_pair(log_dimension, inverse);
+    auto fc_it = fft_factors_cache.find(key);
+    if (fc_it == fft_factors_cache.end()) {
+        FFTFactors fac;
+        double base_angle = 2.0 * M_PI / (double)dimension;
+        if (inverse) base_angle = -base_angle;
+        double scale = inverse ? (1.0 / dimension) : 1.0;
+
+        // coeff_trans[k] = scale * exp(i * k * pi / dimension)
+        double ph = 0.0, cp = 1.0, sp = 0.0;
+        double cs = std::cos(base_angle * 0.5), ss = std::sin(base_angle * 0.5);
+        for (size_t k = 0; k < dimension; k++) {
+            fac.re.push_back(cp * scale);
+            fac.im.push_back(sp * scale);
+            double nc = cp * cs - sp * ss;
+            sp = sp * cs + cp * ss;
+            cp = nc;
+        }
+
+        // Butterfly twiddle: zeta^{bitrev(local, level-1) << (L-level)}
+        // where zeta = exp(i * base_angle)
+        double zr = std::cos(base_angle), zi = std::sin(base_angle);
+        for (size_t level = 1, gap = dimension / 2; level <= log_dimension;
+             level++, gap >>= 1) {
+            for (size_t local = 0; local < dimension / gap / 2; local++) {
+                size_t exp_val = __bit_rev_naive_16(local, level - 1)
+                                 << (log_dimension - level);
+                // zeta^{exp_val} via binary exponentiation (only at init)
+                double pr = 1.0, pi = 0.0;
+                double br = zr, bi = zi;
+                size_t e = exp_val;
+                while (e) {
+                    if (e & 1) {
+                        double t = pr * br - pi * bi;
+                        pi = pr * bi + pi * br;
+                        pr = t;
+                    }
+                    e >>= 1;
+                    double t = br * br - bi * bi;
+                    bi = 2.0 * br * bi;
+                    br = t;
                 }
+                fac.re.push_back(pr);
+                fac.im.push_back(pi);
             }
         }
-
-        vector<cc_double> coeff_trans;
-
-        vector<cc_double> butterfly;
-    };
-
-    static map<pair<size_t, bool>, FFTFactors> fft_factors_cache;
-
-    auto __find_or_create_fft_factors = [&](size_t log_dimension,
-                                            bool inverse) {
-        const auto args = make_pair(log_dimension, inverse);
-        auto it = fft_factors_cache.find(args);
-        if (it == fft_factors_cache.end()) {
-            fft_factors_cache.insert(
-                std::make_pair(args, FFTFactors(log_dimension, inverse)));
-            it = fft_factors_cache.find(args);
-        }
-        return it->second;
-    };
-
-    const FFTFactors &fft_factors =
-        __find_or_create_fft_factors(log_dimension, inverse);
+        fc_it = fft_factors_cache.emplace(key, std::move(fac)).first;
+    }
+    const auto &fac = fc_it->second;
+    const double *re_t = fac.re.data();
+    const double *im_t = fac.im.data();
+    const double *re_b = fac.re.data() + dimension;
+    const double *im_b = fac.im.data() + dimension;
     /************************* End of preparations ***************************/
 
-    auto dimension = 1ULL << log_dimension;
-    vector<cc_double> coeffs_copy(dimension);
+    // Workspace: extract real/imag arrays with pre-multiplication.
+    std::vector<double> re_work(dimension);
+    std::vector<double> im_work(dimension);
     if (!inverse) {
         for (size_t i = 0; i < dimension; i++) {
-            coeffs_copy[i] = coeffs[i] * fft_factors.coeff_trans[i];
+            double r = coeffs[i].real(), im = coeffs[i].imag();
+            re_work[i] = r * re_t[i] - im * im_t[i];
+            im_work[i] = r * im_t[i] + im * re_t[i];
         }
     } else {
         for (size_t i = 0; i < dimension; i++) {
-            coeffs_copy[i] = coeffs[i];
+            re_work[i] = coeffs[i].real();
+            im_work[i] = coeffs[i].imag();
         }
     }
 
-    size_t level, start, gap, h, l, idx = 0;
-    for (level = 1, gap = dimension / 2; level <= log_dimension;
-         level++, gap >>= 1) {
-        for (start = 0; start < dimension; start += 2 * gap, idx++) {
-            for (l = start; l < start + gap; l++) {
-                h = l + gap;
-                auto temp = coeffs_copy[h] * fft_factors.butterfly[idx];
-                coeffs_copy[h] = coeffs_copy[l] - temp;
-                coeffs_copy[l] = coeffs_copy[l] + temp;
+    // Butterfly loops (Cooley-Tukey DIT, in-place on work arrays).
+    size_t idx = 0;
+    for (size_t gap = dimension / 2; gap > 0; gap >>= 1) {
+        for (size_t start = 0; start < dimension; start += 2 * gap) {
+            double wr = re_b[idx], wi = im_b[idx];
+            idx++;
+            for (size_t l = start; l < start + gap; l++) {
+                size_t h = l + gap;
+                double tr = re_work[h] * wr - im_work[h] * wi;
+                double ti = re_work[h] * wi + im_work[h] * wr;
+                re_work[h] = re_work[l] - tr;
+                im_work[h] = im_work[l] - ti;
+                re_work[l] = re_work[l] + tr;
+                im_work[l] = im_work[l] + ti;
             }
         }
     }
 
-    for (size_t i = 0; i < dimension; i++) {
-        coeffs[i] = coeffs_copy[__bit_rev_naive_16(i, log_dimension)];
-    }
-    if (inverse) {
+    // Bit-reverse write-back + optional post-multiplication.
+    if (!inverse) {
         for (size_t i = 0; i < dimension; i++) {
-            coeffs[i] *= fft_factors.coeff_trans[i];
+            coeffs[i] = cc_double(re_work[bitrev[i]], im_work[bitrev[i]]);
+        }
+    } else {
+        for (size_t i = 0; i < dimension; i++) {
+            double r = re_work[bitrev[i]], im = im_work[bitrev[i]];
+            coeffs[i] = cc_double(r * re_t[i] - im * im_t[i],
+                                  r * im_t[i] + im * re_t[i]);
         }
     }
 }

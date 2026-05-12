@@ -146,7 +146,6 @@ __find_or_create_ntt_factors(const u64 modulus, const size_t log_dimension,
 void ntt_negacyclic_inplace_lazy(const size_t log_dimension, const u64 modulus,
                                  u64 coeffs[]) {
     const size_t dimension = 1ULL << log_dimension;
-    // generate or read from cache
     const auto &ntt_factors =
         __find_or_create_ntt_factors(modulus, log_dimension);
 
