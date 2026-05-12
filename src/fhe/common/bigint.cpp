@@ -535,12 +535,14 @@ UBIntVec::UBIntVec(const RnsPolynomial &rns_poly) {
     const auto dimension(rns_poly.dimension());
     const auto component_count(rns_poly.component_count());
     CRTComposer crt_composer(rns_poly.modulus_vec());
+    coeffs_.resize(dimension);
+    #pragma omp parallel for
     for (size_t i = 0; i < dimension; i++) {
-        std::vector<u64> remainder_coeffs;
+        std::vector<u64> remainder_coeffs(component_count);
         for (size_t j = 0; j < component_count; j++) {
-            remainder_coeffs.push_back(rns_poly[j][i]);
+            remainder_coeffs[j] = rns_poly[j][i];
         }
-        coeffs_.push_back(crt_composer.compose(remainder_coeffs));
+        coeffs_[i] = crt_composer.compose(remainder_coeffs);
     }
 }
 
