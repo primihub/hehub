@@ -9,7 +9,8 @@ using namespace ranges::views;
 namespace hehub {
 
 RgswCt rgsw_encrypt(const RlwePt &pt_ntt, const RlweSk &sk,
-                    const vector<vector<u64>> &decomp_basis) {
+                    const vector<vector<u64>> &decomp_basis,
+                    const u64 noise_lifting_factor) {
     if (pt_ntt.rep_form == PolyRepForm::coeff) {
         throw invalid_argument("Plaintext is expected in NTT form.");
     }
@@ -17,9 +18,16 @@ RgswCt rgsw_encrypt(const RlwePt &pt_ntt, const RlweSk &sk,
     auto sample_count = decomp_basis.size();
     RgswCt rgsw(sample_count);
 
-    // generate the masks
+    // generate the masks; for BGV-style keys the noise needs to be a multiple
+    // of the plain modulus t, so (same trick as bgv::encrypt) the whole fresh
+    // sample is multiplied by the lifting factor BEFORE the message is added.
     for (auto &rlwe_sample : rgsw) {
         rlwe_sample = get_rlwe_sample(sk);
+        if (noise_lifting_factor != 1) {
+            for (auto &rns_poly : rlwe_sample) {
+                rns_poly *= noise_lifting_factor;
+            }
+        }
     }
 
     // add pt multiplied by decomposition basis
@@ -31,8 +39,9 @@ RgswCt rgsw_encrypt(const RlwePt &pt_ntt, const RlweSk &sk,
 }
 
 RgswCt rgsw_encrypt_montgomery(const RlwePt &pt_ntt, const RlweSk &sk,
-                               const vector<vector<u64>> &decomp_basis) {
-    auto rgsw = rgsw_encrypt(pt_ntt, sk, decomp_basis);
+                               const vector<vector<u64>> &decomp_basis,
+                               const u64 noise_lifting_factor) {
+    auto rgsw = rgsw_encrypt(pt_ntt, sk, decomp_basis, noise_lifting_factor);
 
     auto get_2to64_reduced = [](const u64 modulus) {
         const u64 _2to64_but_one = (u64)(-1LL) % modulus;

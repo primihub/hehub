@@ -69,12 +69,20 @@ BgvQuadraticCt mult_low_level(const BgvCt &ct1, const BgvCt &ct2) {
 }
 
 BgvCt relinearize(const BgvQuadraticCt &ct, const RlweKsk &relin_key) {
+    if (ct.plain_modulus <= 1) {
+        throw std::invalid_argument(
+            "Quadratic ciphertext carries no valid plain modulus.");
+    }
     BgvCt ct_new = ext_prod_montgomery(ct[2], relin_key);
+    // plain_modulus must be set BEFORE mod switching: mod_switch_inplace uses
+    // it for the t-divisible correction and the final (q_last mod t) scaling.
+    // With the default value 1 the scaling degenerates to x(q_last % 1) == x0,
+    // zeroing the key-switched s^2 component entirely.
+    ct_new.plain_modulus = ct.plain_modulus;
     mod_switch_inplace(ct_new);
 
     ct_new[0] += ct[0];
     ct_new[1] += ct[1];
-    ct_new.plain_modulus = ct.plain_modulus;
     return ct_new;
 }
 

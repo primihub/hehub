@@ -6,14 +6,15 @@
 namespace hehub {
 
 RlweKsk::RlweKsk(const RlweSk &sk_curr, const RlweSk &sk_orig,
-                 const u64 additional_mod) {
+                 const u64 additional_mod, const u64 noise_lifting_factor) {
     auto sk_curr_extended = sk_curr;
     sk_curr_extended.add_components({additional_mod});
-    // no need to set 0 manually unless debugging mem since will be mult'd by p
-#ifdef HEHUB_DEBUG
+    // The freshly added component MUST be zeroed: although every use site
+    // multiplies it by a zero basis entry, leaving it uninitialised poisons
+    // valgrind/MSan analysis of the whole key-switch pipeline and relies on
+    // an invariant no caller enforces.
     std::fill(sk_curr_extended.last()->begin(), sk_curr_extended.last()->end(),
               (u64)0);
-#endif
 
     // To encapsulate
     auto extended_moduli = sk_orig.modulus_vec();
@@ -32,7 +33,8 @@ RlweKsk::RlweKsk(const RlweSk &sk_curr, const RlweSk &sk_orig,
         rns_composition_basis[i][i] = additional_mod % extended_moduli[i];
     }
     *this = RgswCt(rgsw_encrypt_montgomery(sk_curr_extended, sk_orig_extended, 
-                                           rns_composition_basis));
+                                           rns_composition_basis,
+                                           noise_lifting_factor));
 }
 
 } // namespace hehub

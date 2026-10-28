@@ -190,40 +190,42 @@ TEST_CASE("bgv arith") {
                         pt_modulus);
         }
     }
-    // SECTION("multiplication with ciphertext") {
-    //     u64 pt_modulus = 65537;
-    //     auto data_count = dimension;
-    //     std::vector<u64> plain_data1(data_count);
-    //     std::vector<u64> plain_data2(data_count);
-    //     u64 seed = 1;
-    //     for (auto &d : plain_data1) {
-    //         d = ((seed++) * 888 + 123) % pt_modulus;
-    //     }
-    //     for (auto &d : plain_data2) {
-    //         d = ((seed++) * 888 + 123) % pt_modulus;
-    //     }
+    SECTION("multiplication with ciphertext") {
+        u64 pt_modulus = 65537;
+        auto data_count = dimension;
+        std::vector<u64> plain_data1(data_count);
+        std::vector<u64> plain_data2(data_count);
+        u64 seed = 1;
+        for (auto &d : plain_data1) {
+            d = ((seed++) * 888 + 123) % pt_modulus;
+        }
+        for (auto &d : plain_data2) {
+            d = ((seed++) * 888 + 123) % pt_modulus;
+        }
 
-    //     // encode
-    //     auto pt1 = bgv::simd_encode(plain_data1, pt_modulus);
-    //     auto pt2 = bgv::simd_encode(plain_data2, pt_modulus);
+        // encode
+        auto pt1 = bgv::simd_encode(plain_data1, pt_modulus);
+        auto pt2 = bgv::simd_encode(plain_data2, pt_modulus);
 
-    //     // encrypt & arith
-    //     auto ct1 = bgv::encrypt(pt1, sk);
-    //     auto ct2 = bgv::encrypt(pt2, sk);
-    //     auto ct_prod_quadratic = bgv::mult_low_level(ct1, ct2);
-    //     auto relin_key = get_relin_key(sk, 131923969);
-    //     auto ct_prod = bgv::relinearize(ct_prod_quadratic, relin_key);
+        // encrypt & arith
+        auto ct1 = bgv::encrypt(pt1, sk);
+        auto ct2 = bgv::encrypt(pt2, sk);
+        auto ct_prod_quadratic = bgv::mult_low_level(ct1, ct2);
+        // additional_mod must be === 1 (mod 2N) for NTT and === 1 (mod t) for BGV
+        // correctness (see get_relin_key); 5368791041 = 10*8192*65537 + 1 is prime.
+        auto relin_key = get_relin_key(sk, 5368791041ULL, pt_modulus);
+        auto ct_prod = bgv::relinearize(ct_prod_quadratic, relin_key);
 
-    //     // decrypt
-    //     auto prod_decrypted = bgv::decrypt(ct_prod, sk);
-    //     auto prod_data = bgv::simd_decode(prod_decrypted);
+        // decrypt
+        auto prod_decrypted = bgv::decrypt(ct_prod, sk);
+        auto prod_data = bgv::simd_decode(prod_decrypted);
 
-    //     // check
-    //     for (size_t i = 0; i < data_count; i++) {
-    //         REQUIRE(prod_data[i] ==
-    //                 plain_data1[i] * plain_data2[i] % pt_modulus);
-    //     }
-    // }
+        // check
+        for (size_t i = 0; i < data_count; i++) {
+            REQUIRE(prod_data[i] ==
+                    plain_data1[i] * plain_data2[i] % pt_modulus);
+        }
+    }
 }
 
 TEST_CASE("bgv mod switch") {

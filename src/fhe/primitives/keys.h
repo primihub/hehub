@@ -28,7 +28,7 @@ struct RlweKsk : public RgswCt {
     /// @param sk_orig
     /// @param additional_mod
     RlweKsk(const RlweSk &sk_new, const RlweSk &sk_orig,
-            const u64 additional_mod);
+            const u64 additional_mod, const u64 noise_lifting_factor = 1);
 };
 
 /**
@@ -39,8 +39,18 @@ struct RlweKsk : public RgswCt {
  * relinearization key and the ciphertext to relinearize.
  * @return RlweKsk
  */
-inline RlweKsk get_relin_key(const RlweSk &sk, const u64 additional_mod) {
-    return RlweKsk(sk * sk, sk, additional_mod);
+inline RlweKsk get_relin_key(const RlweSk &sk, const u64 additional_mod,
+                             const u64 noise_lifting_factor = 1) {
+    // BGV callers pass noise_lifting_factor = plain modulus t, which requires
+    // additional_mod === 1 (mod t): the key-switch divides by additional_mod
+    // and bgv::mod_switch re-scales by (additional_mod mod t) -- any value
+    // other than 1 would leave a spurious factor on the plaintext.
+    if (noise_lifting_factor != 1 &&
+        additional_mod % noise_lifting_factor != 1) {
+        throw std::invalid_argument(
+            "BGV relin key requires additional_mod === 1 (mod plain_modulus).");
+    }
+    return RlweKsk(sk * sk, sk, additional_mod, noise_lifting_factor);
 }
 
 /**

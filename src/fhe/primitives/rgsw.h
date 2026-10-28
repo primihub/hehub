@@ -28,7 +28,8 @@ using RgswCt = std::vector<RlweCt>;
  * @return RgswCt
  */
 RgswCt rgsw_encrypt(const RlwePt &pt_ntt, const RlweSk &sk, 
-                    const std::vector<std::vector<u64>> &decomp_basis);
+                    const std::vector<std::vector<u64>> &decomp_basis,
+                    const u64 noise_lifting_factor = 1);
 
 /**
  * @brief TODO
@@ -39,7 +40,8 @@ RgswCt rgsw_encrypt(const RlwePt &pt_ntt, const RlweSk &sk,
  * @return RgswCt
  */
 RgswCt rgsw_encrypt_montgomery(const RlwePt &pt_ntt, const RlweSk &sk, 
-                               const std::vector<std::vector<u64>> &decomp_basis);
+                               const std::vector<std::vector<u64>> &decomp_basis,
+                               const u64 noise_lifting_factor = 1);
 
 /**
  * @brief TODO

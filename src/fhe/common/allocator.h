@@ -131,11 +131,20 @@ public:
     inline const T operator[](const int idx) const { return data_[idx]; }
 
     SmartArray &operator=(const SmartArray &copying) {
+        if (this == &copying) {
+            return *this;
+        }
         if (dimension_ != copying.dimension_) {
+            // cache() zeroes dimension_, so it must be restored BEFORE
+            // require(): the old code called init_allocator(dimension_)
+            // with dimension_ == 0 and then copied dimension_ (== 0)
+            // elements -- a zero-sized pool block later written at full
+            // length, i.e. a heap overflow.
             cache();
+            dimension_ = copying.dimension_;
             require(copying.dimension_);
         }
-        std::copy(copying.data_, copying.data_ + dimension_, data_);
+        std::copy(copying.data_, copying.data_ + copying.dimension_, data_);
         return *this;
     }
 
@@ -143,6 +152,7 @@ public:
         if (this == &moving) {
             return *this;
         }
+        cache(); // release the current block instead of leaking it
 
         dimension_ = moving.dimension_;
         moving.dimension_ = 0;
@@ -195,8 +205,11 @@ public:
     }
 
     inline void require(size_t dimension) {
+        dimension_ = dimension; // keep bookkeeping in sync with the request
         if (!aff_allocator_) {
-            init_allocator(dimension_);
+            // must key the pool by the REQUESTED size; the old code used the
+            // member dimension_ (often just zeroed by cache()).
+            init_allocator(dimension);
         }
 
         data_ = (T *)aff_allocator_->allocate();

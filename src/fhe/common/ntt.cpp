@@ -3,6 +3,7 @@
 #include "permutation.h"
 #include <cmath>
 #include <map>
+#include <mutex>
 #include <vector>
 
 namespace hehub {
@@ -115,9 +116,19 @@ std::map<std::pair<u64, u64>, NTTFactors> &intt_factors_cache() {
     return global_intt_factors_cache;
 }
 
+// The poly-level ntt/intt wrappers transform RNS components from an OpenMP
+// parallel-for; on the first use of a (modulus, log_dimension) pair several
+// threads used to race on inserting into the shared std::map caches -- a data
+// race corrupting the map (intermittent SIGSEGV / garbage factors depending on
+// scheduling; invisible under gdb/valgrind which serialise the threads).
+// All lookups go through this single guarded helper, so one mutex suffices;
+// std::map node references stay valid after unlock.
+static std::mutex __ntt_factors_cache_mutex;
+
 inline const auto &
 __find_or_create_ntt_factors(const u64 modulus, const size_t log_dimension,
                              const bool for_inverse = false) {
+    std::lock_guard<std::mutex> lock(__ntt_factors_cache_mutex);
     if (!for_inverse) {
         auto it =
             ntt_factors_cache().find(std::make_pair(modulus, log_dimension));
@@ -168,10 +179,16 @@ void ntt_negacyclic_inplace_lazy(const size_t log_dimension, const u64 modulus,
         }
     }
 
-    const u64 log_modulus = (u64)(log2(modulus) + 0.5);
-    const u64 div_fix = (modulus >= (1ULL << log_modulus)) ? 1 : 0;
+    // Exact reduction. The previous shift-based quotient estimate
+    // ((v >> round(log2 q)) - div_fix) OVER-estimates the quotient whenever the
+    // modulus is slightly above a power of two (e.g. a 33-bit prime just over
+    // 2^32): the subtraction then wraps below zero in u64, which shifts the
+    // residue by 2^64 mod q and silently corrupts the transform. The in-library
+    // prime lists only contain primes just UNDER a power of two, which is why
+    // this never fired before externally-chosen moduli (BGV relin additional
+    // primes) hit it. A hardware modulo is exact for every modulus <= 59 bits.
     for (size_t i = 0; i < dimension; i++) {
-        coeffs[i] -= ((coeffs[i] >> log_modulus) - div_fix) * modulus;
+        coeffs[i] %= modulus;
     }
 }
 
@@ -211,12 +228,10 @@ void intt_negacyclic_inplace_lazy(const size_t log_dimension, const u64 modulus,
 
     // Combine bit-reversal gather with scaling in a single pass:
     // read shuffled in bit-reversed order, scale, write to values sequentially.
-    const u64 log_modulus = (u64)(log2(modulus) + 0.5);
-    const u64 div_fix = (modulus >= (1ULL << log_modulus)) ? 1 : 0;
     idx++;
     for (size_t i = 0; i < dimension; i++, idx++) {
-        u64 val = values_shuffled[shuffled_indices[i]];
-        val -= ((val >> log_modulus) - div_fix) * modulus;
+        // Same exact-reduction fix as the forward transform (see above).
+        u64 val = values_shuffled[shuffled_indices[i]] % modulus;
         values[i] =
             mul_mod_harvey_lazy(modulus, val, intt_factors.seq[idx],
                                 intt_factors.seq_harvey[idx]);
